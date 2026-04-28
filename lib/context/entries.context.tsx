@@ -1,5 +1,5 @@
 import { createContext, useCallback, useEffect, useMemo, useState } from 'react';
-import { LedgerDatabase } from '@/lib/storage/database';
+import { PoishaDatabase } from '@/lib/storage/database';
 import {
   deleteEntry as dbDeleteEntry,
   getEntries,
@@ -25,7 +25,7 @@ export interface EntriesCtxValue {
 export const EntriesCtx = createContext<EntriesCtxValue | null>(null);
 
 export function EntriesProvider({ children }: { children: React.ReactNode }) {
-  const db = useMemo(() => new LedgerDatabase(), []);
+  const db = useMemo(() => new PoishaDatabase(), []);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState(true);
   const [sheetOpen, setSheetOpen] = useState(false);

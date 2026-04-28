@@ -1,9 +1,9 @@
-import { useState } from 'react';
-import { Text, View, Pressable } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PinInput } from '@/lib/components/pin-input.component';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { useState } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type Step = 'welcome' | 'create' | 'confirm';
 
@@ -42,7 +42,7 @@ export function PinOnboarding() {
             <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 28, color: colors.bg }}>৳</Text>
           </View>
           <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 28, color: colors.ink, letterSpacing: -0.5, textAlign: 'center' }}>
-            Secure your ledger
+            Secure your Poisha
           </Text>
           <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 15, color: colors.inkSoft, textAlign: 'center', lineHeight: 22, maxWidth: 280 }}>
             Set a 4-digit PIN to keep your data private.

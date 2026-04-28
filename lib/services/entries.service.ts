@@ -1,9 +1,9 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { LedgerDatabase } from '@/lib/storage/database';
+import { PoishaDatabase } from '@/lib/storage/database';
 import { SEED_ENTRIES, STORAGE_KEY } from '@/lib/data/seed.data';
 import type { Draft, Entry } from '@/lib/types/entry.type';
 
-export function seedIfEmpty(db: LedgerDatabase): void {
+export function seedIfEmpty(db: PoishaDatabase): void {
   if (db.isEmpty()) {
     for (const entry of SEED_ENTRIES) {
       db.upsertEntry(entry);
@@ -11,11 +11,11 @@ export function seedIfEmpty(db: LedgerDatabase): void {
   }
 }
 
-export function getEntries(db: LedgerDatabase): Entry[] {
+export function getEntries(db: PoishaDatabase): Entry[] {
   return db.loadEntries();
 }
 
-export function saveEntry(db: LedgerDatabase, draft: Draft): Entry {
+export function saveEntry(db: PoishaDatabase, draft: Draft): Entry {
   const entry: Entry = draft.id
     ? ({ ...draft, id: draft.id } as Entry)
     : ({ ...draft, id: `e_${Date.now()}` } as Entry);
@@ -23,12 +23,12 @@ export function saveEntry(db: LedgerDatabase, draft: Draft): Entry {
   return entry;
 }
 
-export function deleteEntry(db: LedgerDatabase, id: string): void {
+export function deleteEntry(db: PoishaDatabase, id: string): void {
   db.removeEntry(id);
 }
 
-export async function migrateFromAsyncStorage(db: LedgerDatabase): Promise<void> {
-  const migrated = await AsyncStorage.getItem('ledger_sqlite_migrated');
+export async function migrateFromAsyncStorage(db: PoishaDatabase): Promise<void> {
+  const migrated = await AsyncStorage.getItem('poisha_sqlite_migrated');
   if (migrated) return;
 
   const raw = await AsyncStorage.getItem(STORAGE_KEY);
@@ -37,5 +37,5 @@ export async function migrateFromAsyncStorage(db: LedgerDatabase): Promise<void>
     for (const e of old) db.upsertEntry(e);
   }
 
-  await AsyncStorage.setItem('ledger_sqlite_migrated', '1');
+  await AsyncStorage.setItem('poisha_sqlite_migrated', '1');
 }

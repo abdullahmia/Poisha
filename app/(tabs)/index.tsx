@@ -316,7 +316,7 @@ export default function HomeScreen() {
   if (loading) {
     return (
       <View style={[styles.loadingScreen, { paddingTop: insets.top }]}>
-        <Text style={styles.loadingText}>ledger</Text>
+        <Text style={styles.loadingText}>poisha</Text>
       </View>
     );
   }
@@ -330,7 +330,7 @@ export default function HomeScreen() {
       {/* Header */}
       <Animated.View style={[styles.header, headerStyle]}>
         <View>
-          <Text style={styles.brandName}>ledger</Text>
+          <Text style={styles.brandName}>poisha</Text>
           <Text style={styles.brandTagline}>a quiet money journal</Text>
         </View>
         <View style={styles.brandBadge}>

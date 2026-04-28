@@ -16,7 +16,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const [scheme, setScheme] = useState<ColorScheme>('dark');
 
   useEffect(() => {
-    AsyncStorage.getItem('ledger_theme').then(v => {
+    AsyncStorage.getItem('poisha_theme').then(v => {
       if (v === 'light' || v === 'dark') setScheme(v);
     });
   }, []);
@@ -24,7 +24,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const toggleScheme = () => {
     const next: ColorScheme = scheme === 'dark' ? 'light' : 'dark';
     setScheme(next);
-    AsyncStorage.setItem('ledger_theme', next);
+    AsyncStorage.setItem('poisha_theme', next);
   };
 
   const colors = scheme === 'dark' ? darkTheme : lightTheme;

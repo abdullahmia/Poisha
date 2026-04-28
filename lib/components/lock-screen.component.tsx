@@ -1,22 +1,22 @@
-import { useEffect, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedProps,
-  useAnimatedStyle,
-  withTiming,
-  withRepeat,
-  withSequence,
-  Easing,
-  FadeIn,
-  FadeOut,
-} from 'react-native-reanimated';
-import Svg, { Circle } from 'react-native-svg';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PinInput } from '@/lib/components/pin-input.component';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { pinService } from '@/lib/services/pin.service';
+import { useEffect, useRef, useState } from 'react';
+import { Text, View } from 'react-native';
+import Animated, {
+  Easing,
+  FadeIn,
+  FadeOut,
+  useAnimatedProps,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import Svg, { Circle } from 'react-native-svg';
 
 const MAX_ATTEMPTS = 5;
 const LOCKOUT_SECONDS = 30;
@@ -189,7 +189,7 @@ export function LockScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32, alignItems: 'center' }}>
       <View style={{ alignItems: 'center', marginBottom: 48, gap: 8 }}>
-        <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 20, color: ink, letterSpacing: -0.3 }}>ledger</Text>
+        <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 20, color: ink, letterSpacing: -0.3 }}>Poisha</Text>
         <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 26, color: ink, letterSpacing: -0.4 }}>Enter PIN</Text>
       </View>
 

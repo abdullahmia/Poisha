@@ -3,11 +3,11 @@ import type { Entry } from '@/lib/types/entry.type';
 
 type EntryRow = { id: string; date: string; amounts: string; note: string };
 
-export class LedgerDatabase {
+export class PoishaDatabase {
   private db: SQLite.SQLiteDatabase;
 
   constructor() {
-    this.db = SQLite.openDatabaseSync('ledger.db');
+    this.db = SQLite.openDatabaseSync('poisha.db');
     this.createTable();
   }
 

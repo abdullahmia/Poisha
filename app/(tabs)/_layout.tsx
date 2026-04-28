@@ -50,7 +50,7 @@ function TabButton({ tab, active, onPress, onLayout, colors }: TabButtonProps) {
   );
 }
 
-function LedgerTabBar({ state, navigation }: BottomTabBarProps) {
+function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { openAdd } = useEntries();
   const { colors } = useTheme();
@@ -138,7 +138,7 @@ function LedgerTabBar({ state, navigation }: BottomTabBarProps) {
 
 export default function TabLayout() {
   return (
-    <Tabs tabBar={props => <LedgerTabBar {...props} />} screenOptions={{ headerShown: false }}>
+    <Tabs tabBar={props => <PoishaTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
       <Tabs.Screen name="settings" />

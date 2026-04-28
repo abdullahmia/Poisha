@@ -1,9 +1,9 @@
 import * as SecureStore from 'expo-secure-store';
 
-const KEY_PIN = 'ledger_pin';
-const KEY_ENABLED = 'ledger_pin_enabled';
-const KEY_ONBOARDED = 'ledger_pin_onboarded';
-const KEY_LOCKOUT_UNTIL = 'ledger_lockout_until';
+const KEY_PIN = 'poisha_pin';
+const KEY_ENABLED = 'poisha_pin_enabled';
+const KEY_ONBOARDED = 'poisha_pin_onboarded';
+const KEY_LOCKOUT_UNTIL = 'poisha_lockout_until';
 
 class PinService {
   async getPin(): Promise<string | null> {

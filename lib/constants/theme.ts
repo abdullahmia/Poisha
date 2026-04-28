@@ -35,4 +35,4 @@ export const lightTheme: Palette = {
 } as const;
 
 // backwards-compatible alias
-export const ledger = darkTheme;
+export const poisha = darkTheme;
