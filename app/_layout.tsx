@@ -17,9 +17,13 @@ import { StatusBar } from 'expo-status-bar';
 import { View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AddEntrySheet } from '@/lib/components/add-entry-sheet.component';
+import { LockScreen } from '@/lib/components/lock-screen.component';
+import { PinOnboarding } from '@/lib/components/pin-onboarding.component';
 import { darkTheme } from '@/lib/constants/theme';
 import { EntriesProvider } from '@/lib/context/entries.context';
+import { LockProvider } from '@/lib/context/lock.context';
 import { ThemeProvider } from '@/lib/context/theme.context';
+import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 
 export const unstable_settings = { anchor: '(tabs)' };
@@ -27,6 +31,22 @@ export const unstable_settings = { anchor: '(tabs)' };
 function AppStatusBar() {
   const { scheme, colors } = useTheme();
   return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} backgroundColor={colors.bg} />;
+}
+
+function AppGate() {
+  const { isLocked, showOnboarding } = useLock();
+
+  if (showOnboarding) return <PinOnboarding />;
+  if (isLocked) return <LockScreen />;
+
+  return (
+    <>
+      <Stack screenOptions={{ headerShown: false }}>
+        <Stack.Screen name="(tabs)" />
+      </Stack>
+      <AddEntrySheet />
+    </>
+  );
 }
 
 export default function RootLayout() {
@@ -49,13 +69,12 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <ThemeProvider>
-        <EntriesProvider>
-          <Stack screenOptions={{ headerShown: false }}>
-            <Stack.Screen name="(tabs)" />
-          </Stack>
-          <AddEntrySheet />
-          <AppStatusBar />
-        </EntriesProvider>
+        <LockProvider>
+          <EntriesProvider>
+            <AppGate />
+            <AppStatusBar />
+          </EntriesProvider>
+        </LockProvider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

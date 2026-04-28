@@ -14,6 +14,7 @@ export interface EntriesCtxValue {
   loading: boolean;
   saveEntry: (e: Draft) => void;
   deleteEntry: (id: string) => void;
+  importEntries: (imported: Entry[], replace: boolean) => void;
   sheetOpen: boolean;
   sheetEntry: Entry | null;
   openAdd: () => void;
@@ -55,12 +56,22 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     setEntries(prev => prev.filter(e => e.id !== id));
   }, [db]);
 
+  const importEntries = useCallback((imported: Entry[], replace: boolean) => {
+    if (replace) {
+      for (const e of db.loadEntries()) db.removeEntry(e.id);
+      for (const e of imported) db.upsertEntry(e);
+    } else {
+      for (const e of imported) db.upsertEntry(e);
+    }
+    setEntries(db.loadEntries());
+  }, [db]);
+
   const openAdd = useCallback(() => { setSheetEntry(null); setSheetOpen(true); }, []);
   const openEdit = useCallback((e: Entry) => { setSheetEntry(e); setSheetOpen(true); }, []);
   const closeSheet = useCallback(() => { setSheetOpen(false); setSheetEntry(null); }, []);
 
   return (
-    <EntriesCtx.Provider value={{ entries, loading, saveEntry, deleteEntry, sheetOpen, sheetEntry, openAdd, openEdit, closeSheet }}>
+    <EntriesCtx.Provider value={{ entries, loading, saveEntry, deleteEntry, importEntries, sheetOpen, sheetEntry, openAdd, openEdit, closeSheet }}>
       {children}
     </EntriesCtx.Provider>
   );
