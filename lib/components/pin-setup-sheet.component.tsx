@@ -6,7 +6,7 @@ import { PinInput } from '@/lib/components/pin-input.component';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 
-type Mode = 'enable' | 'change';
+type Mode = 'enable' | 'change' | 'disable';
 type Step = 'verify' | 'create' | 'confirm';
 
 interface PinSetupSheetProps {
@@ -18,10 +18,10 @@ interface PinSetupSheetProps {
 
 export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupSheetProps) {
   const { colors } = useTheme();
-  const { enableLock, changePin, unlock } = useLock();
+  const { enableLock, changePin, unlock, disableLock } = useLock();
   const insets = useSafeAreaInsets();
 
-  const initialStep: Step = mode === 'change' ? 'verify' : 'create';
+  const initialStep: Step = (mode === 'change' || mode === 'disable') ? 'verify' : 'create';
   const [step, setStep] = useState<Step>(initialStep);
   const [pin, setPin] = useState('');
   const [firstPin, setFirstPin] = useState('');
@@ -33,7 +33,7 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
 
   useEffect(() => {
     if (visible) {
-      setStep(mode === 'change' ? 'verify' : 'create');
+      setStep(mode === 'change' || mode === 'disable' ? 'verify' : 'create');
       setPin('');
       setFirstPin('');
       setError('');
@@ -46,6 +46,11 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
   async function handleVerify(entered: string) {
     const ok = await unlock(entered);
     if (!ok) { setShake(true); setError('Wrong PIN'); return; }
+    if (mode === 'disable') {
+      await disableLock();
+      onSuccess();
+      return;
+    }
     setPin('');
     setStep('create');
   }
@@ -68,7 +73,7 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
   }
 
   const headings: Record<Step, string> = {
-    verify: 'Enter current PIN',
+    verify: mode === 'disable' ? 'Verify to disable' : 'Enter current PIN',
     create: 'Choose a new PIN',
     confirm: 'Confirm your PIN',
   };

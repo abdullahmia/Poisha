@@ -2,8 +2,9 @@ import { PinInput } from '@/lib/components/pin-input.component';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { pinService } from '@/lib/services/pin.service';
+import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
 import { useEffect, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -125,7 +126,7 @@ function LockoutTimer({ countdown, total }: { countdown: number; total: number }
 
 export function LockScreen() {
   const { colors } = useTheme();
-  const { unlock } = useLock();
+  const { unlock, biometricType, biometricEnabled, unlockWithBiometric } = useLock();
   const insets = useSafeAreaInsets();
   const [pin, setPin] = useState('');
   const [shake, setShake] = useState(false);
@@ -134,13 +135,13 @@ export function LockScreen() {
   const [countdown, setCountdown] = useState(0);
   const [lockoutTotal, setLockoutTotal] = useState(LOCKOUT_SECONDS);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const bioPromptFiredRef = useRef(false);
 
   useEffect(() => {
     pinService.getLockoutUntil().then(until => {
       if (!until) return;
       const remaining = Math.ceil((until - Date.now()) / 1000);
       if (remaining > 0) {
-        const elapsed = LOCKOUT_SECONDS - remaining;
         setLockoutTotal(LOCKOUT_SECONDS);
         beginCountdown(remaining);
       } else {
@@ -149,6 +150,16 @@ export function LockScreen() {
     });
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
+
+  // Auto-prompt biometric on mount
+  useEffect(() => {
+    if (!biometricEnabled || bioPromptFiredRef.current) return;
+    bioPromptFiredRef.current = true;
+    const t = setTimeout(() => {
+      unlockWithBiometric();
+    }, 400);
+    return () => clearTimeout(t);
+  }, [biometricEnabled]);
 
   function beginCountdown(seconds: number) {
     setLockedOut(true);
@@ -184,7 +195,9 @@ export function LockScreen() {
     }
   }
 
-  const { bg, ink, accent, inkSoft } = colors;
+  const icon = biometricEnabled ? biometricIcon(biometricType) : null;
+  const label = biometricEnabled ? biometricLabel(biometricType) : '';
+  const { bg, ink, accent } = colors;
 
   return (
     <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32, alignItems: 'center' }}>
@@ -196,7 +209,7 @@ export function LockScreen() {
       {lockedOut ? (
         <LockoutTimer countdown={countdown} total={lockoutTotal} />
       ) : (
-        <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)}>
+        <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} style={{ alignItems: 'center' }}>
           {attempts > 0 && (
             <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: accent, marginBottom: 16, textAlign: 'center' }}>
               Wrong PIN ({attempts}/{MAX_ATTEMPTS})
@@ -208,7 +221,16 @@ export function LockScreen() {
             onComplete={handleComplete}
             shake={shake}
             onShakeDone={() => { setShake(false); setPin(''); }}
+            leftKeyIcon={icon}
+            onLeftKeyPress={unlockWithBiometric}
           />
+          {biometricEnabled && (
+            <Pressable onPress={unlockWithBiometric} style={{ marginTop: 28 }}>
+              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: accent, textDecorationLine: 'underline' }}>
+                Use {label}
+              </Text>
+            </Pressable>
+          )}
         </Animated.View>
       )}
     </View>

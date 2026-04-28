@@ -1,15 +1,17 @@
 import { PinInput } from '@/lib/components/pin-input.component';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
+import { HugeiconsIcon } from '@hugeicons/react-native';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-type Step = 'welcome' | 'create' | 'confirm';
+type Step = 'welcome' | 'create' | 'confirm' | 'biometric';
 
 export function PinOnboarding() {
   const { colors } = useTheme();
-  const { enableLock } = useLock();
+  const { enableLock, biometricType, enableBiometric } = useLock();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState<Step>('welcome');
   const [firstPin, setFirstPin] = useState('');
@@ -29,6 +31,19 @@ export function PinOnboarding() {
       setError("PINs don't match");
       return;
     }
+    if (biometricType !== 'none') {
+      setStep('biometric');
+    } else {
+      await enableLock(firstPin);
+    }
+  }
+
+  async function handleEnableBiometric() {
+    await enableBiometric();
+    await enableLock(firstPin);
+  }
+
+  async function handleSkipBiometric() {
     await enableLock(firstPin);
   }
 
@@ -60,6 +75,58 @@ export function PinOnboarding() {
         >
           <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 16, color: colors.bg }}>Set PIN</Text>
         </Pressable>
+      </View>
+    );
+  }
+
+  if (step === 'biometric') {
+    const icon = biometricIcon(biometricType);
+    const label = biometricLabel(biometricType);
+    const bodyText = biometricType === 'faceId'
+      ? 'Unlock faster with Face ID.'
+      : 'Unlock faster with your fingerprint.';
+
+    return (
+      <View style={bg}>
+        <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 }}>
+          <View style={{ width: 72, height: 72, borderRadius: 36, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.line, alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+            {icon && <HugeiconsIcon icon={icon} size={36} color={colors.ink} />}
+          </View>
+          <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 28, color: colors.ink, letterSpacing: -0.5, textAlign: 'center' }}>
+            Enable {label}
+          </Text>
+          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 15, color: colors.inkSoft, textAlign: 'center', lineHeight: 22, maxWidth: 280 }}>
+            {bodyText}
+          </Text>
+        </View>
+        <View style={{ width: '100%', gap: 12 }}>
+          <Pressable
+            onPress={handleEnableBiometric}
+            style={({ pressed }) => ({
+              width: '100%',
+              paddingVertical: 16,
+              borderRadius: 16,
+              backgroundColor: pressed ? colors.inkSoft : colors.ink,
+              alignItems: 'center',
+            })}
+          >
+            <Text style={{ fontFamily: 'DMSans_600SemiBold', fontSize: 16, color: colors.bg }}>Enable</Text>
+          </Pressable>
+          <Pressable
+            onPress={handleSkipBiometric}
+            style={({ pressed }) => ({
+              width: '100%',
+              paddingVertical: 16,
+              borderRadius: 16,
+              backgroundColor: pressed ? colors.surfaceAlt : colors.surface,
+              borderWidth: 1,
+              borderColor: colors.line,
+              alignItems: 'center',
+            })}
+          >
+            <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 16, color: colors.inkSoft }}>Not now</Text>
+          </Pressable>
+        </View>
       </View>
     );
   }

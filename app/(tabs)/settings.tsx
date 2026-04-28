@@ -7,6 +7,9 @@ import { PinSetupSheet } from '@/lib/components/pin-setup-sheet.component';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
+import { biometricService } from '@/lib/services/biometric.service';
+import { biometricLabel, biometricIcon } from '@/lib/utils/biometric.utils';
+import { HugeiconsIcon } from '@hugeicons/react-native';
 import { entriesToCsv, csvToEntries } from '@/lib/utils/csv.util';
 import { useState } from 'react';
 
@@ -14,13 +17,10 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { scheme, colors, toggleScheme } = useTheme();
   const { entries, importEntries } = useEntries();
-  const { lockEnabled, disableLock, unlock } = useLock();
+  const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric } = useLock();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' }>({ visible: false, mode: 'enable' });
-  const [disablePin, setDisablePin] = useState('');
-  const [disableShake, setDisableShake] = useState(false);
-  const [showDisableInput, setShowDisableInput] = useState(false);
+  const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({ visible: false, mode: 'enable' });
 
   async function handleExport() {
     setExporting(true);
@@ -209,14 +209,7 @@ export default function SettingsScreen() {
                 if (val) {
                   setSetupSheet({ visible: true, mode: 'enable' });
                 } else {
-                  Alert.alert(
-                    'Disable lock?',
-                    "You'll need your PIN.",
-                    [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Disable', style: 'destructive', onPress: () => setShowDisableInput(true) },
-                    ]
-                  );
+                  setSetupSheet({ visible: true, mode: 'disable' });
                 }
               }}
               trackColor={{ false: colors.surfaceAlt, true: colors.accent }}
@@ -224,32 +217,6 @@ export default function SettingsScreen() {
             />
           </View>
 
-          {/* Inline PIN verify for disabling */}
-          {showDisableInput && (
-            <View style={{ paddingHorizontal: 16, paddingBottom: 16, alignItems: 'center', gap: 8 }}>
-              <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.inkSoft }}>Enter PIN to confirm</Text>
-              {disableShake && (
-                <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.accent }}>Wrong PIN</Text>
-              )}
-              {/* Reuse PinSetupSheet in verify-only mode by opening the sheet */}
-              <Pressable
-                onPress={async () => {
-                  const ok = await unlock(disablePin);
-                  if (ok) {
-                    await disableLock();
-                    setShowDisableInput(false);
-                    setDisablePin('');
-                  } else {
-                    setDisableShake(true);
-                    setTimeout(() => setDisableShake(false), 500);
-                  }
-                }}
-                style={({ pressed }) => ({ marginTop: 4, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 12, backgroundColor: pressed ? colors.surfaceAlt : colors.surface, borderWidth: 1, borderColor: colors.line })}
-              >
-                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 14, color: colors.accent }}>Verify & Disable</Text>
-              </Pressable>
-            </View>
-          )}
 
           {/* Change PIN row — only when lock is enabled */}
           {lockEnabled && (
@@ -262,6 +229,63 @@ export default function SettingsScreen() {
               >
                 <View>
                   <Text style={rowLabel}>Change PIN</Text>
+                </View>
+                <Text style={chevron}>›</Text>
+              </Pressable>
+            </>
+          )}
+
+          {/* Biometric toggle — only when lock is enabled and device supports biometrics */}
+          {lockEnabled && biometricType !== 'none' && (
+            <>
+              <View style={divider} />
+              <View style={rowStyle}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                  {biometricIcon(biometricType) && (
+                    <HugeiconsIcon icon={biometricIcon(biometricType)!} size={18} color={colors.inkSoft} />
+                  )}
+                  <View>
+                    <Text style={rowLabel}>{biometricLabel(biometricType)}</Text>
+                    <Text style={rowSub}>{biometricEnabled ? 'On' : 'Off'}</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={biometricEnabled}
+                  onValueChange={async val => {
+                    if (val) {
+                      const result = await biometricService.authenticate(`Verify ${biometricLabel(biometricType)}`);
+                      if (result.success) {
+                        await enableBiometric();
+                      } else {
+                        Alert.alert('Verification failed', 'Biometric verification failed. Please try again.');
+                      }
+                    } else {
+                      await disableBiometric();
+                    }
+                  }}
+                  trackColor={{ false: colors.surfaceAlt, true: colors.accent }}
+                  thumbColor={colors.surface}
+                />
+              </View>
+            </>
+          )}
+
+          {/* Re-enroll row — only when biometric is enabled */}
+          {lockEnabled && biometricEnabled && (
+            <>
+              <View style={divider} />
+              <Pressable
+                onPress={async () => {
+                  const result = await biometricService.authenticate(`Re-enroll ${biometricLabel(biometricType)}`);
+                  if (!result.success) {
+                    Alert.alert('Verification failed', 'Could not verify biometric credential.');
+                  }
+                }}
+                style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+                accessibilityLabel={`Re-enroll ${biometricLabel(biometricType)}`}
+              >
+                <View>
+                  <Text style={rowLabel}>Re-enroll {biometricLabel(biometricType)}</Text>
                 </View>
                 <Text style={chevron}>›</Text>
               </Pressable>

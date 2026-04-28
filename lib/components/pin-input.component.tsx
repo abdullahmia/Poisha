@@ -1,14 +1,14 @@
-import { useEffect } from 'react';
-import { Pressable, Text, View } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSequence,
-  withTiming,
-} from 'react-native-reanimated';
 import { Delete02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { useEffect } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
 
 interface PinInputProps {
   value: string;
@@ -16,11 +16,13 @@ interface PinInputProps {
   onComplete: (pin: string) => void;
   shake?: boolean;
   onShakeDone?: () => void;
+  leftKeyIcon?: typeof Delete02Icon | null;
+  onLeftKeyPress?: () => void;
 }
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
 
-export function PinInput({ value, onChange, onComplete, shake, onShakeDone }: PinInputProps) {
+export function PinInput({ value, onChange, onComplete, shake, onShakeDone, leftKeyIcon, onLeftKeyPress }: PinInputProps) {
   const { colors } = useTheme();
   const shakeX = useSharedValue(0);
 
@@ -78,6 +80,24 @@ export function PinInput({ value, onChange, onComplete, shake, onShakeDone }: Pi
       <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 72 * 3 + 16 * 2, gap: 16, justifyContent: 'center' }}>
         {KEYS.map((key, idx) => {
           if (key === '') {
+            if (leftKeyIcon) {
+              return (
+                <Pressable
+                  key={idx}
+                  onPress={onLeftKeyPress}
+                  style={({ pressed }) => ({
+                    width: 72,
+                    height: 72,
+                    borderRadius: 36,
+                    backgroundColor: pressed ? colors.surfaceAlt : 'transparent',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  })}
+                >
+                  <HugeiconsIcon icon={leftKeyIcon} size={32} color={colors.inkSoft} />
+                </Pressable>
+              );
+            }
             return <View key={idx} style={{ width: 72, height: 72 }} />;
           }
           return (
