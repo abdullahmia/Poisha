@@ -1,23 +1,23 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Add01Icon, Home01Icon, ListViewIcon } from '@hugeicons/core-free-icons';
+import { Add01Icon, Home01Icon, ListViewIcon, Settings01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { Tabs } from 'expo-router';
-import { useEffect, useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useMemo, useRef, useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
-  withSequence,
   withSpring,
-  withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ledger } from '@/lib/constants/theme';
+import { type Palette } from '@/lib/constants/theme';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 
 const TABS = [
   { name: 'index', label: 'Home', icon: Home01Icon },
   { name: 'explore', label: 'Entries', icon: ListViewIcon },
+  { name: 'settings', label: 'Settings', icon: Settings01Icon },
 ];
 
 interface TabButtonProps {
@@ -25,44 +25,27 @@ interface TabButtonProps {
   active: boolean;
   onPress: () => void;
   onLayout: (x: number, width: number) => void;
+  colors: Palette;
 }
 
-function TabButton({ tab, active, onPress, onLayout }: TabButtonProps) {
-  const labelOpacity = useSharedValue(active ? 1 : 0);
-  const iconScale = useSharedValue(1);
-
-  useEffect(() => {
-    labelOpacity.value = withTiming(active ? 1 : 0, { duration: 180 });
-    if (active) {
-      iconScale.value = withSequence(
-        withSpring(1.22, { damping: 10, stiffness: 420 }),
-        withSpring(1, { damping: 18, stiffness: 360 }),
-      );
-    }
-  }, [active]);
-
-  const labelStyle = useAnimatedStyle(() => ({ opacity: labelOpacity.value }));
-  const iconStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: iconScale.value }],
-  }));
-
+function TabButton({ tab, active, onPress, onLayout, colors }: TabButtonProps) {
   return (
     <Pressable
       style={styles.tab}
       onPress={onPress}
       onLayout={(e) => onLayout(e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
     >
-      <Animated.View style={iconStyle}>
-        <HugeiconsIcon
-          icon={tab.icon}
-          size={18}
-          color={active ? ledger.ink : ledger.inkMuted}
-          strokeWidth={active ? 2 : 1.5}
-        />
-      </Animated.View>
-      <Animated.Text style={[styles.tabLabel, labelStyle]}>
-        {tab.label}
-      </Animated.Text>
+      <HugeiconsIcon
+        icon={tab.icon}
+        size={18}
+        color={active ? colors.bg : colors.inkMuted}
+        strokeWidth={active ? 2 : 1.5}
+      />
+      {active && (
+        <Text style={[styles.tabLabel, { color: colors.bg }]}>
+          {tab.label}
+        </Text>
+      )}
     </Pressable>
   );
 }
@@ -70,35 +53,67 @@ function TabButton({ tab, active, onPress, onLayout }: TabButtonProps) {
 function LedgerTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { openAdd } = useEntries();
+  const { colors } = useTheme();
   const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
 
   const pillX = useSharedValue(0);
   const pillW = useSharedValue(0);
+  const initialized = useRef(false);
 
-  useEffect(() => {
-    const layout = tabLayouts[state.index];
-    if (!layout) return;
-    pillX.value = withSpring(layout.x, { damping: 22, stiffness: 260, mass: 0.85 });
-    pillW.value = withSpring(layout.width, { damping: 22, stiffness: 260 });
-  }, [state.index, tabLayouts]);
+  const handleLayout = (i: number, x: number, width: number) => {
+    setTabLayouts(prev => {
+      const next = [...prev];
+      next[i] = { x, width };
+
+      // Set pill position instantly on first layout of the active tab
+      if (!initialized.current && i === state.index) {
+        pillX.value = x;
+        pillW.value = width;
+        initialized.current = true;
+      }
+
+      return next;
+    });
+  };
+
+  const handleTabPress = (i: number, route: (typeof state.routes)[number]) => {
+    const layout = tabLayouts[i];
+    if (layout) {
+      pillX.value = withSpring(layout.x, { damping: 24, stiffness: 300, mass: 0.8 });
+      pillW.value = withSpring(layout.width, { damping: 24, stiffness: 300 });
+    }
+    const isFocused = state.index === i;
+    const event = navigation.emit({
+      type: 'tabPress',
+      target: route.key,
+      canPreventDefault: true,
+    });
+    if (!isFocused && !event.defaultPrevented) {
+      navigation.navigate(route.name, route.params);
+    }
+  };
 
   const pillStyle = useAnimatedStyle(() => ({
     transform: [{ translateX: pillX.value }],
     width: pillW.value,
   }));
 
-  const handleLayout = (i: number, x: number, width: number) => {
-    setTabLayouts(prev => {
-      const next = [...prev];
-      next[i] = { x, width };
-      return next;
-    });
-  };
+  const barStyle = useMemo(() => ({
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+  }), [colors]);
+
+  const pillBg = useMemo(() => ({ backgroundColor: colors.ink }), [colors]);
+
+  const addBtnStyle = useMemo(() => ({
+    backgroundColor: colors.accent,
+    shadowColor: colors.accent,
+  }), [colors]);
 
   return (
     <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={styles.bar}>
-        <Animated.View style={[styles.pill, pillStyle]} pointerEvents="none" />
+      <View style={[styles.bar, barStyle]}>
+        <Animated.View style={[styles.pill, pillBg, pillStyle]} pointerEvents="none" />
         {state.routes.map((route, i) => {
           const tab = TABS[i];
           const isFocused = state.index === i;
@@ -107,22 +122,14 @@ function LedgerTabBar({ state, navigation }: BottomTabBarProps) {
               key={route.key}
               tab={tab}
               active={isFocused}
-              onPress={() => {
-                const event = navigation.emit({
-                  type: 'tabPress',
-                  target: route.key,
-                  canPreventDefault: true,
-                });
-                if (!isFocused && !event.defaultPrevented) {
-                  navigation.navigate(route.name, route.params);
-                }
-              }}
+              colors={colors}
+              onPress={() => handleTabPress(i, route)}
               onLayout={(x, width) => handleLayout(i, x, width)}
             />
           );
         })}
-        <Pressable onPress={openAdd} style={styles.addBtn} accessibilityLabel="Add entry">
-          <HugeiconsIcon icon={Add01Icon} size={20} color={ledger.bg} strokeWidth={2.5} />
+        <Pressable onPress={openAdd} style={[styles.addBtn, addBtnStyle]} accessibilityLabel="Add entry">
+          <HugeiconsIcon icon={Add01Icon} size={20} color={colors.bg} strokeWidth={2.5} />
         </Pressable>
       </View>
     </View>
@@ -134,6 +141,7 @@ export default function TabLayout() {
     <Tabs tabBar={props => <LedgerTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
+      <Tabs.Screen name="settings" />
     </Tabs>
   );
 }
@@ -149,52 +157,46 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
   },
   bar: {
-    backgroundColor: ledger.surface,
     borderRadius: 999,
     borderWidth: 1,
-    borderColor: ledger.line,
-    padding: 6,
+    padding: 5,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    gap: 2,
     shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.45,
     shadowRadius: 24,
     elevation: 12,
   },
   pill: {
     position: 'absolute',
-    top: 6,
-    bottom: 6,
+    top: 5,
+    bottom: 5,
     left: 0,
     borderRadius: 999,
-    backgroundColor: 'rgba(240,236,229,0.08)',
   },
   tab: {
     flex: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 10,
+    paddingVertical: 11,
+    paddingHorizontal: 12,
     borderRadius: 999,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 7,
   },
   tabLabel: {
     fontFamily: 'DMSans_500Medium',
     fontSize: 13,
-    color: ledger.ink,
-    letterSpacing: -0.13,
+    letterSpacing: -0.2,
   },
   addBtn: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    backgroundColor: ledger.accent,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: ledger.accent,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.45,
     shadowRadius: 14,

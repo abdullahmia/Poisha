@@ -1,5 +1,5 @@
 import { StyleSheet, View } from 'react-native';
-import { ledger } from '@/lib/constants/theme';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 
 interface BarChartProps {
   data: { day: number; amount: number }[];
@@ -7,6 +7,7 @@ interface BarChartProps {
 }
 
 export function BarChart({ data, height = 120 }: BarChartProps) {
+  const { colors } = useTheme();
   const max = Math.max(...data.map(d => d.amount), 1);
 
   return (
@@ -20,7 +21,7 @@ export function BarChart({ data, height = 120 }: BarChartProps) {
                 styles.bar,
                 {
                   height: barH,
-                  backgroundColor: d.amount > 0 ? ledger.accent : ledger.line,
+                  backgroundColor: d.amount > 0 ? colors.accent : colors.line,
                   opacity: d.amount > 0 ? 1 : 0.5,
                 },
               ]}

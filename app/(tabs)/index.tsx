@@ -3,7 +3,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarChart } from '@/lib/components/bar-chart.component';
 import { EntryCard } from '@/lib/components/entry-card.component';
-import { ledger } from '@/lib/constants/theme';
+import { type Palette } from '@/lib/constants/theme';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 
 const fmt = (n: number) => {
@@ -14,10 +15,233 @@ const fmt = (n: number) => {
 
 const fmtFull = (n: number) => `৳${n.toLocaleString('en-IN')}`;
 
+function createStyles(c: Palette) {
+  return StyleSheet.create({
+    root: {
+      flex: 1,
+      backgroundColor: c.bg,
+    },
+    content: {
+      paddingHorizontal: 0,
+    },
+    loadingScreen: {
+      flex: 1,
+      backgroundColor: c.bg,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    loadingText: {
+      fontFamily: 'SpaceGrotesk_600SemiBold',
+      fontSize: 26,
+      color: c.inkSoft,
+      letterSpacing: -0.3,
+    },
+    header: {
+      paddingHorizontal: 24,
+      paddingTop: 28,
+      paddingBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+    },
+    brandName: {
+      fontFamily: 'SpaceGrotesk_700Bold',
+      fontSize: 22,
+      color: c.ink,
+      letterSpacing: -0.4,
+      lineHeight: 26,
+    },
+    brandTagline: {
+      fontSize: 11,
+      color: c.inkMuted,
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      marginTop: 4,
+    },
+    brandBadge: {
+      width: 44,
+      height: 44,
+      borderRadius: 22,
+      backgroundColor: c.accent,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: c.accent,
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.45,
+      shadowRadius: 12,
+      elevation: 8,
+    },
+    brandBadgeText: {
+      fontFamily: 'SpaceGrotesk_700Bold',
+      fontSize: 16,
+      color: c.bg,
+    },
+    monthSelector: {
+      paddingHorizontal: 24,
+      paddingTop: 24,
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    navBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: c.surface,
+      borderWidth: 1,
+      borderColor: c.line,
+      alignItems: 'center',
+      justifyContent: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    navBtnText: {
+      fontFamily: 'Inter_400Regular',
+      fontSize: 22,
+      color: c.inkSoft,
+      lineHeight: 26,
+      marginTop: -1,
+    },
+    monthLabelWrap: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    monthSublabel: {
+      fontSize: 10,
+      color: c.inkMuted,
+      letterSpacing: 2,
+      textTransform: 'uppercase',
+      marginBottom: 2,
+    },
+    monthName: {
+      fontFamily: 'SpaceGrotesk_500Medium',
+      fontSize: 15,
+      color: c.ink,
+      letterSpacing: -0.1,
+    },
+    heroSection: {
+      paddingHorizontal: 24,
+      paddingTop: 20,
+      paddingBottom: 28,
+      alignItems: 'center',
+    },
+    heroAmount: {
+      fontFamily: 'SpaceGrotesk_300Light',
+      fontSize: 56,
+      color: c.ink,
+      letterSpacing: -1.5,
+      lineHeight: 62,
+    },
+    heroStats: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      justifyContent: 'center',
+      gap: 8,
+      marginTop: 14,
+      paddingHorizontal: 8,
+    },
+    heroStat: {
+      fontSize: 12,
+      color: c.inkSoft,
+    },
+    heroStatNum: {
+      color: c.ink,
+      fontWeight: '500',
+    },
+    heroDot: {
+      color: c.line,
+    },
+    chartCard: {
+      marginHorizontal: 16,
+      padding: 16,
+      paddingTop: 22,
+      paddingBottom: 10,
+      backgroundColor: c.surface,
+      borderRadius: 20,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.4,
+      shadowRadius: 16,
+      elevation: 8,
+    },
+    chartHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      paddingHorizontal: 6,
+      marginBottom: 8,
+    },
+    chartTitle: {
+      fontSize: 11,
+      letterSpacing: 1.6,
+      textTransform: 'uppercase',
+      color: c.inkMuted,
+    },
+    chartPeak: {
+      fontSize: 11,
+      color: c.inkSoft,
+    },
+    chartPeakValue: {
+      color: c.accent,
+      fontWeight: '600',
+    },
+    chartFooter: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingHorizontal: 8,
+      paddingTop: 6,
+    },
+    chartFooterLabel: {
+      fontSize: 9,
+      color: c.inkMuted,
+      letterSpacing: 1,
+    },
+    recentHeader: {
+      paddingHorizontal: 24,
+      paddingTop: 32,
+      paddingBottom: 8,
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      justifyContent: 'space-between',
+    },
+    recentTitle: {
+      fontFamily: 'SpaceGrotesk_600SemiBold',
+      fontSize: 18,
+      color: c.ink,
+      letterSpacing: -0.2,
+    },
+    recentCount: {
+      fontSize: 10,
+      color: c.inkMuted,
+      letterSpacing: 1.8,
+      textTransform: 'uppercase',
+    },
+    recentList: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
+    },
+    emptyState: {
+      paddingVertical: 32,
+      alignItems: 'center',
+    },
+    emptyStateText: {
+      fontSize: 13,
+      color: c.inkMuted,
+    },
+  });
+}
+
 export default function HomeScreen() {
   const { entries, loading, openEdit } = useEntries();
   const insets = useSafeAreaInsets();
+  const { colors } = useTheme();
   const [monthOffset, setMonthOffset] = useState(0);
+
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const { monthLabel, monthKey, daysInMonth } = useMemo(() => {
     const now = new Date();
@@ -171,222 +395,3 @@ export default function HomeScreen() {
     </ScrollView>
   );
 }
-
-const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: ledger.bg,
-  },
-  content: {
-    paddingHorizontal: 0,
-  },
-  loadingScreen: {
-    flex: 1,
-    backgroundColor: ledger.bg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    fontFamily: 'Fraunces_400Regular_Italic',
-    fontSize: 28,
-    color: ledger.inkSoft,
-    letterSpacing: -0.6,
-  },
-  header: {
-    paddingHorizontal: 24,
-    paddingTop: 28,
-    paddingBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  brandName: {
-    fontFamily: 'Fraunces_400Regular_Italic',
-    fontSize: 26,
-    color: ledger.ink,
-    letterSpacing: -0.8,
-    lineHeight: 28,
-  },
-  brandTagline: {
-    fontSize: 11,
-    color: ledger.inkMuted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginTop: 4,
-  },
-  brandBadge: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: ledger.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: ledger.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  brandBadgeText: {
-    fontFamily: 'Fraunces_400Regular_Italic',
-    fontSize: 18,
-    color: ledger.bg,
-    fontWeight: '500',
-  },
-  monthSelector: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  navBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: ledger.surface,
-    borderWidth: 1,
-    borderColor: ledger.line,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  navBtnText: {
-    fontFamily: 'DMSans_400Regular',
-    fontSize: 22,
-    color: ledger.inkSoft,
-    lineHeight: 26,
-    marginTop: -1,
-  },
-  monthLabelWrap: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  monthSublabel: {
-    fontSize: 10,
-    color: ledger.inkMuted,
-    letterSpacing: 2,
-    textTransform: 'uppercase',
-    marginBottom: 2,
-  },
-  monthName: {
-    fontFamily: 'Fraunces_500Medium_Italic',
-    fontSize: 15,
-    color: ledger.ink,
-    letterSpacing: -0.15,
-  },
-  heroSection: {
-    paddingHorizontal: 24,
-    paddingTop: 20,
-    paddingBottom: 28,
-    alignItems: 'center',
-  },
-  heroAmount: {
-    fontFamily: 'Fraunces_300Light_Italic',
-    fontSize: 64,
-    color: ledger.ink,
-    letterSpacing: -2.5,
-    lineHeight: 68,
-  },
-  heroStats: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    justifyContent: 'center',
-    gap: 8,
-    marginTop: 14,
-    paddingHorizontal: 8,
-  },
-  heroStat: {
-    fontSize: 12,
-    color: ledger.inkSoft,
-  },
-  heroStatNum: {
-    color: ledger.ink,
-    fontWeight: '500',
-  },
-  heroDot: {
-    color: ledger.line,
-  },
-  chartCard: {
-    marginHorizontal: 16,
-    padding: 16,
-    paddingTop: 22,
-    paddingBottom: 10,
-    backgroundColor: ledger.surface,
-    borderRadius: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 16,
-    elevation: 8,
-  },
-  chartHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'baseline',
-    paddingHorizontal: 6,
-    marginBottom: 8,
-  },
-  chartTitle: {
-    fontSize: 11,
-    letterSpacing: 1.6,
-    textTransform: 'uppercase',
-    color: ledger.inkMuted,
-  },
-  chartPeak: {
-    fontSize: 11,
-    color: ledger.inkSoft,
-  },
-  chartPeakValue: {
-    color: ledger.accent,
-    fontWeight: '600',
-  },
-  chartFooter: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 8,
-    paddingTop: 6,
-  },
-  chartFooterLabel: {
-    fontSize: 9,
-    color: ledger.inkMuted,
-    letterSpacing: 1,
-  },
-  recentHeader: {
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 8,
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    justifyContent: 'space-between',
-  },
-  recentTitle: {
-    fontFamily: 'Fraunces_400Regular_Italic',
-    fontSize: 20,
-    color: ledger.ink,
-    letterSpacing: -0.4,
-  },
-  recentCount: {
-    fontSize: 10,
-    color: ledger.inkMuted,
-    letterSpacing: 1.8,
-    textTransform: 'uppercase',
-  },
-  recentList: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-  },
-  emptyState: {
-    paddingVertical: 32,
-    alignItems: 'center',
-  },
-  emptyStateText: {
-    fontSize: 13,
-    color: ledger.inkMuted,
-  },
-});
