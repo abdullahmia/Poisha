@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay, Easing } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BarChart } from '@/lib/components/bar-chart.component';
 import { EntryCard } from '@/lib/components/entry-card.component';
 import { type Palette } from '@/lib/constants/theme';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const fmt = (n: number) => {
   if (n >= 100000) return `৳${(n / 1000).toFixed(0)}k`;
@@ -330,7 +330,7 @@ export default function HomeScreen() {
       {/* Header */}
       <Animated.View style={[styles.header, headerStyle]}>
         <View>
-          <Text style={styles.brandName}>poisha</Text>
+          <Text style={styles.brandName}>Poisha</Text>
           <Text style={styles.brandTagline}>a quiet money journal</Text>
         </View>
         <View style={styles.brandBadge}>
@@ -402,7 +402,7 @@ export default function HomeScreen() {
       {/* Recent */}
       <Animated.View style={recentStyle}>
       <View style={styles.recentHeader}>
-        <Text style={styles.recentTitle}>recent</Text>
+        <Text style={styles.recentTitle}>Recent</Text>
         <Text style={styles.recentCount}>last {recent.length}</Text>
       </View>
 

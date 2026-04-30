@@ -35,12 +35,14 @@ function TabButton({ tab, active, onPress, onLayout, colors }: TabButtonProps) {
       onPress={onPress}
       onLayout={(e) => onLayout(e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
     >
-      <HugeiconsIcon
-        icon={tab.icon}
-        size={18}
-        color={active ? colors.bg : colors.inkMuted}
-        strokeWidth={active ? 2 : 1.5}
-      />
+      <View pointerEvents="none">
+        <HugeiconsIcon
+          icon={tab.icon}
+          size={18}
+          color={active ? colors.bg : colors.inkMuted}
+          strokeWidth={active ? 2 : 1.5}
+        />
+      </View>
       {active && (
         <Text style={[styles.tabLabel, { color: colors.bg }]}>
           {tab.label}
@@ -129,7 +131,9 @@ function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
           );
         })}
         <Pressable onPress={openAdd} style={[styles.addBtn, addBtnStyle]} accessibilityLabel="Add entry">
-          <HugeiconsIcon icon={Add01Icon} size={20} color={colors.bg} strokeWidth={2.5} />
+          <View pointerEvents="none">
+            <HugeiconsIcon icon={Add01Icon} size={20} color={colors.bg} strokeWidth={2.5} />
+          </View>
         </Pressable>
       </View>
     </View>

@@ -1,21 +1,57 @@
 import * as SecureStore from 'expo-secure-store';
+import * as Crypto from 'expo-crypto';
 
-const KEY_PIN = 'poisha_pin';
-const KEY_ENABLED = 'poisha_pin_enabled';
-const KEY_ONBOARDED = 'poisha_pin_onboarded';
+const KEY_PIN_HASH    = 'poisha_pin_hash';
+const KEY_PIN_SALT    = 'poisha_pin_salt';
+const KEY_PIN_LEGACY  = 'poisha_pin';          // plaintext — only kept for migration
+const KEY_ENABLED     = 'poisha_pin_enabled';
+const KEY_ONBOARDED   = 'poisha_pin_onboarded';
 const KEY_LOCKOUT_UNTIL = 'poisha_lockout_until';
 
+async function hashPin(pin: string, salt: string): Promise<string> {
+  return Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, pin + salt);
+}
+
 class PinService {
-  async getPin(): Promise<string | null> {
-    return SecureStore.getItemAsync(KEY_PIN);
+  async setPin(pin: string): Promise<void> {
+    const salt = Crypto.randomUUID();
+    const hash = await hashPin(pin, salt);
+    await SecureStore.setItemAsync(KEY_PIN_SALT, salt);
+    await SecureStore.setItemAsync(KEY_PIN_HASH, hash);
+    // Remove legacy plaintext value if present
+    await SecureStore.deleteItemAsync(KEY_PIN_LEGACY).catch(() => {});
   }
 
-  async setPin(pin: string): Promise<void> {
-    await SecureStore.setItemAsync(KEY_PIN, pin);
+  async verifyPin(pin: string): Promise<boolean> {
+    const [hash, salt] = await Promise.all([
+      SecureStore.getItemAsync(KEY_PIN_HASH),
+      SecureStore.getItemAsync(KEY_PIN_SALT),
+    ]);
+
+    if (hash && salt) {
+      const candidate = await hashPin(pin, salt);
+      return candidate === hash;
+    }
+
+    // Migration path: existing installs stored plaintext — re-hash on first successful match
+    const legacy = await SecureStore.getItemAsync(KEY_PIN_LEGACY);
+    if (legacy !== null) {
+      if (legacy === pin) {
+        await this.setPin(pin);
+        return true;
+      }
+      return false;
+    }
+
+    return false;
   }
 
   async deletePin(): Promise<void> {
-    await SecureStore.deleteItemAsync(KEY_PIN);
+    await Promise.all([
+      SecureStore.deleteItemAsync(KEY_PIN_HASH).catch(() => {}),
+      SecureStore.deleteItemAsync(KEY_PIN_SALT).catch(() => {}),
+      SecureStore.deleteItemAsync(KEY_PIN_LEGACY).catch(() => {}),
+    ]);
   }
 
   async isLockEnabled(): Promise<boolean> {

@@ -5,7 +5,6 @@ import {
   getEntries,
   migrateFromAsyncStorage,
   saveEntry as dbSaveEntry,
-  seedIfEmpty,
 } from '@/lib/services/entries.service';
 import type { Draft, Entry } from '@/lib/types/entry.type';
 
@@ -34,11 +33,9 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     migrateFromAsyncStorage(db)
       .then(() => {
-        seedIfEmpty(db);
         setEntries(getEntries(db));
       })
       .catch(() => {
-        seedIfEmpty(db);
         setEntries(getEntries(db));
       })
       .finally(() => setLoading(false));

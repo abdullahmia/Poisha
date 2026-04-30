@@ -1,6 +1,9 @@
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { type Palette } from '@/lib/constants/theme';
+import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { Feather } from '@expo/vector-icons';
-import { useRef, useEffect, useMemo, useState } from 'react';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Animated,
   KeyboardAvoidingView,
@@ -13,9 +16,6 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { type Palette } from '@/lib/constants/theme';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { useEntries } from '@/lib/hooks/use-entries.hook';
 
 const fmtFull = (n: number) => `৳${n.toLocaleString('en-IN')}`;
 
@@ -310,7 +310,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
         <View style={styles.sheetHeader}>
           <View>
             <Text style={styles.sheetHeaderSub}>{entry ? 'Edit' : 'New'}</Text>
-            <Text style={styles.sheetTitle}>{entry ? 'adjust entry' : 'an entry'}</Text>
+            <Text style={styles.sheetTitle}>{entry ? 'Adjust entry' : 'Add entry'}</Text>
           </View>
           <Pressable onPress={onClose} style={styles.circleBtn}>
             <Feather name="x" size={16} color={colors.inkSoft} />

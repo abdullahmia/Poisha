@@ -190,6 +190,34 @@ export default function SettingsScreen() {
               : <Text style={chevron}>↓</Text>
             }
           </Pressable>
+
+          <View style={divider} />
+
+          {/* Reset Data */}
+          <Pressable
+            onPress={() => {
+              Alert.alert(
+                'Reset All Data',
+                'This will permanently delete all your entries. This cannot be undone.',
+                [
+                  { text: 'Cancel', style: 'cancel' },
+                  {
+                    text: 'Reset',
+                    style: 'destructive',
+                    onPress: () => importEntries([], true),
+                  },
+                ]
+              );
+            }}
+            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+            accessibilityLabel="Reset all data"
+          >
+            <View>
+              <Text style={[rowLabel, { color: colors.accent }]}>Reset All Data</Text>
+              <Text style={rowSub}>Permanently delete all entries</Text>
+            </View>
+            <Text style={[chevron, { color: colors.accent }]}>›</Text>
+          </Pressable>
         </View>
       </View>
 

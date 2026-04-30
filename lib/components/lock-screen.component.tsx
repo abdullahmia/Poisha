@@ -4,7 +4,7 @@ import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { pinService } from '@/lib/services/pin.service';
 import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { AppState, Pressable, Text, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -66,10 +66,8 @@ function LockoutTimer({ countdown, total }: { countdown: number; total: number }
 
   return (
     <Animated.View entering={FadeIn.duration(400)} style={{ alignItems: 'center', gap: 28 }}>
-      {/* Ring */}
       <Animated.View style={pulseStyle}>
         <Svg width={SIZE} height={SIZE}>
-          {/* Track */}
           <Circle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -78,7 +76,6 @@ function LockoutTimer({ countdown, total }: { countdown: number; total: number }
             strokeWidth={STROKE}
             fill="none"
           />
-          {/* Progress arc */}
           <AnimatedCircle
             cx={SIZE / 2}
             cy={SIZE / 2}
@@ -94,7 +91,6 @@ function LockoutTimer({ countdown, total }: { countdown: number; total: number }
           />
         </Svg>
 
-        {/* Number in center */}
         <Animated.View
           style={[{
             position: 'absolute', top: 0, left: 0,
@@ -111,7 +107,6 @@ function LockoutTimer({ countdown, total }: { countdown: number; total: number }
         </Animated.View>
       </Animated.View>
 
-      {/* Text */}
       <View style={{ alignItems: 'center', gap: 6, paddingHorizontal: 40 }}>
         <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 17, color: colors.ink, letterSpacing: -0.2, textAlign: 'center' }}>
           Too many attempts
@@ -134,8 +129,12 @@ export function LockScreen() {
   const [lockedOut, setLockedOut] = useState(false);
   const [countdown, setCountdown] = useState(0);
   const [lockoutTotal, setLockoutTotal] = useState(LOCKOUT_SECONDS);
+  // Fix 3: prevent concurrent unlock calls
+  const unlockingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const bioPromptFiredRef = useRef(false);
+  // Fix 5: biometric unavailable warning
+  const [bioUnavailable, setBioUnavailable] = useState(false);
 
   useEffect(() => {
     pinService.getLockoutUntil().then(until => {
@@ -151,17 +150,20 @@ export function LockScreen() {
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
-  // Auto-prompt biometric on mount
+  // Fix 6: guard auto-prompt — only fire when app is actually active
   useEffect(() => {
     if (!biometricEnabled || bioPromptFiredRef.current) return;
+    if (AppState.currentState !== 'active') return;
     bioPromptFiredRef.current = true;
     const t = setTimeout(() => {
-      unlockWithBiometric();
+      handleBiometric();
     }, 400);
     return () => clearTimeout(t);
   }, [biometricEnabled]);
 
+  // Fix 2: clear old timer before starting a new one to prevent double-speed countdown
   function beginCountdown(seconds: number) {
+    if (timerRef.current) clearInterval(timerRef.current);
     setLockedOut(true);
     setCountdown(seconds);
     timerRef.current = setInterval(() => {
@@ -185,19 +187,40 @@ export function LockScreen() {
     beginCountdown(LOCKOUT_SECONDS);
   }
 
+  // Fix 3: guard against concurrent calls with unlockingRef
   async function handleComplete(entered: string) {
-    const ok = await unlock(entered);
-    if (!ok) {
-      const next = attempts + 1;
-      setAttempts(next);
-      setShake(true);
-      if (next >= MAX_ATTEMPTS) startLockout();
+    if (unlockingRef.current) return;
+    unlockingRef.current = true;
+    try {
+      const ok = await unlock(entered);
+      if (!ok) {
+        const next = attempts + 1;
+        setAttempts(next);
+        setShake(true);
+        if (next >= MAX_ATTEMPTS) startLockout();
+      }
+    } finally {
+      unlockingRef.current = false;
+    }
+  }
+
+  // Fix 5: show warning when biometric becomes unavailable on device
+  async function handleBiometric() {
+    if (unlockingRef.current) return;
+    unlockingRef.current = true;
+    try {
+      const result = await unlockWithBiometric();
+      if (result.unavailable) {
+        setBioUnavailable(true);
+      }
+    } finally {
+      unlockingRef.current = false;
     }
   }
 
   const icon = biometricEnabled ? biometricIcon(biometricType) : null;
   const label = biometricEnabled ? biometricLabel(biometricType) : '';
-  const { bg, ink, accent } = colors;
+  const { bg, ink, accent, inkSoft, accentSoft } = colors;
 
   return (
     <View style={{ flex: 1, backgroundColor: bg, paddingTop: insets.top + 48, paddingBottom: insets.bottom + 32, alignItems: 'center' }}>
@@ -205,6 +228,15 @@ export function LockScreen() {
         <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 20, color: ink, letterSpacing: -0.3 }}>Poisha</Text>
         <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 26, color: ink, letterSpacing: -0.4 }}>Enter PIN</Text>
       </View>
+
+      {/* Fix 5: biometric unavailable banner */}
+      {bioUnavailable && (
+        <View style={{ backgroundColor: accentSoft, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10, marginBottom: 20, marginHorizontal: 32 }}>
+          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: accent, textAlign: 'center', lineHeight: 18 }}>
+            Biometric unavailable. Check your device settings.
+          </Text>
+        </View>
+      )}
 
       {lockedOut ? (
         <LockoutTimer countdown={countdown} total={lockoutTotal} />
@@ -222,14 +254,19 @@ export function LockScreen() {
             shake={shake}
             onShakeDone={() => { setShake(false); setPin(''); }}
             leftKeyIcon={icon}
-            onLeftKeyPress={unlockWithBiometric}
+            onLeftKeyPress={handleBiometric}
           />
-          {biometricEnabled && (
-            <Pressable onPress={unlockWithBiometric} style={{ marginTop: 28 }}>
+          {biometricEnabled && !bioUnavailable && (
+            <Pressable onPress={handleBiometric} style={{ marginTop: 28 }}>
               <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: accent, textDecorationLine: 'underline' }}>
                 Use {label}
               </Text>
             </Pressable>
+          )}
+          {bioUnavailable && (
+            <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: inkSoft, marginTop: 20 }}>
+              Enter your PIN to unlock
+            </Text>
           )}
         </Animated.View>
       )}

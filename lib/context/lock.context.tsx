@@ -4,6 +4,11 @@ import { biometricService } from '@/lib/services/biometric.service';
 import { pinService } from '@/lib/services/pin.service';
 import type { BiometricType } from '@/lib/types/biometric.type';
 
+export interface BiometricUnlockResult {
+  success: boolean;
+  unavailable?: boolean;
+}
+
 export interface LockCtxValue {
   lockEnabled: boolean;
   isLocked: boolean;
@@ -17,7 +22,7 @@ export interface LockCtxValue {
   biometricEnabled: boolean;
   enableBiometric: () => Promise<void>;
   disableBiometric: () => Promise<void>;
-  unlockWithBiometric: () => Promise<boolean>;
+  unlockWithBiometric: () => Promise<BiometricUnlockResult>;
 }
 
 export const LockCtx = createContext<LockCtxValue | null>(null);
@@ -32,25 +37,31 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
   const [biometricEnabled, setBiometricEnabled] = useState(false);
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
 
+  // Fix 4: wrap bootstrap in try/catch so a SecureStore failure never crashes the app
   useEffect(() => {
     (async () => {
-      const [onboarded, enabled, bioType, bioEnabled] = await Promise.all([
-        pinService.hasOnboarded(),
-        pinService.isLockEnabled(),
-        biometricService.getSupportedType(),
-        biometricService.isEnabled(),
-      ]);
-      setBiometricType(bioType);
-      setBiometricEnabled(bioType !== 'none' && bioEnabled);
-      if (!onboarded) {
-        setPinOnboarded(false);
-        setShowOnboarding(true);
-        setIsLocked(false);
-      } else if (enabled) {
-        setLockEnabled(true);
-        setIsLocked(true);
+      try {
+        const [onboarded, enabled, bioType, bioEnabled] = await Promise.all([
+          pinService.hasOnboarded().catch(() => false),
+          pinService.isLockEnabled().catch(() => false),
+          biometricService.getSupportedType().catch((): BiometricType => 'none'),
+          biometricService.isEnabled().catch(() => false),
+        ]);
+        setBiometricType(bioType);
+        setBiometricEnabled(bioType !== 'none' && bioEnabled);
+        if (!onboarded) {
+          setPinOnboarded(false);
+          setShowOnboarding(true);
+          setIsLocked(false);
+        } else if (enabled) {
+          setLockEnabled(true);
+          setIsLocked(true);
+        }
+      } catch {
+        // Safe fallback: show app unlocked, no lock features active
+      } finally {
+        setReady(true);
       }
-      setReady(true);
     })();
   }, []);
 
@@ -58,11 +69,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
       const prev = appStateRef.current;
       appStateRef.current = next;
-      if (
-        (prev === 'active') &&
-        (next === 'background' || next === 'inactive') &&
-        lockEnabled
-      ) {
+      if (prev === 'active' && (next === 'background' || next === 'inactive') && lockEnabled) {
         setIsLocked(true);
       }
     });
@@ -92,13 +99,11 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
     await pinService.setPin(newPin);
   }, []);
 
+  // Fix 1: uses verifyPin (hashed comparison) instead of plaintext getPin
   const unlock = useCallback(async (pin: string): Promise<boolean> => {
-    const stored = await pinService.getPin();
-    if (stored === pin) {
-      setIsLocked(false);
-      return true;
-    }
-    return false;
+    const ok = await pinService.verifyPin(pin);
+    if (ok) setIsLocked(false);
+    return ok;
   }, []);
 
   const enableBiometric = useCallback(async () => {
@@ -111,13 +116,17 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
     setBiometricEnabled(false);
   }, []);
 
-  const unlockWithBiometric = useCallback(async (): Promise<boolean> => {
+  // Returns unavailable=true so the lock screen can warn the user
+  const unlockWithBiometric = useCallback(async (): Promise<BiometricUnlockResult> => {
     const result = await biometricService.authenticate('Unlock Poisha');
     if (result.success) {
       setIsLocked(false);
-      return true;
+      return { success: true };
     }
-    return false;
+    if (result.error === 'not_enrolled' || result.error === 'not_available') {
+      return { success: false, unavailable: true };
+    }
+    return { success: false };
   }, []);
 
   if (!ready) return null;
