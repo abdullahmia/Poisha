@@ -8,6 +8,7 @@ export interface Palette {
   accent: string;
   accentSoft: string;
   line: string;
+  shadow: string;
 }
 
 export const darkTheme: Palette = {
@@ -20,18 +21,20 @@ export const darkTheme: Palette = {
   accent:     '#ff5c35',
   accentSoft: '#221008',
   line:       '#242428',
+  shadow:     '#000000',
 } as const;
 
 export const lightTheme: Palette = {
-  bg:         '#efe8d8',
-  surface:    '#fbf6ea',
-  surfaceAlt: '#e5dbc4',
-  ink:        '#1d1712',
-  inkSoft:    '#6b5d4a',
-  inkMuted:   '#9c8c72',
-  accent:     '#b8441f',
-  accentSoft: '#e8cfbf',
-  line:       '#d8cdb3',
+  bg:         '#ffffff',   // pure white page
+  surface:    '#f5f3f0',   // warm off-white cards — subtle lift from white
+  surfaceAlt: '#ede9e2',   // warm grey-beige for inputs inside cards
+  ink:        '#1c1512',   // deep warm ink
+  inkSoft:    '#5a4d3c',   // warm medium brown
+  inkMuted:   '#8a7a64',   // warm muted for labels/placeholders
+  accent:     '#c04a22',   // brand red
+  accentSoft: '#fde8de',   // peachy-warm accent background
+  line:       '#e2ddd6',   // soft warm border
+  shadow:     '#2c1f10',   // warm dark brown shadow
 } as const;
 
 // backwards-compatible alias

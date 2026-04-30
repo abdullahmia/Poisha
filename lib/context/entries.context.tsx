@@ -7,6 +7,7 @@ import {
   saveEntry as dbSaveEntry,
 } from '@/lib/services/entries.service';
 import type { Draft, Entry } from '@/lib/types/entry.type';
+import { writeWidgetSnapshot } from '@/lib/utils/widget-snapshot.util';
 
 export interface EntriesCtxValue {
   entries: Entry[];
@@ -46,11 +47,13 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     setEntries(prev =>
       draft.id ? prev.map(e => (e.id === entry.id ? entry : e)) : [...prev, entry]
     );
+    writeWidgetSnapshot(getEntries(db)).catch(() => {});
   }, [db]);
 
   const deleteEntry = useCallback((id: string) => {
     dbDeleteEntry(db, id);
     setEntries(prev => prev.filter(e => e.id !== id));
+    writeWidgetSnapshot(getEntries(db)).catch(() => {});
   }, [db]);
 
   const importEntries = useCallback((imported: Entry[], replace: boolean) => {
@@ -60,7 +63,9 @@ export function EntriesProvider({ children }: { children: React.ReactNode }) {
     } else {
       for (const e of imported) db.upsertEntry(e);
     }
-    setEntries(db.loadEntries());
+    const newEntries = db.loadEntries();
+    setEntries(newEntries);
+    writeWidgetSnapshot(newEntries).catch(() => {});
   }, [db]);
 
   const openAdd = useCallback(() => { setSheetEntry(null); setSheetOpen(true); }, []);

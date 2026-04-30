@@ -107,6 +107,7 @@ function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
   const barStyle = useMemo(() => ({
     backgroundColor: colors.surface,
     borderColor: colors.line,
+    shadowColor: colors.shadow,
   }), [colors]);
 
   const pillBg = useMemo(() => ({ backgroundColor: colors.ink }), [colors]);
@@ -171,9 +172,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 2,
-    shadowColor: '#000000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.45,
+    shadowOpacity: 0.28,
     shadowRadius: 24,
     elevation: 12,
   },
@@ -205,9 +205,9 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.45,
-    shadowRadius: 14,
-    elevation: 8,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    elevation: 6,
   },
 });

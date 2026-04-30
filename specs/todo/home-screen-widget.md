@@ -2,7 +2,7 @@
 
 ## Status
 
-> **Not started**
+> **Implemented** — JS layer complete (snapshot writer, context integration, deep-link handler). Native targets (iOS WidgetKit extension, Android AppWidgetProvider) scaffolded; Xcode target registration and Android Glance dependency must be wired manually before a build.
 
 ---
 

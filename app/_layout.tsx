@@ -7,6 +7,9 @@ import { LockProvider } from '@/lib/context/lock.context';
 import { ThemeProvider } from '@/lib/context/theme.context';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import * as Linking from 'expo-linking';
+import { router } from 'expo-router';
+import { useEffect } from 'react';
 import {
   DMSans_400Regular,
   DMSans_500Medium,
@@ -41,6 +44,13 @@ function AppStatusBar() {
 
 function AppGate() {
   const { isLocked, showOnboarding } = useLock();
+  const url = Linking.useURL();
+
+  useEffect(() => {
+    if (url?.startsWith('tracker://home')) {
+      router.replace('/(tabs)');
+    }
+  }, [url]);
 
   return (
     <>
