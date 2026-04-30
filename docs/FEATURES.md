@@ -9,6 +9,7 @@
 | App Lock with PIN | [app-lock-pin.md](../specs/done/app-lock-pin.md) |
 | Biometric Authentication | [biometric-authentication.md](../specs/done/biometric-authentication.md) |
 | CSV Export & Import | [csv-export-import.md](../specs/done/csv-export-import.md) |
+| Haptic Feedback | [haptic-feedback.md](../specs/done/haptic-feedback.md) |
 | Settings Screen | [settings-screen.md](../specs/done/settings-screen.md) |
 | SQLite Local Database | [sqlite-database.md](../specs/done/sqlite-database.md) |
 
@@ -170,7 +171,7 @@ The suggestions below are ordered roughly by effort (small → large) and groupe
 
 | # | Feature | Spec | Status |
 |---|---------|------|--------|
-| 1 | Haptic feedback on key interactions | [haptic-feedback.md](../specs/todo/haptic-feedback.md) | Not started |
+| 1 | Haptic feedback on key interactions | [haptic-feedback.md](../specs/done/haptic-feedback.md) | Completed |
 | 2 | "Today at a glance" home-screen widget | [home-screen-widget.md](../specs/todo/home-screen-widget.md) | Not started |
 | 3 | Running monthly budget indicator | [monthly-budget-indicator.md](../specs/todo/monthly-budget-indicator.md) | Not started |
 | 4 | Entry search | [entry-search.md](../specs/todo/entry-search.md) | Not started |

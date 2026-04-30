@@ -4,6 +4,7 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { PinSetupSheet } from '@/lib/components/pin-setup-sheet.component';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
@@ -18,6 +19,7 @@ export default function SettingsScreen() {
   const { scheme, colors, toggleScheme } = useTheme();
   const { entries, importEntries } = useEntries();
   const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric } = useLock();
+  const { hapticsEnabled, setHapticsEnabled } = useHaptics();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({ visible: false, mode: 'enable' });
@@ -144,6 +146,21 @@ export default function SettingsScreen() {
             <Switch
               value={scheme === 'dark'}
               onValueChange={toggleScheme}
+              trackColor={{ false: colors.surfaceAlt, true: colors.accent }}
+              thumbColor={colors.surface}
+            />
+          </View>
+
+          <View style={divider} />
+
+          <View style={rowStyle}>
+            <View>
+              <Text style={rowLabel}>Haptic Feedback</Text>
+              <Text style={rowSub}>{hapticsEnabled ? 'On' : 'Off'}</Text>
+            </View>
+            <Switch
+              value={hapticsEnabled}
+              onValueChange={setHapticsEnabled}
               trackColor={{ false: colors.surfaceAlt, true: colors.accent }}
               thumbColor={colors.surface}
             />

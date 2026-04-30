@@ -1,5 +1,6 @@
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import type { BiometricAuthResult, BiometricType } from '@/lib/types/biometric.type';
 
 const KEY_BIOMETRIC_ENABLED = 'poisha_biometric_enabled';
@@ -13,8 +14,15 @@ class BiometricService {
     if (!isEnrolled) return 'none';
 
     const types = await LocalAuthentication.supportedAuthenticationTypesAsync();
-    if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) return 'faceId';
-    if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) return 'fingerprint';
+    if (Platform.OS === 'ios') {
+      // iOS: Face ID takes priority over Touch ID
+      if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) return 'faceId';
+      if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) return 'fingerprint';
+    } else {
+      // Android: fingerprint preferred; facial recognition is unreliable on many devices
+      if (types.includes(LocalAuthentication.AuthenticationType.FINGERPRINT)) return 'fingerprint';
+      if (types.includes(LocalAuthentication.AuthenticationType.FACIAL_RECOGNITION)) return 'faceId';
+    }
     return 'none';
   }
 

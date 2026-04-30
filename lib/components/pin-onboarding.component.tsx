@@ -1,6 +1,9 @@
 import { PinInput } from '@/lib/components/pin-input.component';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import * as Haptics from 'expo-haptics';
+import { biometricService } from '@/lib/services/biometric.service';
 import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { useState } from 'react';
@@ -12,6 +15,7 @@ type Step = 'welcome' | 'create' | 'confirm' | 'biometric';
 export function PinOnboarding() {
   const { colors } = useTheme();
   const { enableLock, biometricType, enableBiometric } = useLock();
+  const { notification } = useHaptics();
   const insets = useSafeAreaInsets();
   const [step, setStep] = useState<Step>('welcome');
   const [firstPin, setFirstPin] = useState('');
@@ -27,6 +31,7 @@ export function PinOnboarding() {
 
   async function handleConfirmComplete(entered: string) {
     if (entered !== firstPin) {
+      notification(Haptics.NotificationFeedbackType.Error);
       setShake(true);
       setError("PINs don't match");
       return;
@@ -39,6 +44,8 @@ export function PinOnboarding() {
   }
 
   async function handleEnableBiometric() {
+    const result = await biometricService.authenticate(`Enable ${biometricLabel(biometricType)}`);
+    if (!result.success) return; // user cancelled or failed — stay on biometric step
     await enableBiometric();
     await enableLock(firstPin);
   }

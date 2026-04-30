@@ -8,6 +8,11 @@ import { ThemeProvider } from '@/lib/context/theme.context';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import {
+  DMSans_400Regular,
+  DMSans_500Medium,
+  DMSans_600SemiBold,
+} from '@expo-google-fonts/dm-sans';
+import {
   Inter_400Regular,
   Inter_500Medium,
   Inter_600SemiBold,
@@ -23,7 +28,7 @@ import {
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View } from 'react-native';
+import { Modal, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export const unstable_settings = { anchor: '(tabs)' };
@@ -36,21 +41,32 @@ function AppStatusBar() {
 function AppGate() {
   const { isLocked, showOnboarding } = useLock();
 
-  if (showOnboarding) return <PinOnboarding />;
-  if (isLocked) return <LockScreen />;
-
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" />
       </Stack>
       <AddEntrySheet />
+      {/* Modal renders in a separate native layer — never interacts with the
+          navigation tree, so Expo Router's linking is set up exactly once. */}
+      <Modal
+        visible={isLocked || showOnboarding}
+        transparent={false}
+        animationType="none"
+        onRequestClose={() => {}}
+        statusBarTranslucent
+      >
+        {showOnboarding ? <PinOnboarding /> : <LockScreen />}
+      </Modal>
     </>
   );
 }
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
+    DMSans_400Regular,
+    DMSans_500Medium,
+    DMSans_600SemiBold,
     SpaceGrotesk_300Light,
     SpaceGrotesk_400Regular,
     SpaceGrotesk_500Medium,

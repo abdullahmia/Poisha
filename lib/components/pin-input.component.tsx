@@ -1,5 +1,6 @@
 import { Delete02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
@@ -24,6 +25,7 @@ const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
 
 export function PinInput({ value, onChange, onComplete, shake, onShakeDone, leftKeyIcon, onLeftKeyPress }: PinInputProps) {
   const { colors } = useTheme();
+  const { impact } = useHaptics();
   const shakeX = useSharedValue(0);
 
   const dotsStyle = useAnimatedStyle(() => ({
@@ -48,10 +50,12 @@ export function PinInput({ value, onChange, onComplete, shake, onShakeDone, left
 
   function press(key: string) {
     if (key === '⌫') {
+      impact();
       onChange(value.slice(0, -1));
       return;
     }
     if (key === '' || value.length >= 4) return;
+    impact();
     const next = value + key;
     onChange(next);
     if (next.length === 4) onComplete(next);

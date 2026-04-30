@@ -11,8 +11,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { type Palette } from '@/lib/constants/theme';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
+import * as Haptics from 'expo-haptics';
 
 const TABS = [
   { name: 'index', label: 'Home', icon: Home01Icon },
@@ -56,6 +58,7 @@ function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   const { openAdd } = useEntries();
   const { colors } = useTheme();
+  const { impact, selection } = useHaptics();
   const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
 
   const pillX = useSharedValue(0);
@@ -79,6 +82,7 @@ function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
   };
 
   const handleTabPress = (i: number, route: (typeof state.routes)[number]) => {
+    selection();
     const layout = tabLayouts[i];
     if (layout) {
       pillX.value = withSpring(layout.x, { damping: 24, stiffness: 300, mass: 0.8 });
@@ -130,7 +134,7 @@ function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
             />
           );
         })}
-        <Pressable onPress={openAdd} style={[styles.addBtn, addBtnStyle]} accessibilityLabel="Add entry">
+        <Pressable onPress={() => { impact(Haptics.ImpactFeedbackStyle.Medium); openAdd(); }} style={[styles.addBtn, addBtnStyle]} accessibilityLabel="Add entry">
           <View pointerEvents="none">
             <HugeiconsIcon icon={Add01Icon} size={20} color={colors.bg} strokeWidth={2.5} />
           </View>

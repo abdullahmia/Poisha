@@ -1,7 +1,9 @@
 import { type Palette } from '@/lib/constants/theme';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { Feather } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
@@ -266,6 +268,7 @@ function createStyles(c: Palette) {
 function SheetContent({ onClose }: { onClose: () => void }) {
   const { sheetEntry, saveEntry, deleteEntry, closeSheet } = useEntries();
   const { colors } = useTheme();
+  const { notification } = useHaptics();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const entry = sheetEntry;
 
@@ -294,11 +297,13 @@ function SheetContent({ onClose }: { onClose: () => void }) {
     const cleaned = amounts.map(a => parseFloat(a)).filter(n => !isNaN(n) && n > 0);
     if (cleaned.length === 0) return;
     saveEntry({ id: entry?.id, date: dateISO, amounts: cleaned, note: note.trim() });
+    notification(Haptics.NotificationFeedbackType.Success);
     closeSheet();
   };
 
   const handleDelete = () => {
     if (entry) deleteEntry(entry.id);
+    notification(Haptics.NotificationFeedbackType.Warning);
     closeSheet();
   };
 

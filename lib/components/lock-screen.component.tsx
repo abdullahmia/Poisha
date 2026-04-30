@@ -1,10 +1,12 @@
 import { PinInput } from '@/lib/components/pin-input.component';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { pinService } from '@/lib/services/pin.service';
 import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
+import * as Haptics from 'expo-haptics';
 import { useEffect, useRef, useState } from 'react';
-import { AppState, Pressable, Text, View } from 'react-native';
+import { AppState, Text, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
@@ -122,6 +124,7 @@ function LockoutTimer({ countdown, total }: { countdown: number; total: number }
 export function LockScreen() {
   const { colors } = useTheme();
   const { unlock, biometricType, biometricEnabled, unlockWithBiometric } = useLock();
+  const { notification } = useHaptics();
   const insets = useSafeAreaInsets();
   const [pin, setPin] = useState('');
   const [shake, setShake] = useState(false);
@@ -196,6 +199,7 @@ export function LockScreen() {
       if (!ok) {
         const next = attempts + 1;
         setAttempts(next);
+        notification(Haptics.NotificationFeedbackType.Error);
         setShake(true);
         if (next >= MAX_ATTEMPTS) startLockout();
       }
@@ -256,13 +260,13 @@ export function LockScreen() {
             leftKeyIcon={icon}
             onLeftKeyPress={handleBiometric}
           />
-          {biometricEnabled && !bioUnavailable && (
+          {/* {biometricEnabled && !bioUnavailable && (
             <Pressable onPress={handleBiometric} style={{ marginTop: 28 }}>
               <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: accent, textDecorationLine: 'underline' }}>
                 Use {label}
               </Text>
             </Pressable>
-          )}
+          )} */}
           {bioUnavailable && (
             <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: inkSoft, marginTop: 20 }}>
               Enter your PIN to unlock

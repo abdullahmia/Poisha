@@ -3,8 +3,10 @@ import { Modal, Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { PinInput } from '@/lib/components/pin-input.component';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import * as Haptics from 'expo-haptics';
 
 type Mode = 'enable' | 'change' | 'disable';
 type Step = 'verify' | 'create' | 'confirm';
@@ -19,6 +21,7 @@ interface PinSetupSheetProps {
 export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupSheetProps) {
   const { colors } = useTheme();
   const { enableLock, changePin, unlock, disableLock } = useLock();
+  const { notification } = useHaptics();
   const insets = useSafeAreaInsets();
 
   const initialStep: Step = (mode === 'change' || mode === 'disable') ? 'verify' : 'create';
@@ -45,7 +48,7 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
 
   async function handleVerify(entered: string) {
     const ok = await unlock(entered);
-    if (!ok) { setShake(true); setError('Wrong PIN'); return; }
+    if (!ok) { notification(Haptics.NotificationFeedbackType.Error); setShake(true); setError('Wrong PIN'); return; }
     if (mode === 'disable') {
       await disableLock();
       onSuccess();
@@ -63,6 +66,7 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
 
   async function handleConfirm(entered: string) {
     if (entered !== firstPin) {
+      notification(Haptics.NotificationFeedbackType.Error);
       setShake(true);
       setError("PINs don't match");
       return;
