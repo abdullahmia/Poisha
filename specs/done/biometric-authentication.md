@@ -1,5 +1,11 @@
 # Feature: Biometric Authentication
 
+## Status
+
+> **Completed**
+
+---
+
 ## Overview
 
 Layer biometric unlock on top of the existing PIN lock (spec: `app-lock-pin.md`). PIN remains mandatory — biometrics are **optional and supplemental**. After the PIN onboarding wizard completes, the user is offered a prompt to enable biometrics. On the lock screen, if biometrics are enabled, authentication triggers automatically on arrival; the user can always fall back to PIN.

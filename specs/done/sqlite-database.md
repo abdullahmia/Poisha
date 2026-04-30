@@ -1,5 +1,11 @@
 # Feature: SQLite Local Database
 
+## Status
+
+> **Completed**
+
+---
+
 ## Overview
 
 Replace the `AsyncStorage` JSON-blob approach with a proper **SQLite** database using `expo-sqlite`. Each `Entry` becomes a row with its `amounts` array stored as a JSON string. The existing `EntriesContext` API surface stays identical so no screen code needs to change.

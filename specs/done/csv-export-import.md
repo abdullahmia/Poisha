@@ -1,5 +1,11 @@
 # Feature: CSV Export & Import
 
+## Status
+
+> **Completed**
+
+---
+
 ## Overview
 
 Let users **export** all journal entries to a CSV file (shareable via the iOS/Android share sheet) and **import** entries from a previously exported CSV. Both actions live in the **Settings** screen under a new "Data" section.

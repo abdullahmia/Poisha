@@ -1,5 +1,11 @@
 # Feature: App Lock with PIN
 
+## Status
+
+> **Completed**
+
+---
+
 ## Overview
 
 Users can protect the app with a 4-digit PIN. On the very first launch, an **onboarding flow** walks the user through setting a PIN before they see any data. On every subsequent launch (or when returning from background), a **lock screen** gate requires the correct PIN. The feature can be toggled off or the PIN changed from the Settings screen.

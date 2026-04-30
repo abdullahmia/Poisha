@@ -1,5 +1,11 @@
 # Feature: Settings Screen
 
+## Status
+
+> **Completed**
+
+---
+
 ## Overview
 
 Add a **Settings** tab to the bottom navigation bar. The settings screen exposes app-level preferences, starting with an Appearance section that lets the user toggle between Light and Dark themes. The chosen theme is persisted and applied globally across the app.
