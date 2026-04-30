@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSharedValue } from 'react-native-reanimated';
 import { SwipeableEntryCard } from '@/lib/components/swipeable-entry-card.component';
 import { type Palette } from '@/lib/constants/theme';
+import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 
@@ -18,12 +19,6 @@ const PERIODS: { key: Period; label: string }[] = [
   { key: 'all', label: 'All' },
 ];
 
-const SORTS: { key: SortKey; label: string }[] = [
-  { key: 'date-desc', label: 'Newest' },
-  { key: 'date-asc', label: 'Oldest' },
-  { key: 'amount-desc', label: 'Highest ৳' },
-  { key: 'amount-asc', label: 'Lowest ৳' },
-];
 
 function toISO(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -89,13 +84,6 @@ function getPeriodRange(period: Period, offset: number): PeriodRange {
     sublabel: String(year),
   };
 }
-
-const fmtFull = (n: number) => `৳${n.toLocaleString('en-IN')}`;
-const fmt = (n: number) => {
-  if (n >= 100000) return `৳${(n / 1000).toFixed(0)}k`;
-  if (n >= 10000) return `৳${(n / 1000).toFixed(1)}k`;
-  return `৳${n.toLocaleString('en-IN')}`;
-};
 
 function formatDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -394,12 +382,20 @@ export default function ListScreen() {
   const { entries, openEdit } = useEntries();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { locale, fmt, fmtFull } = useLocale();
   const [period, setPeriod] = useState<Period>('month');
   const [offset, setOffset] = useState(0);
   const [sort, setSort] = useState<SortKey>('date-desc');
   const openCardId = useSharedValue<string | null>(null);
 
   const styles = useMemo(() => createStyles(colors), [colors]);
+
+  const SORTS = useMemo((): { key: SortKey; label: string }[] => [
+    { key: 'date-desc', label: 'Newest' },
+    { key: 'date-asc', label: 'Oldest' },
+    { key: 'amount-desc', label: `Highest ${locale.symbol}` },
+    { key: 'amount-asc', label: `Lowest ${locale.symbol}` },
+  ], [locale.symbol]);
 
   const handlePeriodChange = (p: Period) => { setPeriod(p); setOffset(0); };
 
@@ -507,7 +503,7 @@ export default function ListScreen() {
           <View style={[styles.statCard, styles.statCardAccent]}>
             <Text style={styles.statLabelAccent}>Total Spent</Text>
             <Text style={styles.statValueAccent} numberOfLines={1} adjustsFontSizeToFit>
-              {stats.total > 0 ? fmt(stats.total) : '৳0'}
+              {stats.total > 0 ? fmt(stats.total) : fmtFull(0)}
             </Text>
             <Text style={styles.statMeta}>
               {stats.count} {stats.count === 1 ? 'entry' : 'entries'}

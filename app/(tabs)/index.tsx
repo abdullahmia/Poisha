@@ -1,20 +1,62 @@
 import { BarChart } from '@/lib/components/bar-chart.component';
 import { EntryCard } from '@/lib/components/entry-card.component';
 import { type Palette } from '@/lib/constants/theme';
+import { useBudget } from '@/lib/hooks/use-budget.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const fmt = (n: number) => {
-  if (n >= 100000) return `৳${(n / 1000).toFixed(0)}k`;
-  if (n >= 10000) return `৳${(n / 1000).toFixed(1)}k`;
-  return `৳${n.toLocaleString('en-IN')}`;
-};
+interface BudgetBarProps {
+  spent: number;
+  budget: number;
+  colors: Palette;
+}
 
-const fmtFull = (n: number) => `৳${n.toLocaleString('en-IN')}`;
+function BudgetBar({ spent, budget, colors }: BudgetBarProps) {
+  const { fmtFull } = useLocale();
+  const percent = budget > 0 ? (spent / budget) * 100 : 0;
+  const exceeded = percent > 100;
+  const displayPercent = Math.round(percent);
+  const [trackWidth, setTrackWidth] = useState(0);
+  const fillSv = useSharedValue(0);
+
+  useEffect(() => {
+    if (trackWidth > 0) {
+      fillSv.value = withTiming(
+        (Math.min(percent, 100) / 100) * trackWidth,
+        { duration: 400, easing: Easing.out(Easing.quad) },
+      );
+    }
+  }, [percent, trackWidth]);
+
+  const fillStyle = useAnimatedStyle(() => ({ width: fillSv.value }));
+  const fillColor = exceeded ? '#e84040' : colors.accent;
+  const labelColor = exceeded ? '#e84040' : colors.inkMuted;
+
+  return (
+    <View style={{ paddingHorizontal: 24, paddingTop: 4, paddingBottom: 20 }}>
+      <View
+        style={{ height: 6, backgroundColor: colors.line, borderRadius: 3, overflow: 'hidden' }}
+        onLayout={e => setTrackWidth(e.nativeEvent.layout.width)}
+      >
+        <Animated.View style={[{ height: 6, borderRadius: 3, backgroundColor: fillColor }, fillStyle]} />
+      </View>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: 6 }}>
+        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 11, color: labelColor }}>
+          {fmtFull(spent)} spent
+        </Text>
+        <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 11, color: labelColor }}>
+          {displayPercent}% of {fmtFull(budget)}
+        </Text>
+      </View>
+    </View>
+  );
+}
 
 function createStyles(c: Palette) {
   return StyleSheet.create({
@@ -240,7 +282,9 @@ export default function HomeScreen() {
   const { entries, loading, openEdit } = useEntries();
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
+  const { locale, fmt, fmtFull } = useLocale();
   const [monthOffset, setMonthOffset] = useState(0);
+  const { budget, getProgress } = useBudget();
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -249,6 +293,7 @@ export default function HomeScreen() {
   const sv2 = useSharedValue(0);
   const sv3 = useSharedValue(0);
   const sv4 = useSharedValue(0);
+  const sv5 = useSharedValue(0);
 
   useEffect(() => {
     if (!loading) {
@@ -258,14 +303,16 @@ export default function HomeScreen() {
       sv2.value = withDelay(140, withTiming(1, config));
       sv3.value = withDelay(210, withTiming(1, config));
       sv4.value = withDelay(280, withTiming(1, config));
+      sv5.value = withDelay(210, withTiming(1, config));
     }
   }, [loading]);
 
-  const headerStyle  = useAnimatedStyle(() => ({ opacity: sv0.value, transform: [{ translateY: (1 - sv0.value) * 12 }] }));
-  const monthStyle   = useAnimatedStyle(() => ({ opacity: sv1.value, transform: [{ translateY: (1 - sv1.value) * 18 }] }));
-  const heroStyle    = useAnimatedStyle(() => ({ opacity: sv2.value, transform: [{ translateY: (1 - sv2.value) * 18 }] }));
-  const chartStyle   = useAnimatedStyle(() => ({ opacity: sv3.value, transform: [{ translateY: (1 - sv3.value) * 18 }] }));
-  const recentStyle  = useAnimatedStyle(() => ({ opacity: sv4.value, transform: [{ translateY: (1 - sv4.value) * 18 }] }));
+  const headerStyle    = useAnimatedStyle(() => ({ opacity: sv0.value, transform: [{ translateY: (1 - sv0.value) * 12 }] }));
+  const monthStyle     = useAnimatedStyle(() => ({ opacity: sv1.value, transform: [{ translateY: (1 - sv1.value) * 18 }] }));
+  const heroStyle      = useAnimatedStyle(() => ({ opacity: sv2.value, transform: [{ translateY: (1 - sv2.value) * 18 }] }));
+  const chartStyle     = useAnimatedStyle(() => ({ opacity: sv3.value, transform: [{ translateY: (1 - sv3.value) * 18 }] }));
+  const recentStyle    = useAnimatedStyle(() => ({ opacity: sv4.value, transform: [{ translateY: (1 - sv4.value) * 18 }] }));
+  const budgetBarStyle = useAnimatedStyle(() => ({ opacity: sv5.value, transform: [{ translateY: (1 - sv5.value) * 18 }] }));
 
   const { monthLabel, monthKey, daysInMonth } = useMemo(() => {
     const now = new Date();
@@ -308,6 +355,21 @@ export default function HomeScreen() {
   const uniqueDays = new Set(monthEntries.map(e => e.date)).size;
   const avgDay = count > 0 ? total / uniqueDays : 0;
 
+  const progress = getProgress(total);
+
+  useEffect(() => {
+    if (!progress.exceeded || budget === null) return;
+    AsyncStorage.getItem('poisha_budget_exceeded_month').then(stored => {
+      if (stored === monthKey) return;
+      Alert.alert(
+        'Budget reached',
+        `You've spent ${fmtFull(total)} this month, exceeding your ${fmtFull(budget)} budget.`,
+        [{ text: 'OK' }],
+      );
+      AsyncStorage.setItem('poisha_budget_exceeded_month', monthKey);
+    });
+  }, [progress.exceeded, monthKey, total, budget]);
+
   const recent = useMemo(
     () => [...entries].sort((a, b) => b.date.localeCompare(a.date) || b.id.localeCompare(a.id)).slice(0, 4),
     [entries],
@@ -334,7 +396,7 @@ export default function HomeScreen() {
           <Text style={styles.brandTagline}>a quiet money journal</Text>
         </View>
         <View style={styles.brandBadge}>
-          <Text style={styles.brandBadgeText}>৳</Text>
+          <Text style={styles.brandBadgeText}>{locale.symbol}</Text>
         </View>
       </Animated.View>
 
@@ -381,6 +443,13 @@ export default function HomeScreen() {
           </Text>
         </View>
       </Animated.View>
+
+      {/* Budget bar */}
+      {budget !== null && (
+        <Animated.View style={budgetBarStyle}>
+          <BudgetBar spent={total} budget={budget} colors={colors} />
+        </Animated.View>
+      )}
 
       {/* Chart */}
       <Animated.View style={[styles.chartCard, chartStyle]}>

@@ -1,16 +1,9 @@
 import { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Palette } from '@/lib/constants/theme';
+import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import type { Entry } from '@/lib/types/entry.type';
-
-const fmt = (n: number) => {
-  if (n >= 100000) return `৳${(n / 1000).toFixed(0)}k`;
-  if (n >= 10000) return `৳${(n / 1000).toFixed(1)}k`;
-  return `৳${n.toLocaleString('en-IN')}`;
-};
-
-const fmtFull = (n: number) => `৳${n.toLocaleString('en-IN')}`;
 
 function parseDate(iso: string) {
   const [y, m, d] = iso.split('-').map(Number);
@@ -132,6 +125,7 @@ function createStyles(c: Palette) {
 
 export function EntryCard({ entry, onClick }: EntryCardProps) {
   const { colors } = useTheme();
+  const { fmt, fmtFull } = useLocale();
   const styles = useMemo(() => createStyles(colors), [colors]);
 
   const total = entry.amounts.reduce((a, b) => a + b, 0);

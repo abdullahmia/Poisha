@@ -1,9 +1,12 @@
-import { Alert, ActivityIndicator, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { Alert, Animated, ActivityIndicator, Modal, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
 import { PinSetupSheet } from '@/lib/components/pin-setup-sheet.component';
+import { useBudget } from '@/lib/hooks/use-budget.hook';
+import { useLocale } from '@/lib/hooks/use-locale.hook';
+import { DEFAULT_LOCALE } from '@/lib/utils/format.util';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
@@ -12,17 +15,81 @@ import { biometricService } from '@/lib/services/biometric.service';
 import { biometricLabel, biometricIcon } from '@/lib/utils/biometric.utils';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { entriesToCsv, csvToEntries } from '@/lib/utils/csv.util';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { scheme, colors, toggleScheme } = useTheme();
   const { entries, importEntries } = useEntries();
+  const { locale, setLocale, fmtFull } = useLocale();
   const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric } = useLock();
   const { hapticsEnabled, setHapticsEnabled } = useHaptics();
+  const { budget, setBudget } = useBudget();
   const [exporting, setExporting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({ visible: false, mode: 'enable' });
+  const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
+  const [budgetInput, setBudgetInput] = useState('');
+  const budgetSheetY = useRef(new Animated.Value(600)).current;
+  const [symbolSheetOpen, setSymbolSheetOpen] = useState(false);
+  const [symbolInput, setSymbolInput] = useState('');
+  const symbolSheetY = useRef(new Animated.Value(600)).current;
+
+  function openBudgetSheet() {
+    setBudgetInput(budget !== null ? String(budget) : '');
+    setBudgetSheetOpen(true);
+    Animated.spring(budgetSheetY, { toValue: 0, damping: 28, stiffness: 200, useNativeDriver: true }).start();
+  }
+
+  function closeBudgetSheet() {
+    Animated.timing(budgetSheetY, { toValue: 600, duration: 200, useNativeDriver: true }).start(() => {
+      setBudgetSheetOpen(false);
+    });
+  }
+
+  async function saveBudget() {
+    const parsed = parseFloat(budgetInput);
+    if (!budgetInput.trim() || isNaN(parsed) || parsed <= 0) {
+      Alert.alert('Invalid amount', 'Please enter a positive number.');
+      return;
+    }
+    await setBudget(parsed);
+    closeBudgetSheet();
+  }
+
+  async function removeBudget() {
+    await setBudget(null);
+    closeBudgetSheet();
+  }
+
+  function openSymbolSheet() {
+    setSymbolInput(locale.symbol);
+    setSymbolSheetOpen(true);
+    Animated.spring(symbolSheetY, { toValue: 0, damping: 28, stiffness: 200, useNativeDriver: true }).start();
+  }
+
+  function closeSymbolSheet() {
+    Animated.timing(symbolSheetY, { toValue: 600, duration: 200, useNativeDriver: true }).start(() => {
+      setSymbolSheetOpen(false);
+    });
+  }
+
+  function handleCurrencySymbolPress() {
+    if (Platform.OS === 'ios') {
+      Alert.prompt(
+        'Currency Symbol',
+        undefined,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Save', onPress: (text: string | undefined) => setLocale({ symbol: text?.trim() || DEFAULT_LOCALE.symbol }) },
+        ],
+        'plain-text',
+        locale.symbol,
+      );
+    } else {
+      openSymbolSheet();
+    }
+  }
 
   async function handleExport() {
     setExporting(true);
@@ -168,6 +235,74 @@ export default function SettingsScreen() {
         </View>
       </View>
 
+      {/* Region section */}
+      <View style={{ marginTop: 28 }}>
+        <Text style={sectionLabel}>Region</Text>
+        <View style={sectionCard}>
+          {/* Currency Symbol */}
+          <Pressable
+            onPress={handleCurrencySymbolPress}
+            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+            accessibilityLabel="Currency Symbol"
+          >
+            <Text style={rowLabel}>Currency Symbol</Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkSoft }}>
+              {locale.symbol}
+            </Text>
+          </Pressable>
+
+          <View style={divider} />
+
+          {/* Number Format */}
+          <View style={rowStyle}>
+            <View style={{ flex: 1 }}>
+              <Text style={rowLabel}>Number Format</Text>
+              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+                <Pressable
+                  onPress={() => setLocale({ decimalComma: false })}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: !locale.decimalComma ? colors.ink : colors.line,
+                    backgroundColor: !locale.decimalComma ? colors.ink : colors.surface,
+                  }}
+                >
+                  <Text style={{
+                    fontFamily: 'Inter_500Medium',
+                    fontSize: 13,
+                    color: !locale.decimalComma ? colors.bg : colors.inkSoft,
+                  }}>1,234.56</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setLocale({ decimalComma: true })}
+                  style={{
+                    paddingHorizontal: 14,
+                    paddingVertical: 8,
+                    borderRadius: 8,
+                    borderWidth: 1,
+                    borderColor: locale.decimalComma ? colors.ink : colors.line,
+                    backgroundColor: locale.decimalComma ? colors.ink : colors.surface,
+                  }}
+                >
+                  <Text style={{
+                    fontFamily: 'Inter_500Medium',
+                    fontSize: 13,
+                    color: locale.decimalComma ? colors.bg : colors.inkSoft,
+                  }}>1.234,56</Text>
+                </Pressable>
+              </View>
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.inkMuted, marginTop: 10 }}>
+                {'Preview: ' + (locale.decimalComma
+                  ? `${locale.symbol}1.234,56`
+                  : `${locale.symbol}1,234.56`)}
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+
       {/* Data section */}
       <View style={{ marginTop: 28 }}>
         <Text style={sectionLabel}>Data</Text>
@@ -234,6 +369,23 @@ export default function SettingsScreen() {
               <Text style={rowSub}>Permanently delete all entries</Text>
             </View>
             <Text style={[chevron, { color: colors.accent }]}>›</Text>
+          </Pressable>
+        </View>
+      </View>
+
+      {/* Budget section */}
+      <View style={{ marginTop: 28 }}>
+        <Text style={sectionLabel}>Budget</Text>
+        <View style={sectionCard}>
+          <Pressable
+            onPress={openBudgetSheet}
+            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+            accessibilityLabel="Monthly Budget"
+          >
+            <Text style={rowLabel}>Monthly Budget</Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: budget !== null ? colors.ink : colors.inkMuted }}>
+              {budget !== null ? fmtFull(budget) : 'Not set'}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -338,6 +490,150 @@ export default function SettingsScreen() {
           )}
         </View>
       </View>
+
+      <Modal
+        visible={budgetSheetOpen}
+        transparent
+        animationType="none"
+        onRequestClose={closeBudgetSheet}
+      >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeBudgetSheet} />
+          <Animated.View
+            style={{
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              borderTopWidth: 1,
+              borderTopColor: colors.line,
+              padding: 24,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
+              transform: [{ translateY: budgetSheetY }],
+            }}
+          >
+            <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 6 }}>
+              Monthly Budget
+            </Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.inkMuted, marginBottom: 20 }}>
+              Leave empty to disable the budget indicator.
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: colors.bg,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: colors.line,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontFamily: 'Inter_400Regular',
+                fontSize: 16,
+                color: colors.ink,
+                marginBottom: 16,
+              }}
+              keyboardType="numeric"
+              value={budgetInput}
+              onChangeText={setBudgetInput}
+              placeholder="e.g. 5000"
+              placeholderTextColor={colors.inkMuted}
+              autoFocus
+            />
+            <Pressable
+              onPress={saveBudget}
+              style={({ pressed }) => [{
+                backgroundColor: colors.accent,
+                borderRadius: 10,
+                paddingVertical: 14,
+                alignItems: 'center' as const,
+                marginBottom: 10,
+              }, pressed && { opacity: 0.8 }]}
+            >
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#fff' }}>Save</Text>
+            </Pressable>
+            {budget !== null && (
+              <Pressable
+                onPress={removeBudget}
+                style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const, marginBottom: 4 }, pressed && { opacity: 0.6 }]}
+              >
+                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e84040' }}>Remove Budget</Text>
+              </Pressable>
+            )}
+            <Pressable
+              onPress={closeBudgetSheet}
+              style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={symbolSheetOpen}
+        transparent
+        animationType="none"
+        onRequestClose={closeSymbolSheet}
+      >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeSymbolSheet} />
+          <Animated.View
+            style={{
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              borderTopWidth: 1,
+              borderTopColor: colors.line,
+              padding: 24,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
+              transform: [{ translateY: symbolSheetY }],
+            }}
+          >
+            <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 20 }}>
+              Currency Symbol
+            </Text>
+            <TextInput
+              style={{
+                backgroundColor: colors.bg,
+                borderRadius: 10,
+                borderWidth: 1,
+                borderColor: colors.line,
+                paddingHorizontal: 16,
+                paddingVertical: 12,
+                fontFamily: 'Inter_400Regular',
+                fontSize: 16,
+                color: colors.ink,
+                marginBottom: 16,
+              }}
+              value={symbolInput}
+              onChangeText={setSymbolInput}
+              placeholder={DEFAULT_LOCALE.symbol}
+              placeholderTextColor={colors.inkMuted}
+              maxLength={3}
+              autoFocus
+            />
+            <Pressable
+              onPress={async () => {
+                await setLocale({ symbol: symbolInput.trim() || DEFAULT_LOCALE.symbol });
+                closeSymbolSheet();
+              }}
+              style={({ pressed }) => [{
+                backgroundColor: colors.accent,
+                borderRadius: 10,
+                paddingVertical: 14,
+                alignItems: 'center' as const,
+                marginBottom: 10,
+              }, pressed && { opacity: 0.8 }]}
+            >
+              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#fff' }}>Save</Text>
+            </Pressable>
+            <Pressable
+              onPress={closeSymbolSheet}
+              style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </Modal>
 
       <PinSetupSheet
         visible={setupSheet.visible}

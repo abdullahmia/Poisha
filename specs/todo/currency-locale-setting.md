@@ -2,7 +2,7 @@
 
 ## Status
 
-> **Not started**
+> **Done** — implemented 2026-05-01
 
 ---
 

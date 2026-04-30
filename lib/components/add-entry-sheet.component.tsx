@@ -1,6 +1,7 @@
 import { type Palette } from '@/lib/constants/theme';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
@@ -19,9 +20,10 @@ import {
   View,
 } from 'react-native';
 
-const fmtFull = (n: number) => `৳${n.toLocaleString('en-IN')}`;
-
-const todayISO = () => new Date().toISOString().split('T')[0];
+const todayISO = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
 
 function isoToDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
@@ -268,6 +270,7 @@ function createStyles(c: Palette) {
 function SheetContent({ onClose }: { onClose: () => void }) {
   const { sheetEntry, saveEntry, deleteEntry, closeSheet } = useEntries();
   const { colors } = useTheme();
+  const { locale, fmtFull } = useLocale();
   const { notification } = useHaptics();
   const styles = useMemo(() => createStyles(colors), [colors]);
   const entry = sheetEntry;
@@ -342,7 +345,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
           {amounts.map((amt, i) => (
             <View key={i} style={styles.amountRow}>
               <View style={[styles.inputBox, styles.amountInputBox]}>
-                <Text style={styles.currencySymbol}>৳</Text>
+                <Text style={styles.currencySymbol}>{locale.symbol}</Text>
                 <TextInput
                   value={amt}
                   onChangeText={v => updateAmount(i, v)}
