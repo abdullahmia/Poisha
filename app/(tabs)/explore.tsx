@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { EntryCard } from '@/lib/components/entry-card.component';
+import { useSharedValue } from 'react-native-reanimated';
+import { SwipeableEntryCard } from '@/lib/components/swipeable-entry-card.component';
 import { type Palette } from '@/lib/constants/theme';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
@@ -396,6 +397,7 @@ export default function ListScreen() {
   const [period, setPeriod] = useState<Period>('month');
   const [offset, setOffset] = useState(0);
   const [sort, setSort] = useState<SortKey>('date-desc');
+  const openCardId = useSharedValue<string | null>(null);
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 
@@ -593,14 +595,14 @@ export default function ListScreen() {
                   <Text style={styles.groupTotal}>{fmtFull(dayTotal)}</Text>
                 </View>
                 {items.map(e => (
-                  <EntryCard key={e.id} entry={e} onClick={() => openEdit(e)} />
+                  <SwipeableEntryCard key={e.id} entry={e} onEdit={openEdit} openCardId={openCardId} />
                 ))}
               </View>
             );
           })
         ) : (
           filtered.map(e => (
-            <EntryCard key={e.id} entry={e} onClick={() => openEdit(e)} />
+            <SwipeableEntryCard key={e.id} entry={e} onEdit={openEdit} openCardId={openCardId} />
           ))
         )}
       </View>

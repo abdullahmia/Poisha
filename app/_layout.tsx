@@ -29,6 +29,7 @@ import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Modal, View } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export const unstable_settings = { anchor: '(tabs)' };
@@ -78,20 +79,22 @@ export default function RootLayout() {
     Inter_700Bold,
   });
 
-  if (!fontsLoaded) {
-    return <View style={{ flex: 1, backgroundColor: darkTheme.bg }} />;
-  }
-
   return (
-    <SafeAreaProvider>
-      <ThemeProvider>
-        <LockProvider>
-          <EntriesProvider>
-            <AppGate />
-            <AppStatusBar />
-          </EntriesProvider>
-        </LockProvider>
-      </ThemeProvider>
-    </SafeAreaProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {fontsLoaded ? (
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <LockProvider>
+              <EntriesProvider>
+                <AppGate />
+                <AppStatusBar />
+              </EntriesProvider>
+            </LockProvider>
+          </ThemeProvider>
+        </SafeAreaProvider>
+      ) : (
+        <View style={{ flex: 1, backgroundColor: darkTheme.bg }} />
+      )}
+    </GestureHandlerRootView>
   );
 }

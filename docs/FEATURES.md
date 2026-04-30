@@ -175,7 +175,7 @@ The suggestions below are ordered roughly by effort (small → large) and groupe
 | 2 | "Today at a glance" home-screen widget | [home-screen-widget.md](../specs/todo/home-screen-widget.md) | Not started |
 | 3 | Running monthly budget indicator | [monthly-budget-indicator.md](../specs/todo/monthly-budget-indicator.md) | Not started |
 | 4 | Entry search | [entry-search.md](../specs/todo/entry-search.md) | Not started |
-| 5 | Swipe to delete on entry cards | [swipe-to-delete.md](../specs/todo/swipe-to-delete.md) | Not started |
+| 5 | Swipe to delete on entry cards | [swipe-to-delete.md](../specs/done/swipe-to-delete.md) | Completed |
 | 6 | Currency / locale formatting setting | [currency-locale-setting.md](../specs/todo/currency-locale-setting.md) | Not started |
 | 7 | Shake to undo last entry | [shake-to-undo.md](../specs/todo/shake-to-undo.md) | Not started |
 
