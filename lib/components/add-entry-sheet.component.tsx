@@ -7,9 +7,9 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import {
   Animated,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
@@ -56,7 +56,6 @@ function createStyles(c: Palette) {
       borderTopRightRadius: 28,
       borderTopWidth: 1,
       borderTopColor: c.line,
-      minHeight: '78%' as unknown as number,
       maxHeight: '92%' as unknown as number,
       paddingBottom: Platform.OS === 'ios' ? 24 : 16,
     },
@@ -311,7 +310,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetInner}>
+    <View style={styles.sheetInner}>
       <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
         <View style={styles.handle} />
 
@@ -423,7 +422,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
           </Pressable>
         </Pressable>
       </Modal>
-    </KeyboardAvoidingView>
+    </View>
   );
 }
 
@@ -461,14 +460,14 @@ export function AddEntrySheet() {
 
   return (
     <Modal visible transparent animationType="none" onRequestClose={handleClose}>
-      <View style={styles.modalRoot}>
+      <KeyboardAvoidingView style={styles.modalRoot} behavior="padding">
         <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
         </Animated.View>
         <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
           <SheetContent onClose={handleClose} />
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
