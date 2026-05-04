@@ -33,6 +33,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Modal, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export const unstable_settings = { anchor: '(tabs)' };
@@ -93,14 +94,16 @@ export default function RootLayout() {
     <GestureHandlerRootView style={{ flex: 1 }}>
       {fontsLoaded ? (
         <SafeAreaProvider>
-          <ThemeProvider>
-            <LockProvider>
-              <EntriesProvider>
-                <AppGate />
-                <AppStatusBar />
-              </EntriesProvider>
-            </LockProvider>
-          </ThemeProvider>
+          <KeyboardProvider>
+            <ThemeProvider>
+              <LockProvider>
+                <EntriesProvider>
+                  <AppGate />
+                  <AppStatusBar />
+                </EntriesProvider>
+              </LockProvider>
+            </ThemeProvider>
+          </KeyboardProvider>
         </SafeAreaProvider>
       ) : (
         <View style={{ flex: 1, backgroundColor: darkTheme.bg }} />

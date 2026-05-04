@@ -7,13 +7,12 @@ import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { KeyboardAwareScrollView, KeyboardGestureArea } from 'react-native-keyboard-controller';
 import {
   Animated,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -311,8 +310,13 @@ function SheetContent({ onClose }: { onClose: () => void }) {
   };
 
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.sheetInner}>
-      <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+    <KeyboardGestureArea interpolator={Platform.OS === 'ios' ? 'ios' : 'linear'} style={styles.sheetInner}>
+      <KeyboardAwareScrollView
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        bottomOffset={24}
+        bounces={false}
+      >
         <View style={styles.handle} />
 
         <View style={styles.sheetHeader}>
@@ -403,7 +407,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
         </View>
 
         <View style={{ height: 8 }} />
-      </ScrollView>
+      </KeyboardAwareScrollView>
 
       <Modal visible={pickerVisible} transparent animationType="fade">
         <Pressable style={styles.pickerOverlay} onPress={() => setPickerVisible(false)}>
@@ -423,7 +427,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
           </Pressable>
         </Pressable>
       </Modal>
-    </KeyboardAvoidingView>
+    </KeyboardGestureArea>
   );
 }
 
