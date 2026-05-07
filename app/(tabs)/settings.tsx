@@ -1,4 +1,5 @@
-import { Alert, Animated, ActivityIndicator, Modal, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Alert, ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -14,8 +15,9 @@ import { useLock } from '@/lib/hooks/use-lock.hook';
 import { biometricService } from '@/lib/services/biometric.service';
 import { biometricLabel, biometricIcon } from '@/lib/utils/biometric.utils';
 import { HugeiconsIcon } from '@hugeicons/react-native';
+import { Feather } from '@expo/vector-icons';
 import { entriesToCsv, csvToEntries } from '@/lib/utils/csv.util';
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -30,20 +32,26 @@ export default function SettingsScreen() {
   const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({ visible: false, mode: 'enable' });
   const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
-  const budgetSheetY = useRef(new Animated.Value(600)).current;
+  const budgetSheetY = useSharedValue(600);
   const [symbolSheetOpen, setSymbolSheetOpen] = useState(false);
   const [symbolInput, setSymbolInput] = useState('');
-  const symbolSheetY = useRef(new Animated.Value(600)).current;
+  const symbolSheetY = useSharedValue(600);
+  const [formatSheetOpen, setFormatSheetOpen] = useState(false);
+  const formatSheetY = useSharedValue(600);
+
+  const budgetSheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: budgetSheetY.value }] }));
+  const symbolSheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: symbolSheetY.value }] }));
+  const formatSheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: formatSheetY.value }] }));
 
   function openBudgetSheet() {
     setBudgetInput(budget !== null ? String(budget) : '');
     setBudgetSheetOpen(true);
-    Animated.spring(budgetSheetY, { toValue: 0, damping: 28, stiffness: 200, useNativeDriver: true }).start();
+    budgetSheetY.value = withSpring(0, { damping: 28, stiffness: 200 });
   }
 
   function closeBudgetSheet() {
-    Animated.timing(budgetSheetY, { toValue: 600, duration: 200, useNativeDriver: true }).start(() => {
-      setBudgetSheetOpen(false);
+    budgetSheetY.value = withTiming(600, { duration: 200 }, () => {
+      runOnJS(setBudgetSheetOpen)(false);
     });
   }
 
@@ -65,12 +73,23 @@ export default function SettingsScreen() {
   function openSymbolSheet() {
     setSymbolInput(locale.symbol);
     setSymbolSheetOpen(true);
-    Animated.spring(symbolSheetY, { toValue: 0, damping: 28, stiffness: 200, useNativeDriver: true }).start();
+    symbolSheetY.value = withSpring(0, { damping: 28, stiffness: 200 });
   }
 
   function closeSymbolSheet() {
-    Animated.timing(symbolSheetY, { toValue: 600, duration: 200, useNativeDriver: true }).start(() => {
-      setSymbolSheetOpen(false);
+    symbolSheetY.value = withTiming(600, { duration: 200 }, () => {
+      runOnJS(setSymbolSheetOpen)(false);
+    });
+  }
+
+  function openFormatSheet() {
+    setFormatSheetOpen(true);
+    formatSheetY.value = withSpring(0, { damping: 28, stiffness: 200 });
+  }
+
+  function closeFormatSheet() {
+    formatSheetY.value = withTiming(600, { duration: 200 }, () => {
+      runOnJS(setFormatSheetOpen)(false);
     });
   }
 
@@ -327,21 +346,30 @@ export default function SettingsScreen() {
           <View style={divider} />
 
           {/* Import CSV */}
-          <Pressable
-            onPress={handleImport}
-            disabled={importing}
-            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
-            accessibilityLabel="Import CSV"
-          >
-            <View>
-              <Text style={rowLabel}>Import CSV</Text>
+          <View style={[rowStyle, { paddingRight: 8 }]}>
+            <Pressable
+              onPress={handleImport}
+              disabled={importing}
+              style={{ flex: 1 }}
+              accessibilityLabel="Import CSV"
+            >
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                <Text style={rowLabel}>Import CSV</Text>
+                <Pressable
+                  onPress={openFormatSheet}
+                  hitSlop={8}
+                  accessibilityLabel="Show CSV format"
+                >
+                  <Feather name="info" size={13} color={colors.inkMuted} />
+                </Pressable>
+              </View>
               <Text style={rowSub}>Restore entries from a file</Text>
-            </View>
+            </Pressable>
             {importing
               ? <ActivityIndicator size="small" color={colors.inkMuted} />
               : <Text style={chevron}>↓</Text>
             }
-          </Pressable>
+          </View>
 
           <View style={divider} />
 
@@ -497,10 +525,13 @@ export default function SettingsScreen() {
         animationType="none"
         onRequestClose={closeBudgetSheet}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1, justifyContent: 'flex-end' }}
+        >
           <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeBudgetSheet} />
           <Animated.View
-            style={{
+            style={[{
               backgroundColor: colors.surface,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
@@ -508,8 +539,7 @@ export default function SettingsScreen() {
               borderTopColor: colors.line,
               padding: 24,
               paddingBottom: Math.max(insets.bottom, 16) + 8,
-              transform: [{ translateY: budgetSheetY }],
-            }}
+            }, budgetSheetStyle]}
           >
             <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 6 }}>
               Monthly Budget
@@ -564,7 +594,7 @@ export default function SettingsScreen() {
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
             </Pressable>
           </Animated.View>
-        </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal
@@ -576,7 +606,7 @@ export default function SettingsScreen() {
         <View style={{ flex: 1, justifyContent: 'flex-end' }}>
           <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeSymbolSheet} />
           <Animated.View
-            style={{
+            style={[{
               backgroundColor: colors.surface,
               borderTopLeftRadius: 24,
               borderTopRightRadius: 24,
@@ -584,8 +614,7 @@ export default function SettingsScreen() {
               borderTopColor: colors.line,
               padding: 24,
               paddingBottom: Math.max(insets.bottom, 16) + 8,
-              transform: [{ translateY: symbolSheetY }],
-            }}
+            }, symbolSheetStyle]}
           >
             <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 20 }}>
               Currency Symbol
@@ -630,6 +659,107 @@ export default function SettingsScreen() {
               style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
             >
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+      </Modal>
+
+      <Modal
+        visible={formatSheetOpen}
+        transparent
+        animationType="none"
+        onRequestClose={closeFormatSheet}
+      >
+        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
+          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeFormatSheet} />
+          <Animated.View
+            style={[{
+              backgroundColor: colors.surface,
+              borderTopLeftRadius: 24,
+              borderTopRightRadius: 24,
+              borderTopWidth: 1,
+              borderTopColor: colors.line,
+              padding: 24,
+              paddingBottom: Math.max(insets.bottom, 16) + 8,
+            }, formatSheetStyle]}
+          >
+            <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 4 }}>
+              CSV Format
+            </Text>
+            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.inkMuted, marginBottom: 20 }}>
+              Your file must include these four columns in order.
+            </Text>
+
+            {/* Column definitions */}
+            {[
+              { col: 'id', desc: 'Unique entry ID', example: 'e_1234567890' },
+              { col: 'date', desc: 'ISO date', example: 'YYYY-MM-DD' },
+              { col: 'amounts', desc: 'JSON array of numbers', example: '[150, 80]' },
+              { col: 'note', desc: 'Label (optional)', example: 'groceries' },
+            ].map(({ col, desc, example }) => (
+              <View
+                key={col}
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'flex-start',
+                  gap: 12,
+                  marginBottom: 12,
+                }}
+              >
+                <View style={{
+                  backgroundColor: colors.surfaceAlt,
+                  borderRadius: 6,
+                  paddingHorizontal: 8,
+                  paddingVertical: 3,
+                  minWidth: 72,
+                  alignItems: 'center',
+                }}>
+                  <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.ink }}>{col}</Text>
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.inkSoft }}>{desc}</Text>
+                  <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.inkMuted, marginTop: 1 }}>{example}</Text>
+                </View>
+              </View>
+            ))}
+
+            {/* Example block */}
+            <View style={{
+              backgroundColor: colors.bg,
+              borderRadius: 10,
+              borderWidth: 1,
+              borderColor: colors.line,
+              padding: 14,
+              marginTop: 8,
+              marginBottom: 20,
+            }}>
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: colors.inkMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+                Example
+              </Text>
+              {[
+                'id,date,amounts,note',
+                'e_001,2024-01-15,"[150,80]",groceries',
+                'e_002,2024-01-16,[200],rent',
+              ].map((line, i) => (
+                <Text
+                  key={i}
+                  style={{
+                    fontFamily: 'DMSans_400Regular',
+                    fontSize: 11,
+                    color: i === 0 ? colors.inkMuted : colors.ink,
+                    lineHeight: 18,
+                  }}
+                >
+                  {line}
+                </Text>
+              ))}
+            </View>
+
+            <Pressable
+              onPress={closeFormatSheet}
+              style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
+            >
+              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 14, color: colors.inkMuted }}>Close</Text>
             </Pressable>
           </Animated.View>
         </View>
