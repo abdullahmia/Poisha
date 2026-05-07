@@ -5,7 +5,8 @@ import { useBudget } from '@/lib/hooks/use-budget.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { useEffect, useMemo, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { Easing, useAnimatedStyle, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
@@ -286,7 +287,13 @@ export default function HomeScreen() {
   const { colors } = useTheme();
   const { locale, fmt, fmtFull } = useLocale();
   const [monthOffset, setMonthOffset] = useState(0);
-  const { budget, getProgress } = useBudget();
+  const { budget, getProgress, refresh: refreshBudget } = useBudget();
+
+  useFocusEffect(
+    useCallback(() => {
+      refreshBudget();
+    }, [refreshBudget]),
+  );
 
   const styles = useMemo(() => createStyles(colors), [colors]);
 

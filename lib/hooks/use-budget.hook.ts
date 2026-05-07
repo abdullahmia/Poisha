@@ -1,11 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 const BUDGET_KEY = 'poisha_monthly_budget';
 
 interface UseBudgetReturn {
   budget: number | null;
   setBudget: (value: number | null) => Promise<void>;
+  refresh: () => Promise<void>;
   getProgress: (spent: number) => {
     percent: number;
     exceeded: boolean;
@@ -16,13 +17,18 @@ interface UseBudgetReturn {
 export function useBudget(): UseBudgetReturn {
   const [budget, setBudgetState] = useState<number | null>(null);
 
+  const refresh = useCallback(async () => {
+    const val = await AsyncStorage.getItem(BUDGET_KEY);
+    if (val) {
+      const parsed = parseFloat(val);
+      setBudgetState(isNaN(parsed) ? null : parsed);
+    } else {
+      setBudgetState(null);
+    }
+  }, []);
+
   useEffect(() => {
-    AsyncStorage.getItem(BUDGET_KEY).then(val => {
-      if (val) {
-        const parsed = parseFloat(val);
-        setBudgetState(isNaN(parsed) ? null : parsed);
-      }
-    });
+    refresh();
   }, []);
 
   async function setBudget(value: number | null): Promise<void> {
@@ -40,5 +46,5 @@ export function useBudget(): UseBudgetReturn {
     return { percent, exceeded: spent > budget, isSet: true };
   }
 
-  return { budget, setBudget, getProgress };
+  return { budget, setBudget, refresh, getProgress };
 }

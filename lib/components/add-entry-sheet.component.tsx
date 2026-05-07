@@ -278,6 +278,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
   const [amounts, setAmounts] = useState<string[]>(entry?.amounts.map(String) ?? ['']);
   const [note, setNote] = useState(entry?.note ?? '');
   const [pickerVisible, setPickerVisible] = useState(false);
+  const pickerJustClosed = useRef(false);
 
   const total = amounts.reduce((s, a) => s + (parseFloat(a) || 0), 0);
   const canSave = amounts.some(a => parseFloat(a) > 0);
@@ -331,7 +332,16 @@ function SheetContent({ onClose }: { onClose: () => void }) {
 
         <View style={styles.field}>
           <Text style={styles.label}>Date</Text>
-          <Pressable onPress={() => setPickerVisible(true)} style={styles.inputBox}>
+          <Pressable
+            onPress={() => {
+              if (pickerJustClosed.current) {
+                pickerJustClosed.current = false;
+                return;
+              }
+              setPickerVisible(true);
+            }}
+            style={styles.inputBox}
+          >
             <Text style={styles.inputText}>{formatDateLong(dateISO)}</Text>
             <Feather name="calendar" size={15} color={colors.inkMuted} />
           </Pressable>
@@ -410,7 +420,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
       </KeyboardAwareScrollView>
 
       <Modal visible={pickerVisible} transparent animationType="fade">
-        <Pressable style={styles.pickerOverlay} onPress={() => setPickerVisible(false)}>
+        <Pressable style={styles.pickerOverlay} onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }}>
           <Pressable style={styles.pickerBox}>
             <DateTimePicker
               value={isoToDate(dateISO)}
@@ -421,7 +431,7 @@ function SheetContent({ onClose }: { onClose: () => void }) {
               style={{ width: '100%' }}
               textColor={colors.ink}
             />
-            <Pressable onPress={() => setPickerVisible(false)} style={styles.pickerDone}>
+            <Pressable onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }} style={styles.pickerDone}>
               <Text style={styles.pickerDoneText}>Done</Text>
             </Pressable>
           </Pressable>
