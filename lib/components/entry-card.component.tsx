@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { type Palette } from '@/lib/constants/theme';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { Card } from '@/lib/ui/card.ui';
 import type { Entry } from '@/lib/types/entry.type';
 
 function parseDate(iso: string) {
@@ -18,21 +19,6 @@ interface EntryCardProps {
 
 function createStyles(c: Palette) {
   return StyleSheet.create({
-    card: {
-      backgroundColor: c.surface,
-      borderRadius: 18,
-      padding: 16,
-      marginBottom: 10,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      overflow: 'hidden',
-      shadowColor: c.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.22,
-      shadowRadius: 10,
-      elevation: 4,
-    },
     cardPressed: {
       opacity: 0.7,
       transform: [{ scale: 0.985 }],
@@ -135,37 +121,50 @@ export function EntryCard({ entry, onClick }: EntryCardProps) {
   return (
     <Pressable
       onPress={onClick}
-      style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
+      style={({ pressed }) => [{ marginBottom: 10 }, pressed && styles.cardPressed]}
     >
-      {multi && <View style={styles.accentStripe} />}
+      <Card
+        shadow
+        style={{
+          padding: 16,
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          overflow: 'hidden',
+          borderWidth: 0,
+          shadowOpacity: 0.22,
+        }}
+      >
+        {multi && <View style={styles.accentStripe} />}
 
-      <View style={styles.left}>
-        <View style={[styles.dateBox, multi && styles.dateBoxMulti]}>
-          <Text style={[styles.dayNum, multi && styles.dayNumMulti]}>
-            {d.getDate()}
-          </Text>
-          <Text style={[styles.monthLabel, multi && styles.monthLabelMulti]}>
-            {d.toLocaleDateString('en-US', { month: 'short' })}
-          </Text>
+        <View style={styles.left}>
+          <View style={[styles.dateBox, multi && styles.dateBoxMulti]}>
+            <Text style={[styles.dayNum, multi && styles.dayNumMulti]}>
+              {d.getDate()}
+            </Text>
+            <Text style={[styles.monthLabel, multi && styles.monthLabelMulti]}>
+              {d.toLocaleDateString('en-US', { month: 'short' })}
+            </Text>
+          </View>
+          <View style={styles.info}>
+            <Text style={styles.weekday}>
+              {d.toLocaleDateString('en-US', { weekday: 'long' })}
+            </Text>
+            <Text style={styles.subtitle} numberOfLines={1}>
+              {multi ? `${entry.amounts.length} items` : entry.note || '—'}
+            </Text>
+          </View>
         </View>
-        <View style={styles.info}>
-          <Text style={styles.weekday}>
-            {d.toLocaleDateString('en-US', { weekday: 'long' })}
-          </Text>
-          <Text style={styles.subtitle} numberOfLines={1}>
-            {multi ? `${entry.amounts.length} items` : entry.note || '—'}
-          </Text>
-        </View>
-      </View>
 
-      <View style={styles.right}>
-        <Text style={[styles.total, multi && styles.totalMulti]}>{fmtFull(total)}</Text>
-        {multi && (
-          <Text style={styles.breakdown} numberOfLines={1}>
-            {entry.amounts.map(a => fmt(a)).join(' · ')}
-          </Text>
-        )}
-      </View>
+        <View style={styles.right}>
+          <Text style={[styles.total, multi && styles.totalMulti]}>{fmtFull(total)}</Text>
+          {multi && (
+            <Text style={styles.breakdown} numberOfLines={1}>
+              {entry.amounts.map(a => fmt(a)).join(' · ')}
+            </Text>
+          )}
+        </View>
+      </Card>
     </Pressable>
   );
 }

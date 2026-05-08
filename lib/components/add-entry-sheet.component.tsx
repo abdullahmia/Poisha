@@ -3,13 +3,13 @@ import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { Feather } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { KeyboardAwareScrollView, KeyboardGestureArea } from 'react-native-keyboard-controller';
 import {
-  Animated,
   Modal,
   Platform,
   Pressable,
@@ -42,34 +42,8 @@ function formatDateLong(iso: string) {
 
 function createStyles(c: Palette) {
   return StyleSheet.create({
-    modalRoot: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
-    backdrop: {
-      backgroundColor: '#000000',
-    },
-    sheet: {
-      backgroundColor: c.surface,
-      borderTopLeftRadius: 28,
-      borderTopRightRadius: 28,
-      borderTopWidth: 1,
-      borderTopColor: c.line,
-      minHeight: '78%' as unknown as number,
-      maxHeight: '92%' as unknown as number,
-      paddingBottom: Platform.OS === 'ios' ? 24 : 16,
-    },
     sheetInner: {
       flex: 1,
-    },
-    handle: {
-      width: 42,
-      height: 4,
-      backgroundColor: c.line,
-      borderRadius: 999,
-      alignSelf: 'center',
-      marginTop: 10,
-      marginBottom: 6,
     },
     sheetHeader: {
       flexDirection: 'row',
@@ -318,8 +292,6 @@ function SheetContent({ onClose }: { onClose: () => void }) {
         bottomOffset={24}
         bounces={false}
       >
-        <View style={styles.handle} />
-
         <View style={styles.sheetHeader}>
           <View>
             <Text style={styles.sheetHeaderSub}>{entry ? 'Edit' : 'New'}</Text>
@@ -443,46 +415,13 @@ function SheetContent({ onClose }: { onClose: () => void }) {
 
 export function AddEntrySheet() {
   const { sheetOpen, closeSheet } = useEntries();
-  const { colors } = useTheme();
-  const anim = useRef(new Animated.Value(0)).current;
-  const styles = useMemo(() => createStyles(colors), [colors]);
-
-  useEffect(() => {
-    if (sheetOpen) {
-      Animated.spring(anim, {
-        toValue: 1,
-        useNativeDriver: true,
-        damping: 28,
-        stiffness: 200,
-      }).start();
-    } else {
-      anim.setValue(0);
-    }
-  }, [sheetOpen]);
-
-  const handleClose = () => {
-    Animated.timing(anim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: true,
-    }).start(() => closeSheet());
-  };
-
-  if (!sheetOpen) return null;
-
-  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [700, 0] });
-  const backdropOpacity = anim.interpolate({ inputRange: [0, 0.5, 1], outputRange: [0, 0.7, 0.7] });
-
   return (
-    <Modal visible transparent animationType="none" onRequestClose={handleClose}>
-      <View style={styles.modalRoot}>
-        <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: backdropOpacity }]}>
-          <Pressable style={StyleSheet.absoluteFill} onPress={handleClose} />
-        </Animated.View>
-        <Animated.View style={[styles.sheet, { transform: [{ translateY }] }]}>
-          <SheetContent onClose={handleClose} />
-        </Animated.View>
-      </View>
-    </Modal>
+    <BottomSheet
+      visible={sheetOpen}
+      onClose={closeSheet}
+      sheetStyle={{ minHeight: '78%' as unknown as number, maxHeight: '92%' as unknown as number }}
+    >
+      {(close) => <SheetContent onClose={close} />}
+    </BottomSheet>
   );
 }

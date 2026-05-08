@@ -1,5 +1,6 @@
-import { Alert, ActivityIndicator, KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
-import Animated, { useSharedValue, useAnimatedStyle, withSpring, withTiming, runOnJS } from 'react-native-reanimated';
+import { Alert, ActivityIndicator, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
+import { Card } from '@/lib/ui/card.ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -32,65 +33,28 @@ export default function SettingsScreen() {
   const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({ visible: false, mode: 'enable' });
   const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
-  const budgetSheetY = useSharedValue(600);
   const [symbolSheetOpen, setSymbolSheetOpen] = useState(false);
   const [symbolInput, setSymbolInput] = useState('');
-  const symbolSheetY = useSharedValue(600);
   const [formatSheetOpen, setFormatSheetOpen] = useState(false);
-  const formatSheetY = useSharedValue(600);
-
-  const budgetSheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: budgetSheetY.value }] }));
-  const symbolSheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: symbolSheetY.value }] }));
-  const formatSheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: formatSheetY.value }] }));
 
   function openBudgetSheet() {
     setBudgetInput(budget !== null ? String(budget) : '');
     setBudgetSheetOpen(true);
-    budgetSheetY.value = withSpring(0, { damping: 28, stiffness: 200 });
   }
 
-  function closeBudgetSheet() {
-    budgetSheetY.value = withTiming(600, { duration: 200 }, () => {
-      runOnJS(setBudgetSheetOpen)(false);
-    });
-  }
-
-  async function saveBudget() {
+  async function saveBudget(close: () => void) {
     const parsed = parseFloat(budgetInput);
     if (!budgetInput.trim() || isNaN(parsed) || parsed <= 0) {
       Alert.alert('Invalid amount', 'Please enter a positive number.');
       return;
     }
     await setBudget(parsed);
-    closeBudgetSheet();
+    close();
   }
 
-  async function removeBudget() {
+  async function removeBudget(close: () => void) {
     await setBudget(null);
-    closeBudgetSheet();
-  }
-
-  function openSymbolSheet() {
-    setSymbolInput(locale.symbol);
-    setSymbolSheetOpen(true);
-    symbolSheetY.value = withSpring(0, { damping: 28, stiffness: 200 });
-  }
-
-  function closeSymbolSheet() {
-    symbolSheetY.value = withTiming(600, { duration: 200 }, () => {
-      runOnJS(setSymbolSheetOpen)(false);
-    });
-  }
-
-  function openFormatSheet() {
-    setFormatSheetOpen(true);
-    formatSheetY.value = withSpring(0, { damping: 28, stiffness: 200 });
-  }
-
-  function closeFormatSheet() {
-    formatSheetY.value = withTiming(600, { duration: 200 }, () => {
-      runOnJS(setFormatSheetOpen)(false);
-    });
+    close();
   }
 
   function handleCurrencySymbolPress() {
@@ -106,7 +70,8 @@ export default function SettingsScreen() {
         locale.symbol,
       );
     } else {
-      openSymbolSheet();
+      setSymbolInput(locale.symbol);
+      setSymbolSheetOpen(true);
     }
   }
 
@@ -192,13 +157,6 @@ export default function SettingsScreen() {
     marginBottom: 8,
   };
 
-  const sectionCard = {
-    backgroundColor: colors.surface,
-    borderRadius: 16,
-    borderWidth: 1,
-    borderColor: colors.line,
-    overflow: 'hidden' as const,
-  };
 
   const rowLabel = { fontFamily: 'Inter_500Medium', fontSize: 15, color: colors.ink };
   const rowSub   = { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.inkSoft, marginTop: 2 };
@@ -223,7 +181,7 @@ export default function SettingsScreen() {
       {/* Appearance section */}
       <View style={{ marginTop: 24 }}>
         <Text style={sectionLabel}>Appearance</Text>
-        <View style={sectionCard}>
+        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
           <View style={rowStyle}>
             <View>
               <Text style={rowLabel}>Theme</Text>
@@ -251,13 +209,13 @@ export default function SettingsScreen() {
               thumbColor={colors.surface}
             />
           </View>
-        </View>
+        </Card>
       </View>
 
       {/* Region section */}
       <View style={{ marginTop: 28 }}>
         <Text style={sectionLabel}>Region</Text>
-        <View style={sectionCard}>
+        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
           {/* Currency Symbol */}
           <Pressable
             onPress={handleCurrencySymbolPress}
@@ -319,13 +277,13 @@ export default function SettingsScreen() {
               </Text>
             </View>
           </View>
-        </View>
+        </Card>
       </View>
 
       {/* Data section */}
       <View style={{ marginTop: 28 }}>
         <Text style={sectionLabel}>Data</Text>
-        <View style={sectionCard}>
+        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
           {/* Export CSV */}
           <Pressable
             onPress={handleExport}
@@ -356,7 +314,7 @@ export default function SettingsScreen() {
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
                 <Text style={rowLabel}>Import CSV</Text>
                 <Pressable
-                  onPress={openFormatSheet}
+                  onPress={() => setFormatSheetOpen(true)}
                   hitSlop={8}
                   accessibilityLabel="Show CSV format"
                 >
@@ -398,13 +356,13 @@ export default function SettingsScreen() {
             </View>
             <Text style={[chevron, { color: colors.accent }]}>›</Text>
           </Pressable>
-        </View>
+        </Card>
       </View>
 
       {/* Budget section */}
       <View style={{ marginTop: 28 }}>
         <Text style={sectionLabel}>Budget</Text>
-        <View style={sectionCard}>
+        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
           <Pressable
             onPress={openBudgetSheet}
             style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
@@ -415,13 +373,13 @@ export default function SettingsScreen() {
               {budget !== null ? fmtFull(budget) : 'Not set'}
             </Text>
           </Pressable>
-        </View>
+        </Card>
       </View>
 
       {/* Security section */}
       <View style={{ marginTop: 28 }}>
         <Text style={sectionLabel}>Security</Text>
-        <View style={sectionCard}>
+        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
           {/* App Lock toggle */}
           <View style={rowStyle}>
             <View>
@@ -516,31 +474,16 @@ export default function SettingsScreen() {
               </Pressable>
             </>
           )}
-        </View>
+        </Card>
       </View>
 
-      <Modal
+      <BottomSheet
         visible={budgetSheetOpen}
-        transparent
-        animationType="none"
-        onRequestClose={closeBudgetSheet}
+        onClose={() => setBudgetSheetOpen(false)}
+        keyboardAvoiding
       >
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={{ flex: 1, justifyContent: 'flex-end' }}
-        >
-          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeBudgetSheet} />
-          <Animated.View
-            style={[{
-              backgroundColor: colors.surface,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              borderTopWidth: 1,
-              borderTopColor: colors.line,
-              padding: 24,
-              paddingBottom: Math.max(insets.bottom, 16) + 8,
-            }, budgetSheetStyle]}
-          >
+        {(close) => (
+          <View style={{ padding: 24 }}>
             <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 6 }}>
               Monthly Budget
             </Text>
@@ -568,7 +511,7 @@ export default function SettingsScreen() {
               autoFocus
             />
             <Pressable
-              onPress={saveBudget}
+              onPress={() => saveBudget(close)}
               style={({ pressed }) => [{
                 backgroundColor: colors.accent,
                 borderRadius: 10,
@@ -581,41 +524,29 @@ export default function SettingsScreen() {
             </Pressable>
             {budget !== null && (
               <Pressable
-                onPress={removeBudget}
+                onPress={() => removeBudget(close)}
                 style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const, marginBottom: 4 }, pressed && { opacity: 0.6 }]}
               >
                 <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e84040' }}>Remove Budget</Text>
               </Pressable>
             )}
             <Pressable
-              onPress={closeBudgetSheet}
+              onPress={close}
               style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
             >
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
             </Pressable>
-          </Animated.View>
-        </KeyboardAvoidingView>
-      </Modal>
+          </View>
+        )}
+      </BottomSheet>
 
-      <Modal
+      <BottomSheet
         visible={symbolSheetOpen}
-        transparent
-        animationType="none"
-        onRequestClose={closeSymbolSheet}
+        onClose={() => setSymbolSheetOpen(false)}
+        keyboardAvoiding
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeSymbolSheet} />
-          <Animated.View
-            style={[{
-              backgroundColor: colors.surface,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              borderTopWidth: 1,
-              borderTopColor: colors.line,
-              padding: 24,
-              paddingBottom: Math.max(insets.bottom, 16) + 8,
-            }, symbolSheetStyle]}
-          >
+        {(close) => (
+          <View style={{ padding: 24 }}>
             <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 20 }}>
               Currency Symbol
             </Text>
@@ -642,7 +573,7 @@ export default function SettingsScreen() {
             <Pressable
               onPress={async () => {
                 await setLocale({ symbol: symbolInput.trim() || DEFAULT_LOCALE.symbol });
-                closeSymbolSheet();
+                close();
               }}
               style={({ pressed }) => [{
                 backgroundColor: colors.accent,
@@ -655,34 +586,21 @@ export default function SettingsScreen() {
               <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#fff' }}>Save</Text>
             </Pressable>
             <Pressable
-              onPress={closeSymbolSheet}
+              onPress={close}
               style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
             >
               <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
             </Pressable>
-          </Animated.View>
-        </View>
-      </Modal>
+          </View>
+        )}
+      </BottomSheet>
 
-      <Modal
+      <BottomSheet
         visible={formatSheetOpen}
-        transparent
-        animationType="none"
-        onRequestClose={closeFormatSheet}
+        onClose={() => setFormatSheetOpen(false)}
       >
-        <View style={{ flex: 1, justifyContent: 'flex-end' }}>
-          <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' }} onPress={closeFormatSheet} />
-          <Animated.View
-            style={[{
-              backgroundColor: colors.surface,
-              borderTopLeftRadius: 24,
-              borderTopRightRadius: 24,
-              borderTopWidth: 1,
-              borderTopColor: colors.line,
-              padding: 24,
-              paddingBottom: Math.max(insets.bottom, 16) + 8,
-            }, formatSheetStyle]}
-          >
+        {(close) => (
+          <View style={{ padding: 24 }}>
             <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 4 }}>
               CSV Format
             </Text>
@@ -756,14 +674,14 @@ export default function SettingsScreen() {
             </View>
 
             <Pressable
-              onPress={closeFormatSheet}
+              onPress={close}
               style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
             >
               <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 14, color: colors.inkMuted }}>Close</Text>
             </Pressable>
-          </Animated.View>
-        </View>
-      </Modal>
+          </View>
+        )}
+      </BottomSheet>
 
       <PinSetupSheet
         visible={setupSheet.visible}

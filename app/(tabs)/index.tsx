@@ -1,6 +1,7 @@
 import { BarChart } from '@/lib/components/bar-chart.component';
 import { EntryCard } from '@/lib/components/entry-card.component';
 import { type Palette } from '@/lib/constants/theme';
+import { Card } from '@/lib/ui/card.ui';
 import { useBudget } from '@/lib/hooks/use-budget.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
@@ -198,21 +199,6 @@ function createStyles(c: Palette) {
     },
     heroDot: {
       color: c.line,
-    },
-    chartCard: {
-      marginHorizontal: 16,
-      padding: 16,
-      paddingTop: 22,
-      paddingBottom: 10,
-      backgroundColor: c.surface,
-      borderRadius: 20,
-      borderWidth: 1,
-      borderColor: c.line,
-      shadowColor: c.shadow,
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.12,
-      shadowRadius: 16,
-      elevation: 6,
     },
     chartHeader: {
       flexDirection: 'row',
@@ -461,7 +447,8 @@ export default function HomeScreen() {
       )}
 
       {/* Chart */}
-      <Animated.View style={[styles.chartCard, chartStyle]}>
+      <Animated.View style={chartStyle}>
+        <Card shadow style={{ marginHorizontal: 16, padding: 16, paddingTop: 22, paddingBottom: 10, borderRadius: 20 }}>
         <View style={styles.chartHeader}>
           <Text style={styles.chartTitle}>Daily flow</Text>
           {maxDay && (
@@ -475,6 +462,7 @@ export default function HomeScreen() {
           <Text style={styles.chartFooterLabel}>1</Text>
           <Text style={styles.chartFooterLabel}>{daysInMonth}</Text>
         </View>
+        </Card>
       </Animated.View>
 
       {/* Recent */}

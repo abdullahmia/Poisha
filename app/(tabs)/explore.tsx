@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Card } from '@/lib/ui/card.ui';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useSharedValue } from 'react-native-reanimated';
 import { SwipeableEntryCard } from '@/lib/components/swipeable-entry-card.component';
@@ -201,20 +202,6 @@ function createStyles(c: Palette) {
     statsRow: {
       flexDirection: 'row',
       gap: 10,
-    },
-    statCard: {
-      flex: 1,
-      backgroundColor: c.surface,
-      borderRadius: 18,
-      padding: 16,
-      borderWidth: 1,
-      borderColor: c.line,
-      minHeight: 90,
-      justifyContent: 'space-between',
-    },
-    statCardAccent: {
-      backgroundColor: c.accentSoft,
-      borderColor: c.line,
     },
     statLabel: {
       fontFamily: 'Inter_500Medium',
@@ -500,7 +487,7 @@ export default function ListScreen() {
       {/* Stats grid */}
       <View style={styles.statsGrid}>
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, styles.statCardAccent]}>
+          <Card variant="accent" style={{ flex: 1, padding: 16, minHeight: 90, justifyContent: 'space-between' }}>
             <Text style={styles.statLabelAccent}>Total Spent</Text>
             <Text style={styles.statValueAccent} numberOfLines={1} adjustsFontSizeToFit>
               {stats.total > 0 ? fmt(stats.total) : fmtFull(0)}
@@ -508,8 +495,8 @@ export default function ListScreen() {
             <Text style={styles.statMeta}>
               {stats.count} {stats.count === 1 ? 'entry' : 'entries'}
             </Text>
-          </View>
-          <View style={styles.statCard}>
+          </Card>
+          <Card style={{ flex: 1, padding: 16, minHeight: 90, justifyContent: 'space-between' }}>
             <Text style={styles.statLabel}>
               {period === 'day' ? 'Avg / Item' : 'Avg / Day'}
             </Text>
@@ -523,21 +510,21 @@ export default function ListScreen() {
                 ? `${stats.items} item${stats.items !== 1 ? 's' : ''}`
                 : `${stats.uniqueDays} active day${stats.uniqueDays !== 1 ? 's' : ''}`}
             </Text>
-          </View>
+          </Card>
         </View>
         <View style={styles.statsRow}>
-          <View style={styles.statCard}>
+          <Card style={{ flex: 1, padding: 16, minHeight: 90, justifyContent: 'space-between' }}>
             <Text style={styles.statLabel}>Entries</Text>
             <Text style={styles.statValue}>{stats.count}</Text>
             <Text style={styles.statMeta}>{stats.items} item{stats.items !== 1 ? 's' : ''} total</Text>
-          </View>
-          <View style={styles.statCard}>
+          </Card>
+          <Card style={{ flex: 1, padding: 16, minHeight: 90, justifyContent: 'space-between' }}>
             <Text style={styles.statLabel}>Highest</Text>
             <Text style={styles.statValue} numberOfLines={1} adjustsFontSizeToFit>
               {stats.highest > 0 ? fmt(stats.highest) : '—'}
             </Text>
             <Text style={styles.statMeta}>single entry</Text>
-          </View>
+          </Card>
         </View>
       </View>
 

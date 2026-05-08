@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { useState } from 'react';
+import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import Animated, { useSharedValue, useAnimatedStyle, withTiming, Easing } from 'react-native-reanimated';
 import { PinInput } from '@/lib/components/pin-input.component';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import * as Haptics from 'expo-haptics';
 
 type Mode = 'enable' | 'change' | 'disable';
@@ -30,21 +30,6 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
   const [firstPin, setFirstPin] = useState('');
   const [error, setError] = useState('');
   const [shake, setShake] = useState(false);
-
-  const translateY = useSharedValue(600);
-  const sheetStyle = useAnimatedStyle(() => ({ transform: [{ translateY: translateY.value }] }));
-
-  useEffect(() => {
-    if (visible) {
-      setStep(mode === 'change' || mode === 'disable' ? 'verify' : 'create');
-      setPin('');
-      setFirstPin('');
-      setError('');
-      translateY.value = withTiming(0, { duration: 380, easing: Easing.out(Easing.cubic) });
-    } else {
-      translateY.value = withTiming(600, { duration: 300, easing: Easing.in(Easing.cubic) });
-    }
-  }, [visible, mode]);
 
   async function handleVerify(entered: string) {
     const ok = await unlock(entered);
@@ -83,18 +68,12 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
   };
 
   return (
-    <Modal transparent visible={visible} animationType="none" onRequestClose={onClose}>
-      <Pressable style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)' }} onPress={onClose} />
-      <Animated.View style={[{
-        position: 'absolute', bottom: 0, left: 0, right: 0,
-        backgroundColor: colors.bg,
-        borderTopLeftRadius: 24, borderTopRightRadius: 24,
-        paddingTop: 24, paddingBottom: insets.bottom + 32,
-        paddingHorizontal: 24, alignItems: 'center', gap: 32,
-      }, sheetStyle]}>
-        {/* Handle */}
-        <View style={{ width: 40, height: 4, borderRadius: 2, backgroundColor: colors.line, position: 'absolute', top: 10 }} />
-
+    <BottomSheet
+      visible={visible}
+      onClose={onClose}
+      sheetStyle={{ backgroundColor: colors.bg }}
+    >
+      <View style={{ paddingTop: 16, paddingBottom: insets.bottom + 8, paddingHorizontal: 24, alignItems: 'center', gap: 32 }}>
         <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 22, color: colors.ink, letterSpacing: -0.3 }}>
           {headings[step]}
         </Text>
@@ -116,7 +95,7 @@ export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupShe
             if (step === 'confirm') { setFirstPin(''); setStep('create'); }
           }}
         />
-      </Animated.View>
-    </Modal>
+      </View>
+    </BottomSheet>
   );
 }
