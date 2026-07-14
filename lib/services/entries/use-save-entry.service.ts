@@ -2,6 +2,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS } from '@/lib/constants';
 import { sqliteStorage } from '@/lib/storages';
 import type { TDraft, TEntry } from '@/lib/types';
+import { checkBudgetAndNotify } from '@/lib/utils/budget-notification.util';
 import { writeWidgetSnapshot } from '@/lib/utils/widget-snapshot.util';
 
 function saveEntry(draft: TDraft): TEntry {
@@ -17,9 +18,10 @@ export function useSaveEntry() {
 
   return useMutation({
     mutationFn: async (draft: TDraft) => saveEntry(draft),
-    onSuccess: () => {
+    onSuccess: entry => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries.all });
       writeWidgetSnapshot(sqliteStorage.loadEntries()).catch(() => {});
+      checkBudgetAndNotify(entry, queryClient).catch(() => {});
     },
   });
 }

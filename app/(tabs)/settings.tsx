@@ -17,6 +17,7 @@ import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
+import { useNotifications } from '@/lib/hooks/use-notifications.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { Card } from '@/lib/ui/card.ui';
@@ -38,6 +39,7 @@ export default function SettingsScreen() {
   const { authenticate } = useBiometric();
   const { hapticsEnabled, setHapticsEnabled } = useHaptics();
   const { budget, setBudget } = useBudget();
+  const { notificationsEnabled, setNotificationsEnabled } = useNotifications();
   const { exporting, handleExport } = useCsvExport(entries);
   const { importing, handleImport } = useCsvImport();
 
@@ -250,6 +252,26 @@ export default function SettingsScreen() {
               {budget !== null ? fmtFull(budget) : 'Not set'}
             </Text>
           </Pressable>
+
+          <View className="mx-4 h-px bg-line" />
+
+          <View className={rowClass}>
+            <View>
+              <Text className="text-ink" style={rowLabelStyle}>Budget Alerts</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>{notificationsEnabled ? 'On' : 'Off'}</Text>
+            </View>
+            <Switch
+              value={notificationsEnabled}
+              onValueChange={async val => {
+                const result = await setNotificationsEnabled(val);
+                if (val && !result) {
+                  Alert.alert('Permission needed', 'Enable notifications for Poisha in system settings to get budget alerts.');
+                }
+              }}
+              trackColor={{ false: colors.surfaceAlt, true: colors.accent }}
+              thumbColor={colors.surface}
+            />
+          </View>
         </Card>
       </View>
 

@@ -1,15 +1,9 @@
-import { useEffect, useMemo } from 'react';
-import { Alert } from 'react-native';
+import { useMemo } from 'react';
 import { useBudget } from '@/lib/hooks/use-budget.hook';
-import { useLocale } from '@/lib/hooks/use-locale.hook';
-import { useBudgetExceededMonth, useMarkBudgetExceededMonth } from '@/lib/services/budget';
 import type { TEntry } from '@/lib/types';
 
 export function useMonthlySummary(entries: TEntry[], monthKey: string, daysInMonth: number) {
   const { budget, getProgress } = useBudget();
-  const { fmtFull } = useLocale();
-  const exceededMonthQuery = useBudgetExceededMonth();
-  const markExceededMonth = useMarkBudgetExceededMonth();
 
   const monthEntries = useMemo(
     () => entries.filter(e => e.date.startsWith(monthKey)),
@@ -43,17 +37,6 @@ export function useMonthlySummary(entries: TEntry[], monthKey: string, daysInMon
   const avgDay = count > 0 ? total / uniqueDays : 0;
 
   const progress = getProgress(total);
-
-  useEffect(() => {
-    if (!progress.exceeded || budget === null) return;
-    if (exceededMonthQuery.isPending || exceededMonthQuery.data === monthKey) return;
-    Alert.alert(
-      'Budget reached',
-      `You've spent ${fmtFull(total)} this month, exceeding your ${fmtFull(budget)} budget.`,
-      [{ text: 'OK' }],
-    );
-    markExceededMonth.mutate(monthKey);
-  }, [progress.exceeded, monthKey, total, budget, exceededMonthQuery.isPending, exceededMonthQuery.data]);
 
   return { monthEntries, total, count, txCount, chartData, maxDay, avgDay, budget, progress };
 }

@@ -11,6 +11,7 @@ import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { QueryClientProvider } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
 import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import {
@@ -33,12 +34,28 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { Modal, View } from 'react-native';
+import { Modal, Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 export const unstable_settings = { anchor: '(tabs)' };
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowBanner: true,
+    shouldShowList: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+  }),
+});
+
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('default', {
+    name: 'Default',
+    importance: Notifications.AndroidImportance.HIGH,
+  });
+}
 
 function AppStatusBar() {
   const { scheme, colors } = useTheme();
