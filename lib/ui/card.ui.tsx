@@ -1,50 +1,45 @@
-import { type ReactNode, useMemo } from 'react';
-import { type StyleProp, type ViewStyle, StyleSheet, View } from 'react-native';
-import { type Palette } from '@/lib/constants/theme';
+import { cva, type VariantProps } from 'class-variance-authority';
+import { clsx } from 'clsx';
+import type React from 'react';
+import type { ReactNode } from 'react';
+import { type StyleProp, View, type ViewStyle } from 'react-native';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 
-export interface CardProps {
+const cardVariants = cva('rounded-[18px] border border-line', {
+  variants: {
+    variant: {
+      default: 'bg-surface',
+      accent: 'bg-accent-soft',
+    },
+  },
+  defaultVariants: { variant: 'default' },
+});
+
+type CardProps = VariantProps<typeof cardVariants> & {
   children: ReactNode;
+  className?: string;
   style?: StyleProp<ViewStyle>;
-  variant?: 'default' | 'accent';
   shadow?: boolean;
-}
+};
 
-function createStyles(c: Palette) {
-  return StyleSheet.create({
-    base: {
-      backgroundColor: c.surface,
-      borderRadius: 18,
-      borderWidth: 1,
-      borderColor: c.line,
-    },
-    accent: {
-      backgroundColor: c.accentSoft,
-    },
-    shadow: {
-      shadowColor: c.shadow,
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.12,
-      shadowRadius: 10,
-      elevation: 4,
-    },
-  });
-}
-
-export function Card({ children, style, variant = 'default', shadow = false }: CardProps) {
+export const Card: React.FC<CardProps> = ({ children, className, style, variant = 'default', shadow = false }) => {
   const { colors } = useTheme();
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   return (
     <View
+      className={clsx(cardVariants({ variant }), className)}
       style={[
-        styles.base,
-        variant === 'accent' && styles.accent,
-        shadow && styles.shadow,
+        shadow && {
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 2 },
+          shadowOpacity: 0.12,
+          shadowRadius: 10,
+          elevation: 4,
+        },
         style,
       ]}
     >
       {children}
     </View>
   );
-}
+};

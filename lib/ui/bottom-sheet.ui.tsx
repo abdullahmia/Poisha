@@ -1,4 +1,5 @@
-import { type ReactNode, useEffect, useMemo } from 'react';
+import type React from 'react';
+import { type ReactNode, useEffect } from 'react';
 import {
   type StyleProp,
   type ViewStyle,
@@ -17,8 +18,6 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { type Palette } from '@/lib/constants/theme';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
 
 export interface BottomSheetProps {
   visible: boolean;
@@ -28,45 +27,14 @@ export interface BottomSheetProps {
   keyboardAvoiding?: boolean;
 }
 
-function createStyles(c: Palette) {
-  return StyleSheet.create({
-    root: {
-      flex: 1,
-      justifyContent: 'flex-end',
-    },
-    backdrop: {
-      ...StyleSheet.absoluteFillObject,
-      backgroundColor: '#000000',
-    },
-    sheet: {
-      backgroundColor: c.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      borderTopWidth: 1,
-      borderTopColor: c.line,
-    },
-    handle: {
-      width: 40,
-      height: 4,
-      borderRadius: 2,
-      backgroundColor: c.line,
-      alignSelf: 'center',
-      marginTop: 10,
-      marginBottom: 2,
-    },
-  });
-}
-
-export function BottomSheet({
+export const BottomSheet: React.FC<BottomSheetProps> = ({
   visible,
   onClose,
   children,
   sheetStyle,
   keyboardAvoiding = false,
-}: BottomSheetProps) {
-  const { colors } = useTheme();
+}) => {
   const insets = useSafeAreaInsets();
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const translateY = useSharedValue(600);
   const backdropOpacity = useSharedValue(0);
@@ -89,19 +57,19 @@ export function BottomSheet({
   };
 
   const content = (
-    <View style={styles.root}>
-      <Animated.View style={[styles.backdrop, backdropAnimStyle]}>
+    <View className="flex-1 justify-end">
+      <Animated.View className="absolute inset-0 bg-black" style={backdropAnimStyle}>
         <Pressable style={StyleSheet.absoluteFill} onPress={close} />
       </Animated.View>
       <Animated.View
+        className="rounded-t-[24px] border-t border-line bg-surface"
         style={[
-          styles.sheet,
           { paddingBottom: insets.bottom + (Platform.OS === 'ios' ? 24 : 16) },
           sheetStyle,
           sheetAnimStyle,
         ]}
       >
-        <View style={styles.handle} />
+        <View className="mt-[10px] mb-[2px] h-1 w-10 self-center rounded-full bg-line" />
         {typeof children === 'function' ? children(close) : children}
       </Animated.View>
     </View>
@@ -116,4 +84,4 @@ export function BottomSheet({
       ) : content}
     </Modal>
   );
-}
+};

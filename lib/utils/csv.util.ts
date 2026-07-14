@@ -1,4 +1,4 @@
-import type { Entry } from '@/lib/types/entry.type';
+import type { TEntry } from '@/lib/types';
 
 const HEADER = 'id,date,amounts,note';
 
@@ -7,7 +7,7 @@ function escapeField(val: string): string {
   return val;
 }
 
-export function entriesToCsv(entries: Entry[]): string {
+export function entriesToCsv(entries: TEntry[]): string {
   const rows = entries.map(e =>
     [e.id, e.date, escapeField(JSON.stringify(e.amounts)), escapeField(e.note)].join(',')
   );
@@ -49,11 +49,11 @@ function parseRow(row: string): string[] {
   return fields;
 }
 
-export function csvToEntries(csv: string): Entry[] {
+export function csvToEntries(csv: string): TEntry[] {
   const lines = csv.split('\n').filter(l => l.trim() !== '');
   // skip header
   const dataLines = lines.slice(1);
-  const entries: Entry[] = [];
+  const entries: TEntry[] = [];
 
   for (const line of dataLines) {
     try {

@@ -1,20 +1,19 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Add01Icon, Home01Icon, ListViewIcon, Settings01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
+import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
-import { useMemo, useRef, useState } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { type Palette } from '@/lib/constants/theme';
-import { useHaptics } from '@/lib/hooks/use-haptics.hook';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { useEntries } from '@/lib/hooks/use-entries.hook';
 import * as Haptics from 'expo-haptics';
+import type React from 'react';
+import { useEffect } from 'react';
+import { Pressable, Text, View } from 'react-native';
+import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import type { TPalette } from '@/lib/types';
+import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 
 const TABS = [
   { name: 'index', label: 'Home', icon: Home01Icon },
@@ -22,128 +21,126 @@ const TABS = [
   { name: 'settings', label: 'Settings', icon: Settings01Icon },
 ];
 
-interface TabButtonProps {
-  tab: (typeof TABS)[number];
+type TabButtonProps = {
+  label: string;
+  icon: typeof Home01Icon;
   active: boolean;
   onPress: () => void;
-  onLayout: (x: number, width: number) => void;
-  colors: Palette;
-}
+  colors: TPalette;
+};
 
-function TabButton({ tab, active, onPress, onLayout, colors }: TabButtonProps) {
+const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, colors }) => {
+  const press = usePressScale(0.85);
+  const focusBump = useSharedValue(1);
+
+  useEffect(() => {
+    if (active) {
+      focusBump.value = withSequence(
+        withSpring(1.25, { damping: 9, stiffness: 320 }),
+        withSpring(1, { damping: 12, stiffness: 260 }),
+      );
+    }
+  }, [active]);
+
+  const iconStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: press.scale.value * focusBump.value }],
+  }));
+
   return (
     <Pressable
-      style={styles.tab}
+      className="flex-1 items-center justify-center gap-1 py-1"
       onPress={onPress}
-      onLayout={(e) => onLayout(e.nativeEvent.layout.x, e.nativeEvent.layout.width)}
+      onPressIn={press.onPressIn}
+      onPressOut={press.onPressOut}
     >
-      <View pointerEvents="none">
-        <HugeiconsIcon
-          icon={tab.icon}
-          size={18}
-          color={active ? colors.bg : colors.inkMuted}
-          strokeWidth={active ? 2 : 1.5}
-        />
-      </View>
+      <Animated.View style={iconStyle} pointerEvents="none">
+        <HugeiconsIcon icon={icon} size={20} color={active ? colors.accent : colors.inkMuted} strokeWidth={active ? 2 : 1.5} />
+      </Animated.View>
+      <Text
+        style={{
+          fontFamily: 'DMSans_500Medium',
+          fontSize: 10.5,
+          letterSpacing: -0.1,
+          color: active ? colors.accent : colors.inkMuted,
+        }}
+      >
+        {label}
+      </Text>
       {active && (
-        <Text style={[styles.tabLabel, { color: colors.bg }]}>
-          {tab.label}
-        </Text>
+        <Animated.View
+          entering={FadeIn.duration(180)}
+          exiting={FadeOut.duration(120)}
+          className="absolute bottom-0.5 h-1 w-1 rounded-full bg-accent"
+        />
       )}
     </Pressable>
   );
-}
+};
 
-function PoishaTabBar({ state, navigation }: BottomTabBarProps) {
+const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
   const insets = useSafeAreaInsets();
   const { openAdd } = useEntries();
-  const { colors } = useTheme();
+  const { scheme, colors } = useTheme();
   const { impact, selection } = useHaptics();
-  const [tabLayouts, setTabLayouts] = useState<{ x: number; width: number }[]>([]);
 
-  const pillX = useSharedValue(0);
-  const pillW = useSharedValue(0);
-  const initialized = useRef(false);
-
-  const handleLayout = (i: number, x: number, width: number) => {
-    setTabLayouts(prev => {
-      const next = [...prev];
-      next[i] = { x, width };
-
-      // Set pill position instantly on first layout of the active tab
-      if (!initialized.current && i === state.index) {
-        pillX.value = x;
-        pillW.value = width;
-        initialized.current = true;
-      }
-
-      return next;
-    });
-  };
-
-  const handleTabPress = (i: number, route: (typeof state.routes)[number]) => {
+  function handleTabPress(i: number, route: (typeof state.routes)[number]) {
     selection();
-    const layout = tabLayouts[i];
-    if (layout) {
-      pillX.value = withSpring(layout.x, { damping: 24, stiffness: 300, mass: 0.8 });
-      pillW.value = withSpring(layout.width, { damping: 24, stiffness: 300 });
-    }
     const isFocused = state.index === i;
-    const event = navigation.emit({
-      type: 'tabPress',
-      target: route.key,
-      canPreventDefault: true,
-    });
+    const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
     if (!isFocused && !event.defaultPrevented) {
       navigation.navigate(route.name, route.params);
     }
-  };
-
-  const pillStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: pillX.value }],
-    width: pillW.value,
-  }));
-
-  const barStyle = useMemo(() => ({
-    backgroundColor: colors.surface,
-    borderColor: colors.line,
-    shadowColor: colors.shadow,
-  }), [colors]);
-
-  const pillBg = useMemo(() => ({ backgroundColor: colors.ink }), [colors]);
-
-  const addBtnStyle = useMemo(() => ({
-    backgroundColor: colors.accent,
-    shadowColor: colors.accent,
-  }), [colors]);
+  }
 
   return (
-    <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]}>
-      <View style={[styles.bar, barStyle]}>
-        <Animated.View style={[styles.pill, pillBg, pillStyle]} pointerEvents="none" />
-        {state.routes.map((route, i) => {
-          const tab = TABS[i];
-          const isFocused = state.index === i;
-          return (
+    <View className="absolute bottom-0 left-0 right-0 px-6" style={{ paddingBottom: Math.max(insets.bottom, 12) }}>
+      <View
+        className="rounded-[32px]"
+        style={{
+          shadowColor: colors.shadow,
+          shadowOffset: { width: 0, height: 10 },
+          shadowOpacity: 0.22,
+          shadowRadius: 26,
+          elevation: 12,
+        }}
+      >
+        <BlurView intensity={64} tint={scheme === 'dark' ? 'dark' : 'light'} className="overflow-hidden rounded-[32px]">
+          <View className="absolute inset-0 rounded-[32px] border border-line bg-surface/55" />
+          <View className="flex-row items-center px-2 pb-2 pt-2.5">
             <TabButton
-              key={route.key}
-              tab={tab}
-              active={isFocused}
+              label={TABS[0].label}
+              icon={TABS[0].icon}
+              active={state.index === 0}
               colors={colors}
-              onPress={() => handleTabPress(i, route)}
-              onLayout={(x, width) => handleLayout(i, x, width)}
+              onPress={() => handleTabPress(0, state.routes[0])}
             />
-          );
-        })}
-        <Pressable onPress={() => { impact(Haptics.ImpactFeedbackStyle.Medium); openAdd(); }} style={[styles.addBtn, addBtnStyle]} accessibilityLabel="Add entry">
-          <View pointerEvents="none">
-            <HugeiconsIcon icon={Add01Icon} size={20} color={colors.bg} strokeWidth={2.5} />
+            <TabButton
+              label={TABS[1].label}
+              icon={TABS[1].icon}
+              active={state.index === 1}
+              colors={colors}
+              onPress={() => handleTabPress(1, state.routes[1])}
+            />
+            <TabButton
+              label="Add"
+              icon={Add01Icon}
+              active={false}
+              colors={colors}
+              onPress={() => { impact(Haptics.ImpactFeedbackStyle.Medium); openAdd(); }}
+            />
+            <TabButton
+              label={TABS[2].label}
+              icon={TABS[2].icon}
+              active={state.index === 2}
+              colors={colors}
+              onPress={() => handleTabPress(2, state.routes[2])}
+            />
           </View>
-        </Pressable>
+        </BlurView>
       </View>
     </View>
   );
-}
+};
 
 export default function TabLayout() {
   return (
@@ -154,60 +151,3 @@ export default function TabLayout() {
     </Tabs>
   );
 }
-
-const styles = StyleSheet.create({
-  wrapper: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    paddingHorizontal: 20,
-    paddingTop: 10,
-    backgroundColor: 'transparent',
-  },
-  bar: {
-    borderRadius: 999,
-    borderWidth: 1,
-    padding: 5,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 2,
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.28,
-    shadowRadius: 24,
-    elevation: 12,
-  },
-  pill: {
-    position: 'absolute',
-    top: 5,
-    bottom: 5,
-    left: 0,
-    borderRadius: 999,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 11,
-    paddingHorizontal: 12,
-    borderRadius: 999,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 7,
-  },
-  tabLabel: {
-    fontFamily: 'DMSans_500Medium',
-    fontSize: 13,
-    letterSpacing: -0.2,
-  },
-  addBtn: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    elevation: 6,
-  },
-});

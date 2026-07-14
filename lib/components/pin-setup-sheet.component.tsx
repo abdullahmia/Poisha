@@ -1,101 +1,105 @@
+import * as Haptics from 'expo-haptics';
+import type React from 'react';
 import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { PinInput } from '@/lib/components/pin-input.component';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
+import { usePinWizard } from '@/lib/hooks/use-pin-wizard.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
-import * as Haptics from 'expo-haptics';
 
 type Mode = 'enable' | 'change' | 'disable';
-type Step = 'verify' | 'create' | 'confirm';
 
-interface PinSetupSheetProps {
+type PinSetupSheetProps = {
   visible: boolean;
   mode: Mode;
   onClose: () => void;
   onSuccess: () => void;
-}
+};
 
-export function PinSetupSheet({ visible, mode, onClose, onSuccess }: PinSetupSheetProps) {
+export const PinSetupSheet: React.FC<PinSetupSheetProps> = ({ visible, mode, onClose, onSuccess }) => {
   const { colors } = useTheme();
   const { enableLock, changePin, unlock, disableLock } = useLock();
   const { notification } = useHaptics();
   const insets = useSafeAreaInsets();
 
-  const initialStep: Step = (mode === 'change' || mode === 'disable') ? 'verify' : 'create';
-  const [step, setStep] = useState<Step>(initialStep);
-  const [pin, setPin] = useState('');
-  const [firstPin, setFirstPin] = useState('');
-  const [error, setError] = useState('');
-  const [shake, setShake] = useState(false);
+  const needsVerify = mode === 'change' || mode === 'disable';
+  const [verifying, setVerifying] = useState(needsVerify);
+  const [verifyPin, setVerifyPin] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [verifyShake, setVerifyShake] = useState(false);
+
+  const wizard = usePinWizard(async pin => {
+    if (mode === 'enable') await enableLock(pin);
+    else await changePin(pin);
+    onSuccess();
+  });
 
   async function handleVerify(entered: string) {
     const ok = await unlock(entered);
-    if (!ok) { notification(Haptics.NotificationFeedbackType.Error); setShake(true); setError('Wrong PIN'); return; }
+    if (!ok) {
+      notification(Haptics.NotificationFeedbackType.Error);
+      setVerifyShake(true);
+      setVerifyError('Wrong PIN');
+      return;
+    }
     if (mode === 'disable') {
       await disableLock();
       onSuccess();
       return;
     }
-    setPin('');
-    setStep('create');
+    setVerifyPin('');
+    setVerifying(false);
   }
 
-  function handleCreate(entered: string) {
-    setFirstPin(entered);
-    setPin('');
-    setStep('confirm');
-  }
-
-  async function handleConfirm(entered: string) {
-    if (entered !== firstPin) {
-      notification(Haptics.NotificationFeedbackType.Error);
-      setShake(true);
-      setError("PINs don't match");
-      return;
-    }
-    if (mode === 'enable') await enableLock(firstPin);
-    else await changePin(firstPin);
-    onSuccess();
-  }
-
-  const headings: Record<Step, string> = {
-    verify: mode === 'disable' ? 'Verify to disable' : 'Enter current PIN',
-    create: 'Choose a new PIN',
-    confirm: 'Confirm your PIN',
-  };
+  const heading = verifying
+    ? mode === 'disable' ? 'Verify to disable' : 'Enter current PIN'
+    : wizard.step === 'create' ? 'Choose a new PIN' : 'Confirm your PIN';
 
   return (
-    <BottomSheet
-      visible={visible}
-      onClose={onClose}
-      sheetStyle={{ backgroundColor: colors.bg }}
-    >
-      <View style={{ paddingTop: 16, paddingBottom: insets.bottom + 8, paddingHorizontal: 24, alignItems: 'center', gap: 32 }}>
-        <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 22, color: colors.ink, letterSpacing: -0.3 }}>
-          {headings[step]}
+    <BottomSheet visible={visible} onClose={onClose} sheetStyle={{ backgroundColor: colors.bg }}>
+      <View
+        className="items-center gap-8 px-6 pt-4"
+        style={{ paddingBottom: insets.bottom + 8 }}
+      >
+        <Text className="text-ink" style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 22, letterSpacing: -0.3 }}>
+          {heading}
         </Text>
 
-        {error ? (
-          <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 13, color: colors.accent, marginTop: -16 }}>
-            {error}
-          </Text>
-        ) : null}
-
-        <PinInput
-          value={pin}
-          onChange={v => { setPin(v); setError(''); }}
-          onComplete={step === 'verify' ? handleVerify : step === 'create' ? handleCreate : handleConfirm}
-          shake={shake}
-          onShakeDone={() => {
-            setShake(false);
-            setPin('');
-            if (step === 'confirm') { setFirstPin(''); setStep('create'); }
-          }}
-        />
+        {verifying ? (
+          <>
+            {verifyError ? (
+              <Text className="-mt-4 text-accent" style={{ fontFamily: 'DMSans_400Regular', fontSize: 13 }}>
+                {verifyError}
+              </Text>
+            ) : null}
+            <PinInput
+              value={verifyPin}
+              onChange={v => { setVerifyPin(v); setVerifyError(''); }}
+              onComplete={handleVerify}
+              shake={verifyShake}
+              onShakeDone={() => { setVerifyShake(false); setVerifyPin(''); }}
+            />
+          </>
+        ) : (
+          <>
+            {wizard.error ? (
+              <Text className="-mt-4 text-accent" style={{ fontFamily: 'DMSans_400Regular', fontSize: 13 }}>
+                {wizard.error}
+              </Text>
+            ) : null}
+            <PinInput
+              value={wizard.pin}
+              onChange={wizard.handleChange}
+              onComplete={wizard.handleComplete}
+              shake={wizard.shake}
+              onShakeDone={wizard.handleShakeDone}
+            />
+          </>
+        )}
       </View>
     </BottomSheet>
   );
-}
+};

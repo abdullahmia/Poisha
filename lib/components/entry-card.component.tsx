@@ -1,165 +1,75 @@
-import { useMemo } from 'react';
-import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { type Palette } from '@/lib/constants/theme';
+import { clsx } from 'clsx';
+import type React from 'react';
+import { Pressable, Text, View } from 'react-native';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
+import type { TEntry } from '@/lib/types';
 import { Card } from '@/lib/ui/card.ui';
-import type { Entry } from '@/lib/types/entry.type';
+import { isoToDate } from '@/lib/utils/date.util';
 
-function parseDate(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
-interface EntryCardProps {
-  entry: Entry;
+type EntryCardProps = {
+  entry: TEntry;
   onClick: () => void;
-  index?: number;
-}
+};
 
-function createStyles(c: Palette) {
-  return StyleSheet.create({
-    cardPressed: {
-      opacity: 0.7,
-      transform: [{ scale: 0.985 }],
-    },
-    accentStripe: {
-      position: 'absolute',
-      left: 0,
-      top: 0,
-      bottom: 0,
-      width: 3,
-      backgroundColor: c.accent,
-    },
-    left: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 14,
-      flex: 1,
-      minWidth: 0,
-    },
-    dateBox: {
-      width: 46,
-      height: 46,
-      borderRadius: 12,
-      backgroundColor: c.surfaceAlt,
-      alignItems: 'center',
-      justifyContent: 'center',
-      flexShrink: 0,
-    },
-    dateBoxMulti: {
-      backgroundColor: c.accentSoft,
-      borderWidth: 1,
-      borderColor: c.line,
-    },
-    dayNum: {
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 15,
-      lineHeight: 18,
-      color: c.inkSoft,
-    },
-    dayNumMulti: {
-      color: c.accent,
-    },
-    monthLabel: {
-      fontSize: 8,
-      textTransform: 'uppercase',
-      letterSpacing: 1.5,
-      color: c.inkMuted,
-      marginTop: 2,
-    },
-    monthLabelMulti: {
-      color: c.accent,
-      opacity: 0.75,
-    },
-    info: {
-      flex: 1,
-      minWidth: 0,
-    },
-    weekday: {
-      fontFamily: 'Inter_500Medium',
-      fontSize: 13,
-      color: c.ink,
-      letterSpacing: -0.1,
-    },
-    subtitle: {
-      fontSize: 11,
-      color: c.inkMuted,
-      marginTop: 2,
-    },
-    right: {
-      alignItems: 'flex-end',
-      paddingLeft: 12,
-    },
-    total: {
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 18,
-      color: c.ink,
-      letterSpacing: -0.3,
-    },
-    totalMulti: {
-      color: c.accent,
-    },
-    breakdown: {
-      fontSize: 10,
-      color: c.inkMuted,
-      marginTop: 3,
-      maxWidth: 130,
-    },
-  });
-}
-
-export function EntryCard({ entry, onClick }: EntryCardProps) {
-  const { colors } = useTheme();
+export const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick }) => {
   const { fmt, fmtFull } = useLocale();
-  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const total = entry.amounts.reduce((a, b) => a + b, 0);
   const multi = entry.amounts.length > 1;
-  const d = parseDate(entry.date);
+  const d = isoToDate(entry.date);
 
   return (
     <Pressable
       onPress={onClick}
-      style={({ pressed }) => [{ marginBottom: 10 }, pressed && styles.cardPressed]}
+      className={clsx('mb-2.5')}
+      style={({ pressed }) => (pressed ? { opacity: 0.7, transform: [{ scale: 0.985 }] } : undefined)}
     >
       <Card
         shadow
-        style={{
-          padding: 16,
-          flexDirection: 'row',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          overflow: 'hidden',
-          borderWidth: 0,
-          shadowOpacity: 0.22,
-        }}
+        className="relative flex-row items-center justify-between overflow-hidden border-0 p-4"
+        style={{ shadowOpacity: 0.22 }}
       >
-        {multi && <View style={styles.accentStripe} />}
+        {multi && <View className="absolute bottom-0 left-0 top-0 w-[3px] bg-accent" />}
 
-        <View style={styles.left}>
-          <View style={[styles.dateBox, multi && styles.dateBoxMulti]}>
-            <Text style={[styles.dayNum, multi && styles.dayNumMulti]}>
+        <View className="min-w-0 flex-1 flex-row items-center gap-3.5">
+          <View
+            className={clsx(
+              'h-[46px] w-[46px] shrink-0 items-center justify-center rounded-xl',
+              multi ? 'border border-line bg-accent-soft' : 'bg-surface-alt',
+            )}
+          >
+            <Text
+              className={clsx(multi ? 'text-accent' : 'text-ink-soft')}
+              style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 15, lineHeight: 18 }}
+            >
               {d.getDate()}
             </Text>
-            <Text style={[styles.monthLabel, multi && styles.monthLabelMulti]}>
+            <Text
+              className={clsx('mt-0.5 uppercase tracking-widest', multi ? 'text-accent opacity-75' : 'text-ink-muted')}
+              style={{ fontSize: 8, letterSpacing: 1.5 }}
+            >
               {d.toLocaleDateString('en-US', { month: 'short' })}
             </Text>
           </View>
-          <View style={styles.info}>
-            <Text style={styles.weekday}>
+          <View className="min-w-0 flex-1">
+            <Text className="text-ink" style={{ fontFamily: 'Inter_500Medium', fontSize: 13, letterSpacing: -0.1 }}>
               {d.toLocaleDateString('en-US', { weekday: 'long' })}
             </Text>
-            <Text style={styles.subtitle} numberOfLines={1}>
+            <Text className="mt-0.5 text-ink-muted" style={{ fontSize: 11 }} numberOfLines={1}>
               {multi ? `${entry.amounts.length} items` : entry.note || '—'}
             </Text>
           </View>
         </View>
 
-        <View style={styles.right}>
-          <Text style={[styles.total, multi && styles.totalMulti]}>{fmtFull(total)}</Text>
+        <View className="items-end pl-3">
+          <Text
+            className={clsx(multi ? 'text-accent' : 'text-ink')}
+            style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, letterSpacing: -0.3 }}
+          >
+            {fmtFull(total)}
+          </Text>
           {multi && (
-            <Text style={styles.breakdown} numberOfLines={1}>
+            <Text className="mt-1 max-w-[130px] text-ink-muted" style={{ fontSize: 10 }} numberOfLines={1}>
               {entry.amounts.map(a => fmt(a)).join(' · ')}
             </Text>
           )}
@@ -167,4 +77,4 @@ export function EntryCard({ entry, onClick }: EntryCardProps) {
       </Card>
     </Pressable>
   );
-}
+};

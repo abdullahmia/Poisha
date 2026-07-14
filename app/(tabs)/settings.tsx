@@ -1,24 +1,33 @@
-import { Alert, ActivityIndicator, Platform, Pressable, ScrollView, Switch, Text, TextInput, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { HugeiconsIcon } from '@hugeicons/react-native';
+import { clsx } from 'clsx';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Platform, Pressable, ScrollView, Switch, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BudgetSheetContent } from '@/lib/components/settings/budget-sheet.component';
+import { CsvFormatSheetContent } from '@/lib/components/settings/csv-format-sheet.component';
+import { CurrencySymbolSheetContent } from '@/lib/components/settings/currency-symbol-sheet.component';
+import { PinSetupSheet } from '@/lib/components/pin-setup-sheet.component';
+import { DEFAULT_LOCALE } from '@/lib/constants';
+import { useBiometric } from '@/lib/hooks/use-biometric.hook';
+import { useBudget } from '@/lib/hooks/use-budget.hook';
+import { useCsvExport } from '@/lib/hooks/use-csv-export.hook';
+import { useCsvImport } from '@/lib/hooks/use-csv-import.hook';
+import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { useLocale } from '@/lib/hooks/use-locale.hook';
+import { useLock } from '@/lib/hooks/use-lock.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { Card } from '@/lib/ui/card.ui';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { File, Paths } from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
-import * as DocumentPicker from 'expo-document-picker';
-import { PinSetupSheet } from '@/lib/components/pin-setup-sheet.component';
-import { useBudget } from '@/lib/hooks/use-budget.hook';
-import { useLocale } from '@/lib/hooks/use-locale.hook';
-import { DEFAULT_LOCALE } from '@/lib/utils/format.util';
-import { useHaptics } from '@/lib/hooks/use-haptics.hook';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { useEntries } from '@/lib/hooks/use-entries.hook';
-import { useLock } from '@/lib/hooks/use-lock.hook';
-import { biometricService } from '@/lib/services/biometric.service';
-import { biometricLabel, biometricIcon } from '@/lib/utils/biometric.utils';
-import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Feather } from '@expo/vector-icons';
-import { entriesToCsv, csvToEntries } from '@/lib/utils/csv.util';
-import { useState } from 'react';
+import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
+
+const rowClass = 'flex-row items-center justify-between px-4 py-4';
+const sectionLabelClass = 'mb-2 uppercase text-ink-muted';
+const sectionLabelStyle = { fontFamily: 'Inter_500Medium', fontSize: 11, letterSpacing: 2 } as const;
+const rowLabelStyle = { fontFamily: 'Inter_500Medium', fontSize: 15 } as const;
+const rowSubStyle = { fontFamily: 'Inter_400Regular', fontSize: 12 } as const;
+const chevronStyle = { fontFamily: 'Inter_400Regular', fontSize: 18 } as const;
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -26,10 +35,12 @@ export default function SettingsScreen() {
   const { entries, importEntries } = useEntries();
   const { locale, setLocale, fmtFull } = useLocale();
   const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric } = useLock();
+  const { authenticate } = useBiometric();
   const { hapticsEnabled, setHapticsEnabled } = useHaptics();
   const { budget, setBudget } = useBudget();
-  const [exporting, setExporting] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const { exporting, handleExport } = useCsvExport(entries);
+  const { importing, handleImport } = useCsvImport();
+
   const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({ visible: false, mode: 'enable' });
   const [budgetSheetOpen, setBudgetSheetOpen] = useState(false);
   const [budgetInput, setBudgetInput] = useState('');
@@ -42,19 +53,19 @@ export default function SettingsScreen() {
     setBudgetSheetOpen(true);
   }
 
-  async function saveBudget(close: () => void) {
+  async function saveBudget() {
     const parsed = parseFloat(budgetInput);
     if (!budgetInput.trim() || isNaN(parsed) || parsed <= 0) {
       Alert.alert('Invalid amount', 'Please enter a positive number.');
       return;
     }
     await setBudget(parsed);
-    close();
+    setBudgetSheetOpen(false);
   }
 
-  async function removeBudget(close: () => void) {
+  async function removeBudget() {
     await setBudget(null);
-    close();
+    setBudgetSheetOpen(false);
   }
 
   function handleCurrencySymbolPress() {
@@ -75,117 +86,31 @@ export default function SettingsScreen() {
     }
   }
 
-  async function handleExport() {
-    setExporting(true);
-    try {
-      const csv = entriesToCsv(entries);
-      const file = new File(Paths.cache, 'poisha-export.csv');
-      file.write(csv);
-      const available = await Sharing.isAvailableAsync();
-      if (!available) {
-        Alert.alert('Not available', 'Sharing is not supported on this device.');
-        return;
-      }
-      await Sharing.shareAsync(file.uri, { mimeType: 'text/csv', dialogTitle: 'Export Poisha' });
-    } catch (e: unknown) {
-      Alert.alert('Export failed', e instanceof Error ? e.message : 'Unknown error');
-    } finally {
-      setExporting(false);
-    }
+  async function saveCurrencySymbol() {
+    await setLocale({ symbol: symbolInput.trim() || DEFAULT_LOCALE.symbol });
+    setSymbolSheetOpen(false);
   }
-
-  async function handleImport() {
-    setImporting(true);
-    try {
-      const result = await DocumentPicker.getDocumentAsync({ type: 'text/csv', copyToCacheDirectory: true });
-      if (result.canceled) return;
-      const csv = await new File(result.assets[0].uri).text();
-      const imported = csvToEntries(csv);
-      if (imported.length === 0) {
-        Alert.alert('Import failed', 'The file could not be parsed.');
-        return;
-      }
-      Alert.alert(
-        'Import CSV',
-        `Found ${imported.length} entries. How would you like to import?`,
-        [
-          { text: 'Cancel', style: 'cancel' },
-          {
-            text: 'Merge',
-            onPress: () => {
-              importEntries(imported, false);
-              Alert.alert('Done', `Imported ${imported.length} entries.`);
-            },
-          },
-          {
-            text: 'Replace',
-            style: 'destructive',
-            onPress: () => {
-              importEntries(imported, true);
-              Alert.alert('Done', `Imported ${imported.length} entries.`);
-            },
-          },
-        ]
-      );
-    } catch (e: unknown) {
-      Alert.alert('Import failed', e instanceof Error ? e.message : 'The file could not be parsed.');
-    } finally {
-      setImporting(false);
-    }
-  }
-
-  const rowStyle = {
-    flexDirection: 'row' as const,
-    alignItems: 'center' as const,
-    justifyContent: 'space-between' as const,
-    paddingHorizontal: 16,
-    paddingVertical: 16,
-  };
-
-  const divider = {
-    height: 1,
-    backgroundColor: colors.line,
-    marginHorizontal: 16,
-  };
-
-  const sectionLabel = {
-    fontFamily: 'Inter_500Medium',
-    fontSize: 11,
-    color: colors.inkMuted,
-    letterSpacing: 2,
-    textTransform: 'uppercase' as const,
-    marginBottom: 8,
-  };
-
-
-  const rowLabel = { fontFamily: 'Inter_500Medium', fontSize: 15, color: colors.ink };
-  const rowSub   = { fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.inkSoft, marginTop: 2 };
-  const chevron  = { fontFamily: 'Inter_400Regular', fontSize: 18, color: colors.inkMuted };
 
   return (
     <ScrollView
-      style={{ flex: 1, backgroundColor: colors.bg }}
-      contentContainerStyle={{
-        paddingTop: insets.top,
-        paddingBottom: 110 + insets.bottom,
-        paddingHorizontal: 24,
-      }}
+      className="flex-1 bg-bg"
+      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 + insets.bottom, paddingHorizontal: 24 }}
       showsVerticalScrollIndicator={false}
     >
-      <View style={{ paddingTop: 28, paddingBottom: 8 }}>
-        <Text style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 30, color: colors.ink, letterSpacing: -0.5 }}>
+      <View className="pb-2 pt-7">
+        <Text className="text-ink" style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 30, letterSpacing: -0.5 }}>
           Settings
         </Text>
       </View>
 
       {/* Appearance section */}
-      <View style={{ marginTop: 24 }}>
-        <Text style={sectionLabel}>Appearance</Text>
-        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
-          <View style={rowStyle}>
+      <View className="mt-6">
+        <Text className={sectionLabelClass} style={sectionLabelStyle}>Appearance</Text>
+        <Card className="overflow-hidden rounded-2xl">
+          <View className={rowClass}>
             <View>
-              <Text style={rowLabel}>Theme</Text>
-              <Text style={rowSub}>{scheme === 'dark' ? 'Dark' : 'Light'}</Text>
+              <Text className="text-ink" style={rowLabelStyle}>Theme</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>{scheme === 'dark' ? 'Dark' : 'Light'}</Text>
             </View>
             <Switch
               value={scheme === 'dark'}
@@ -195,12 +120,12 @@ export default function SettingsScreen() {
             />
           </View>
 
-          <View style={divider} />
+          <View className="mx-4 h-px bg-line" />
 
-          <View style={rowStyle}>
+          <View className={rowClass}>
             <View>
-              <Text style={rowLabel}>Haptic Feedback</Text>
-              <Text style={rowSub}>{hapticsEnabled ? 'On' : 'Off'}</Text>
+              <Text className="text-ink" style={rowLabelStyle}>Haptic Feedback</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>{hapticsEnabled ? 'On' : 'Off'}</Text>
             </View>
             <Switch
               value={hapticsEnabled}
@@ -213,67 +138,45 @@ export default function SettingsScreen() {
       </View>
 
       {/* Region section */}
-      <View style={{ marginTop: 28 }}>
-        <Text style={sectionLabel}>Region</Text>
-        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
-          {/* Currency Symbol */}
+      <View className="mt-7">
+        <Text className={sectionLabelClass} style={sectionLabelStyle}>Region</Text>
+        <Card className="overflow-hidden rounded-2xl">
           <Pressable
             onPress={handleCurrencySymbolPress}
-            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+            className={clsx(rowClass, 'active:opacity-60')}
             accessibilityLabel="Currency Symbol"
           >
-            <Text style={rowLabel}>Currency Symbol</Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkSoft }}>
+            <Text className="text-ink" style={rowLabelStyle}>Currency Symbol</Text>
+            <Text className="text-ink-soft" style={{ fontFamily: 'Inter_400Regular', fontSize: 14 }}>
               {locale.symbol}
             </Text>
           </Pressable>
 
-          <View style={divider} />
+          <View className="mx-4 h-px bg-line" />
 
-          {/* Number Format */}
-          <View style={rowStyle}>
-            <View style={{ flex: 1 }}>
-              <Text style={rowLabel}>Number Format</Text>
-              <View style={{ flexDirection: 'row', gap: 8, marginTop: 10 }}>
+          <View className={rowClass}>
+            <View className="flex-1">
+              <Text className="text-ink" style={rowLabelStyle}>Number Format</Text>
+              <View className="mt-2.5 flex-row gap-2">
                 <Pressable
                   onPress={() => setLocale({ decimalComma: false })}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: !locale.decimalComma ? colors.ink : colors.line,
-                    backgroundColor: !locale.decimalComma ? colors.ink : colors.surface,
-                  }}
+                  className={clsx('rounded-lg border px-3.5 py-2', !locale.decimalComma ? 'border-ink bg-ink' : 'border-line bg-surface')}
                 >
-                  <Text style={{
-                    fontFamily: 'Inter_500Medium',
-                    fontSize: 13,
-                    color: !locale.decimalComma ? colors.bg : colors.inkSoft,
-                  }}>1,234.56</Text>
+                  <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: !locale.decimalComma ? colors.bg : colors.inkSoft }}>
+                    1,234.56
+                  </Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setLocale({ decimalComma: true })}
-                  style={{
-                    paddingHorizontal: 14,
-                    paddingVertical: 8,
-                    borderRadius: 8,
-                    borderWidth: 1,
-                    borderColor: locale.decimalComma ? colors.ink : colors.line,
-                    backgroundColor: locale.decimalComma ? colors.ink : colors.surface,
-                  }}
+                  className={clsx('rounded-lg border px-3.5 py-2', locale.decimalComma ? 'border-ink bg-ink' : 'border-line bg-surface')}
                 >
-                  <Text style={{
-                    fontFamily: 'Inter_500Medium',
-                    fontSize: 13,
-                    color: locale.decimalComma ? colors.bg : colors.inkSoft,
-                  }}>1.234,56</Text>
+                  <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 13, color: locale.decimalComma ? colors.bg : colors.inkSoft }}>
+                    1.234,56
+                  </Text>
                 </Pressable>
               </View>
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 12, color: colors.inkMuted, marginTop: 10 }}>
-                {'Preview: ' + (locale.decimalComma
-                  ? `${locale.symbol}1.234,56`
-                  : `${locale.symbol}1,234.56`)}
+              <Text className="mt-2.5 text-ink-muted" style={{ fontFamily: 'Inter_400Regular', fontSize: 12 }}>
+                {'Preview: ' + (locale.decimalComma ? `${locale.symbol}1.234,56` : `${locale.symbol}1,234.56`)}
               </Text>
             </View>
           </View>
@@ -281,57 +184,39 @@ export default function SettingsScreen() {
       </View>
 
       {/* Data section */}
-      <View style={{ marginTop: 28 }}>
-        <Text style={sectionLabel}>Data</Text>
-        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
-          {/* Export CSV */}
+      <View className="mt-7">
+        <Text className={sectionLabelClass} style={sectionLabelStyle}>Data</Text>
+        <Card className="overflow-hidden rounded-2xl">
           <Pressable
             onPress={handleExport}
             disabled={exporting}
-            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+            className={clsx(rowClass, 'active:opacity-60')}
             accessibilityLabel="Export CSV"
           >
             <View>
-              <Text style={rowLabel}>Export CSV</Text>
-              <Text style={rowSub}>Share all entries as a file</Text>
+              <Text className="text-ink" style={rowLabelStyle}>Export CSV</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>Share all entries as a file</Text>
             </View>
-            {exporting
-              ? <ActivityIndicator size="small" color={colors.inkMuted} />
-              : <Text style={chevron}>↑</Text>
-            }
+            {exporting ? <ActivityIndicator size="small" color={colors.inkMuted} /> : <Text className="text-ink-muted" style={chevronStyle}>↑</Text>}
           </Pressable>
 
-          <View style={divider} />
+          <View className="mx-4 h-px bg-line" />
 
-          {/* Import CSV */}
-          <View style={[rowStyle, { paddingRight: 8 }]}>
-            <Pressable
-              onPress={handleImport}
-              disabled={importing}
-              style={{ flex: 1 }}
-              accessibilityLabel="Import CSV"
-            >
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-                <Text style={rowLabel}>Import CSV</Text>
-                <Pressable
-                  onPress={() => setFormatSheetOpen(true)}
-                  hitSlop={8}
-                  accessibilityLabel="Show CSV format"
-                >
+          <View className={clsx(rowClass, 'pr-2')}>
+            <Pressable onPress={handleImport} disabled={importing} className="flex-1" accessibilityLabel="Import CSV">
+              <View className="flex-row items-center gap-1.5">
+                <Text className="text-ink" style={rowLabelStyle}>Import CSV</Text>
+                <Pressable onPress={() => setFormatSheetOpen(true)} hitSlop={8} accessibilityLabel="Show CSV format">
                   <Feather name="info" size={13} color={colors.inkMuted} />
                 </Pressable>
               </View>
-              <Text style={rowSub}>Restore entries from a file</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>Restore entries from a file</Text>
             </Pressable>
-            {importing
-              ? <ActivityIndicator size="small" color={colors.inkMuted} />
-              : <Text style={chevron}>↓</Text>
-            }
+            {importing ? <ActivityIndicator size="small" color={colors.inkMuted} /> : <Text className="text-ink-muted" style={chevronStyle}>↓</Text>}
           </View>
 
-          <View style={divider} />
+          <View className="mx-4 h-px bg-line" />
 
-          {/* Reset Data */}
           <Pressable
             onPress={() => {
               Alert.alert(
@@ -339,37 +224,29 @@ export default function SettingsScreen() {
                 'This will permanently delete all your entries. This cannot be undone.',
                 [
                   { text: 'Cancel', style: 'cancel' },
-                  {
-                    text: 'Reset',
-                    style: 'destructive',
-                    onPress: () => importEntries([], true),
-                  },
-                ]
+                  { text: 'Reset', style: 'destructive', onPress: () => importEntries([], true) },
+                ],
               );
             }}
-            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+            className={clsx(rowClass, 'active:opacity-60')}
             accessibilityLabel="Reset all data"
           >
             <View>
-              <Text style={[rowLabel, { color: colors.accent }]}>Reset All Data</Text>
-              <Text style={rowSub}>Permanently delete all entries</Text>
+              <Text className="text-accent" style={rowLabelStyle}>Reset All Data</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>Permanently delete all entries</Text>
             </View>
-            <Text style={[chevron, { color: colors.accent }]}>›</Text>
+            <Text className="text-accent" style={chevronStyle}>›</Text>
           </Pressable>
         </Card>
       </View>
 
       {/* Budget section */}
-      <View style={{ marginTop: 28 }}>
-        <Text style={sectionLabel}>Budget</Text>
-        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
-          <Pressable
-            onPress={openBudgetSheet}
-            style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
-            accessibilityLabel="Monthly Budget"
-          >
-            <Text style={rowLabel}>Monthly Budget</Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: budget !== null ? colors.ink : colors.inkMuted }}>
+      <View className="mt-7">
+        <Text className={sectionLabelClass} style={sectionLabelStyle}>Budget</Text>
+        <Card className="overflow-hidden rounded-2xl">
+          <Pressable onPress={openBudgetSheet} className={clsx(rowClass, 'active:opacity-60')} accessibilityLabel="Monthly Budget">
+            <Text className="text-ink" style={rowLabelStyle}>Monthly Budget</Text>
+            <Text className={budget !== null ? 'text-ink' : 'text-ink-muted'} style={{ fontFamily: 'Inter_400Regular', fontSize: 14 }}>
               {budget !== null ? fmtFull(budget) : 'Not set'}
             </Text>
           </Pressable>
@@ -377,66 +254,54 @@ export default function SettingsScreen() {
       </View>
 
       {/* Security section */}
-      <View style={{ marginTop: 28 }}>
-        <Text style={sectionLabel}>Security</Text>
-        <Card style={{ borderRadius: 16, overflow: 'hidden' }}>
-          {/* App Lock toggle */}
-          <View style={rowStyle}>
+      <View className="mt-7">
+        <Text className={sectionLabelClass} style={sectionLabelStyle}>Security</Text>
+        <Card className="overflow-hidden rounded-2xl">
+          <View className={rowClass}>
             <View>
-              <Text style={rowLabel}>App Lock</Text>
-              <Text style={rowSub}>{lockEnabled ? 'On' : 'Off'}</Text>
+              <Text className="text-ink" style={rowLabelStyle}>App Lock</Text>
+              <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>{lockEnabled ? 'On' : 'Off'}</Text>
             </View>
             <Switch
               value={lockEnabled}
-              onValueChange={val => {
-                if (val) {
-                  setSetupSheet({ visible: true, mode: 'enable' });
-                } else {
-                  setSetupSheet({ visible: true, mode: 'disable' });
-                }
-              }}
+              onValueChange={val => setSetupSheet({ visible: true, mode: val ? 'enable' : 'disable' })}
               trackColor={{ false: colors.surfaceAlt, true: colors.accent }}
               thumbColor={colors.surface}
             />
           </View>
 
-
-          {/* Change PIN row — only when lock is enabled */}
           {lockEnabled && (
             <>
-              <View style={divider} />
+              <View className="mx-4 h-px bg-line" />
               <Pressable
                 onPress={() => setSetupSheet({ visible: true, mode: 'change' })}
-                style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+                className={clsx(rowClass, 'active:opacity-60')}
                 accessibilityLabel="Change PIN"
               >
-                <View>
-                  <Text style={rowLabel}>Change PIN</Text>
-                </View>
-                <Text style={chevron}>›</Text>
+                <Text className="text-ink" style={rowLabelStyle}>Change PIN</Text>
+                <Text className="text-ink-muted" style={chevronStyle}>›</Text>
               </Pressable>
             </>
           )}
 
-          {/* Biometric toggle — only when lock is enabled and device supports biometrics */}
           {lockEnabled && biometricType !== 'none' && (
             <>
-              <View style={divider} />
-              <View style={rowStyle}>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+              <View className="mx-4 h-px bg-line" />
+              <View className={rowClass}>
+                <View className="flex-row items-center gap-2.5">
                   {biometricIcon(biometricType) && (
                     <HugeiconsIcon icon={biometricIcon(biometricType)!} size={18} color={colors.inkSoft} />
                   )}
                   <View>
-                    <Text style={rowLabel}>{biometricLabel(biometricType)}</Text>
-                    <Text style={rowSub}>{biometricEnabled ? 'On' : 'Off'}</Text>
+                    <Text className="text-ink" style={rowLabelStyle}>{biometricLabel(biometricType)}</Text>
+                    <Text className="mt-0.5 text-ink-soft" style={rowSubStyle}>{biometricEnabled ? 'On' : 'Off'}</Text>
                   </View>
                 </View>
                 <Switch
                   value={biometricEnabled}
                   onValueChange={async val => {
                     if (val) {
-                      const result = await biometricService.authenticate(`Verify ${biometricLabel(biometricType)}`);
+                      const result = await authenticate(`Verify ${biometricLabel(biometricType)}`);
                       if (result.success) {
                         await enableBiometric();
                       } else {
@@ -453,234 +318,53 @@ export default function SettingsScreen() {
             </>
           )}
 
-          {/* Re-enroll row — only when biometric is enabled */}
           {lockEnabled && biometricEnabled && (
             <>
-              <View style={divider} />
+              <View className="mx-4 h-px bg-line" />
               <Pressable
                 onPress={async () => {
-                  const result = await biometricService.authenticate(`Re-enroll ${biometricLabel(biometricType)}`);
+                  const result = await authenticate(`Re-enroll ${biometricLabel(biometricType)}`);
                   if (!result.success) {
                     Alert.alert('Verification failed', 'Could not verify biometric credential.');
                   }
                 }}
-                style={({ pressed }) => [rowStyle, pressed && { opacity: 0.6 }]}
+                className={clsx(rowClass, 'active:opacity-60')}
                 accessibilityLabel={`Re-enroll ${biometricLabel(biometricType)}`}
               >
-                <View>
-                  <Text style={rowLabel}>Re-enroll {biometricLabel(biometricType)}</Text>
-                </View>
-                <Text style={chevron}>›</Text>
+                <Text className="text-ink" style={rowLabelStyle}>Re-enroll {biometricLabel(biometricType)}</Text>
+                <Text className="text-ink-muted" style={chevronStyle}>›</Text>
               </Pressable>
             </>
           )}
         </Card>
       </View>
 
-      <BottomSheet
-        visible={budgetSheetOpen}
-        onClose={() => setBudgetSheetOpen(false)}
-        keyboardAvoiding
-      >
-        {(close) => (
-          <View style={{ padding: 24 }}>
-            <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 6 }}>
-              Monthly Budget
-            </Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.inkMuted, marginBottom: 20 }}>
-              Leave empty to disable the budget indicator.
-            </Text>
-            <TextInput
-              style={{
-                backgroundColor: colors.bg,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: colors.line,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                fontFamily: 'Inter_400Regular',
-                fontSize: 16,
-                color: colors.ink,
-                marginBottom: 16,
-              }}
-              keyboardType="numeric"
-              value={budgetInput}
-              onChangeText={setBudgetInput}
-              placeholder="e.g. 5000"
-              placeholderTextColor={colors.inkMuted}
-              autoFocus
-            />
-            <Pressable
-              onPress={() => saveBudget(close)}
-              style={({ pressed }) => [{
-                backgroundColor: colors.accent,
-                borderRadius: 10,
-                paddingVertical: 14,
-                alignItems: 'center' as const,
-                marginBottom: 10,
-              }, pressed && { opacity: 0.8 }]}
-            >
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#fff' }}>Save</Text>
-            </Pressable>
-            {budget !== null && (
-              <Pressable
-                onPress={() => removeBudget(close)}
-                style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const, marginBottom: 4 }, pressed && { opacity: 0.6 }]}
-              >
-                <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: '#e84040' }}>Remove Budget</Text>
-              </Pressable>
-            )}
-            <Pressable
-              onPress={close}
-              style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
-            >
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
-            </Pressable>
-          </View>
+      <BottomSheet visible={budgetSheetOpen} onClose={() => setBudgetSheetOpen(false)} keyboardAvoiding>
+        {() => (
+          <BudgetSheetContent
+            budgetInput={budgetInput}
+            setBudgetInput={setBudgetInput}
+            hasBudget={budget !== null}
+            onSave={saveBudget}
+            onRemove={removeBudget}
+            onCancel={() => setBudgetSheetOpen(false)}
+          />
         )}
       </BottomSheet>
 
-      <BottomSheet
-        visible={symbolSheetOpen}
-        onClose={() => setSymbolSheetOpen(false)}
-        keyboardAvoiding
-      >
-        {(close) => (
-          <View style={{ padding: 24 }}>
-            <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 20 }}>
-              Currency Symbol
-            </Text>
-            <TextInput
-              style={{
-                backgroundColor: colors.bg,
-                borderRadius: 10,
-                borderWidth: 1,
-                borderColor: colors.line,
-                paddingHorizontal: 16,
-                paddingVertical: 12,
-                fontFamily: 'Inter_400Regular',
-                fontSize: 16,
-                color: colors.ink,
-                marginBottom: 16,
-              }}
-              value={symbolInput}
-              onChangeText={setSymbolInput}
-              placeholder={DEFAULT_LOCALE.symbol}
-              placeholderTextColor={colors.inkMuted}
-              maxLength={3}
-              autoFocus
-            />
-            <Pressable
-              onPress={async () => {
-                await setLocale({ symbol: symbolInput.trim() || DEFAULT_LOCALE.symbol });
-                close();
-              }}
-              style={({ pressed }) => [{
-                backgroundColor: colors.accent,
-                borderRadius: 10,
-                paddingVertical: 14,
-                alignItems: 'center' as const,
-                marginBottom: 10,
-              }, pressed && { opacity: 0.8 }]}
-            >
-              <Text style={{ fontFamily: 'Inter_600SemiBold', fontSize: 15, color: '#fff' }}>Save</Text>
-            </Pressable>
-            <Pressable
-              onPress={close}
-              style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
-            >
-              <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 14, color: colors.inkMuted }}>Cancel</Text>
-            </Pressable>
-          </View>
+      <BottomSheet visible={symbolSheetOpen} onClose={() => setSymbolSheetOpen(false)} keyboardAvoiding>
+        {() => (
+          <CurrencySymbolSheetContent
+            symbolInput={symbolInput}
+            setSymbolInput={setSymbolInput}
+            onSave={saveCurrencySymbol}
+            onCancel={() => setSymbolSheetOpen(false)}
+          />
         )}
       </BottomSheet>
 
-      <BottomSheet
-        visible={formatSheetOpen}
-        onClose={() => setFormatSheetOpen(false)}
-      >
-        {(close) => (
-          <View style={{ padding: 24 }}>
-            <Text style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, color: colors.ink, marginBottom: 4 }}>
-              CSV Format
-            </Text>
-            <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.inkMuted, marginBottom: 20 }}>
-              Your file must include these four columns in order.
-            </Text>
-
-            {/* Column definitions */}
-            {[
-              { col: 'id', desc: 'Unique entry ID', example: 'e_1234567890' },
-              { col: 'date', desc: 'ISO date', example: 'YYYY-MM-DD' },
-              { col: 'amounts', desc: 'JSON array of numbers', example: '[150, 80]' },
-              { col: 'note', desc: 'Label (optional)', example: 'groceries' },
-            ].map(({ col, desc, example }) => (
-              <View
-                key={col}
-                style={{
-                  flexDirection: 'row',
-                  alignItems: 'flex-start',
-                  gap: 12,
-                  marginBottom: 12,
-                }}
-              >
-                <View style={{
-                  backgroundColor: colors.surfaceAlt,
-                  borderRadius: 6,
-                  paddingHorizontal: 8,
-                  paddingVertical: 3,
-                  minWidth: 72,
-                  alignItems: 'center',
-                }}>
-                  <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 12, color: colors.ink }}>{col}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={{ fontFamily: 'Inter_400Regular', fontSize: 13, color: colors.inkSoft }}>{desc}</Text>
-                  <Text style={{ fontFamily: 'DMSans_400Regular', fontSize: 12, color: colors.inkMuted, marginTop: 1 }}>{example}</Text>
-                </View>
-              </View>
-            ))}
-
-            {/* Example block */}
-            <View style={{
-              backgroundColor: colors.bg,
-              borderRadius: 10,
-              borderWidth: 1,
-              borderColor: colors.line,
-              padding: 14,
-              marginTop: 8,
-              marginBottom: 20,
-            }}>
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 10, color: colors.inkMuted, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
-                Example
-              </Text>
-              {[
-                'id,date,amounts,note',
-                'e_001,2024-01-15,"[150,80]",groceries',
-                'e_002,2024-01-16,[200],rent',
-              ].map((line, i) => (
-                <Text
-                  key={i}
-                  style={{
-                    fontFamily: 'DMSans_400Regular',
-                    fontSize: 11,
-                    color: i === 0 ? colors.inkMuted : colors.ink,
-                    lineHeight: 18,
-                  }}
-                >
-                  {line}
-                </Text>
-              ))}
-            </View>
-
-            <Pressable
-              onPress={close}
-              style={({ pressed }) => [{ paddingVertical: 12, alignItems: 'center' as const }, pressed && { opacity: 0.6 }]}
-            >
-              <Text style={{ fontFamily: 'Inter_500Medium', fontSize: 14, color: colors.inkMuted }}>Close</Text>
-            </Pressable>
-          </View>
-        )}
+      <BottomSheet visible={formatSheetOpen} onClose={() => setFormatSheetOpen(false)}>
+        {() => <CsvFormatSheetContent onClose={() => setFormatSheetOpen(false)} />}
       </BottomSheet>
 
       <PinSetupSheet

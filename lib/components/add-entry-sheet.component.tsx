@@ -1,309 +1,71 @@
-import { type Palette } from '@/lib/constants/theme';
+import { Feather } from '@expo/vector-icons';
+import { clsx } from 'clsx';
+import type React from 'react';
+import { useRef, useState } from 'react';
+import { KeyboardAwareScrollView, KeyboardGestureArea } from 'react-native-keyboard-controller';
+import { Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
-import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { useEntryForm } from '@/lib/hooks/use-entry-form.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
-import { Feather } from '@expo/vector-icons';
-import * as Haptics from 'expo-haptics';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { useMemo, useRef, useState } from 'react';
-import { KeyboardAwareScrollView, KeyboardGestureArea } from 'react-native-keyboard-controller';
-import {
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { DatePicker } from '@/lib/ui/date-picker.ui';
+import { formatDateLong } from '@/lib/utils/date.util';
 
-const todayISO = () => {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-};
+type SheetContentProps = { onClose: () => void };
 
-function isoToDate(iso: string): Date {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d);
-}
-
-function dateToISO(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-
-function formatDateLong(iso: string) {
-  const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('en-US', {
-    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  });
-}
-
-function createStyles(c: Palette) {
-  return StyleSheet.create({
-    sheetInner: {
-      flex: 1,
-    },
-    sheetHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingHorizontal: 24,
-      paddingTop: 12,
-      paddingBottom: 16,
-    },
-    sheetHeaderSub: {
-      fontSize: 10,
-      color: c.inkMuted,
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-    },
-    sheetTitle: {
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 24,
-      color: c.ink,
-      letterSpacing: -0.4,
-      marginTop: 2,
-    },
-    circleBtn: {
-      width: 36,
-      height: 36,
-      borderRadius: 18,
-      backgroundColor: c.surfaceAlt,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    field: {
-      paddingHorizontal: 20,
-    },
-    label: {
-      fontSize: 10,
-      letterSpacing: 2,
-      textTransform: 'uppercase',
-      color: c.inkMuted,
-      fontWeight: '600',
-      marginBottom: 8,
-      paddingHorizontal: 4,
-    },
-    labelOptional: {
-      color: c.inkMuted,
-      fontWeight: '400',
-    },
-    inputBox: {
-      backgroundColor: c.surfaceAlt,
-      borderWidth: 1,
-      borderColor: c.line,
-      borderRadius: 14,
-      paddingHorizontal: 16,
-      paddingVertical: 15,
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    inputText: {
-      flex: 1,
-      fontSize: 15,
-      color: c.ink,
-      fontFamily: 'Inter_400Regular',
-    },
-    amountsHeader: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'baseline',
-      paddingHorizontal: 4,
-      marginBottom: 8,
-    },
-    totalLabel: {
-      fontSize: 11,
-      color: c.inkSoft,
-    },
-    totalValue: {
-      fontFamily: 'SpaceGrotesk_600SemiBold',
-      fontSize: 15,
-      color: c.accent,
-    },
-    amountRow: {
-      flexDirection: 'row',
-      gap: 8,
-      marginBottom: 8,
-    },
-    amountInputBox: {
-      flex: 1,
-      paddingVertical: 0,
-    },
-    currencySymbol: {
-      fontFamily: 'SpaceGrotesk_500Medium',
-      fontSize: 17,
-      color: c.inkMuted,
-      marginRight: 10,
-    },
-    amountInput: {
-      flex: 1,
-      fontSize: 18,
-      color: c.ink,
-      paddingVertical: 16,
-      fontFamily: 'Inter_500Medium',
-      letterSpacing: -0.2,
-    },
-    removeBtn: {
-      width: 52,
-      backgroundColor: c.surfaceAlt,
-      borderWidth: 1,
-      borderColor: c.line,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    addLineBtn: {
-      borderWidth: 1,
-      borderColor: c.line,
-      borderRadius: 14,
-      paddingVertical: 13,
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 6,
-      marginTop: 4,
-    },
-    addLineBtnText: {
-      fontSize: 13,
-      color: c.inkSoft,
-      fontFamily: 'Inter_500Medium',
-    },
-    noteInput: {
-      flex: 1,
-      fontSize: 14,
-      color: c.ink,
-      fontFamily: 'Inter_400Regular',
-    },
-    actions: {
-      flexDirection: 'row',
-      gap: 10,
-      paddingHorizontal: 20,
-      paddingTop: 26,
-    },
-    deleteBtn: {
-      width: 56,
-      backgroundColor: c.surfaceAlt,
-      borderWidth: 1,
-      borderColor: c.line,
-      borderRadius: 14,
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: 16,
-    },
-    saveBtn: {
-      flex: 1,
-      backgroundColor: c.accent,
-      borderRadius: 14,
-      paddingVertical: 17,
-      alignItems: 'center',
-    },
-    saveBtnDisabled: {
-      backgroundColor: c.surfaceAlt,
-    },
-    saveBtnText: {
-      fontFamily: 'Inter_600SemiBold',
-      fontSize: 14,
-      color: c.bg,
-      letterSpacing: 0.6,
-      textTransform: 'uppercase',
-    },
-    saveBtnTextDisabled: {
-      color: c.inkMuted,
-    },
-    pickerOverlay: {
-      flex: 1,
-      backgroundColor: 'rgba(0,0,0,0.7)',
-      justifyContent: 'flex-end',
-    },
-    pickerBox: {
-      backgroundColor: c.surface,
-      borderTopLeftRadius: 24,
-      borderTopRightRadius: 24,
-      paddingBottom: 24,
-    },
-    pickerDone: {
-      alignSelf: 'flex-end',
-      marginRight: 20,
-      marginTop: 8,
-      backgroundColor: c.accent,
-      paddingHorizontal: 20,
-      paddingVertical: 10,
-      borderRadius: 999,
-    },
-    pickerDoneText: {
-      color: c.bg,
-      fontFamily: 'Inter_600SemiBold',
-      fontSize: 14,
-    },
-  });
-}
-
-function SheetContent({ onClose }: { onClose: () => void }) {
-  const { sheetEntry, saveEntry, deleteEntry, closeSheet } = useEntries();
+const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
+  const { sheetEntry: entry } = useEntries();
   const { colors } = useTheme();
   const { locale, fmtFull } = useLocale();
-  const { notification } = useHaptics();
-  const styles = useMemo(() => createStyles(colors), [colors]);
-  const entry = sheetEntry;
+  const {
+    dateISO,
+    setDateISO,
+    note,
+    setNote,
+    amountFields,
+    amounts,
+    updateAmount,
+    addLine,
+    removeLine,
+    total,
+    canSave,
+    handleSave,
+    handleDelete,
+  } = useEntryForm(entry);
 
-  const [dateISO, setDateISO] = useState(entry?.date ?? todayISO());
-  const [amounts, setAmounts] = useState<string[]>(entry?.amounts.map(String) ?? ['']);
-  const [note, setNote] = useState(entry?.note ?? '');
   const [pickerVisible, setPickerVisible] = useState(false);
   const pickerJustClosed = useRef(false);
 
-  const total = amounts.reduce((s, a) => s + (parseFloat(a) || 0), 0);
-  const canSave = amounts.some(a => parseFloat(a) > 0);
-
-  const updateAmount = (i: number, v: string) => {
-    const next = [...amounts];
-    next[i] = v.replace(/[^0-9.]/g, '');
-    setAmounts(next);
-  };
-
-  const addLine = () => setAmounts([...amounts, '']);
-
-  const removeLine = (i: number) => {
-    if (amounts.length === 1) setAmounts(['']);
-    else setAmounts(amounts.filter((_, idx) => idx !== i));
-  };
-
-  const handleSave = () => {
-    const cleaned = amounts.map(a => parseFloat(a)).filter(n => !isNaN(n) && n > 0);
-    if (cleaned.length === 0) return;
-    saveEntry({ id: entry?.id, date: dateISO, amounts: cleaned, note: note.trim() });
-    notification(Haptics.NotificationFeedbackType.Success);
-    closeSheet();
-  };
-
-  const handleDelete = () => {
-    if (entry) deleteEntry(entry.id);
-    notification(Haptics.NotificationFeedbackType.Warning);
-    closeSheet();
-  };
-
   return (
-    <KeyboardGestureArea interpolator={Platform.OS === 'ios' ? 'ios' : 'linear'} style={styles.sheetInner}>
+    <KeyboardGestureArea interpolator={Platform.OS === 'ios' ? 'ios' : 'linear'} className="flex-1">
       <KeyboardAwareScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         bottomOffset={24}
         bounces={false}
       >
-        <View style={styles.sheetHeader}>
+        <View className="flex-row items-center justify-between px-6 pb-4 pt-3">
           <View>
-            <Text style={styles.sheetHeaderSub}>{entry ? 'Edit' : 'New'}</Text>
-            <Text style={styles.sheetTitle}>{entry ? 'Adjust entry' : 'Add entry'}</Text>
+            <Text className="uppercase tracking-widest text-ink-muted" style={{ fontSize: 10, letterSpacing: 2 }}>
+              {entry ? 'Edit' : 'New'}
+            </Text>
+            <Text className="mt-0.5 text-ink" style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 24, letterSpacing: -0.4 }}>
+              {entry ? 'Adjust entry' : 'Add entry'}
+            </Text>
           </View>
-          <Pressable onPress={onClose} style={styles.circleBtn}>
+          <Pressable onPress={onClose} className="h-9 w-9 items-center justify-center rounded-full bg-surface-alt">
             <Feather name="x" size={16} color={colors.inkSoft} />
           </Pressable>
         </View>
 
-        <View style={styles.field}>
-          <Text style={styles.label}>Date</Text>
+        <View className="px-5">
+          <Text
+            className="mb-2 px-1 uppercase text-ink-muted"
+            style={{ fontSize: 10, letterSpacing: 2, fontWeight: '600' }}
+          >
+            Date
+          </Text>
           <Pressable
             onPress={() => {
               if (pickerJustClosed.current) {
@@ -312,108 +74,139 @@ function SheetContent({ onClose }: { onClose: () => void }) {
               }
               setPickerVisible(true);
             }}
-            style={styles.inputBox}
+            className="flex-row items-center rounded-2xl border border-line bg-surface-alt px-4 py-[15px]"
           >
-            <Text style={styles.inputText}>{formatDateLong(dateISO)}</Text>
+            <Text className="flex-1 text-ink" style={{ fontSize: 15, fontFamily: 'Inter_400Regular' }}>
+              {formatDateLong(dateISO)}
+            </Text>
             <Feather name="calendar" size={15} color={colors.inkMuted} />
           </Pressable>
         </View>
 
-        <View style={[styles.field, { paddingTop: 20 }]}>
-          <View style={styles.amountsHeader}>
-            <Text style={styles.label}>Amounts</Text>
-            <Text style={styles.totalLabel}>
+        <View className="px-5 pt-5">
+          <View className="mb-2 flex-row items-baseline justify-between px-1">
+            <Text
+              className="uppercase text-ink-muted"
+              style={{ fontSize: 10, letterSpacing: 2, fontWeight: '600' }}
+            >
+              Amounts
+            </Text>
+            <Text className="text-ink-soft" style={{ fontSize: 11 }}>
               total{' '}
-              <Text style={styles.totalValue}>{fmtFull(total)}</Text>
+              <Text className="text-accent" style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 15 }}>
+                {fmtFull(total)}
+              </Text>
             </Text>
           </View>
 
-          {amounts.map((amt, i) => (
-            <View key={i} style={styles.amountRow}>
-              <View style={[styles.inputBox, styles.amountInputBox]}>
-                <Text style={styles.currencySymbol}>{locale.symbol}</Text>
+          {amountFields.map((field, i) => (
+            <View key={field.id} className="mb-2 flex-row gap-2">
+              <View className="flex-1 flex-row items-center rounded-2xl border border-line bg-surface-alt px-4">
+                <Text
+                  className="mr-2.5 text-ink-muted"
+                  style={{ fontFamily: 'SpaceGrotesk_500Medium', fontSize: 17 }}
+                >
+                  {locale.symbol}
+                </Text>
                 <TextInput
-                  value={amt}
+                  value={amounts[i]?.value ?? ''}
                   onChangeText={v => updateAmount(i, v)}
                   placeholder="0"
                   keyboardType="decimal-pad"
                   placeholderTextColor={colors.inkMuted}
-                  autoFocus={i === amounts.length - 1 && !entry}
-                  style={styles.amountInput}
+                  autoFocus={i === amountFields.length - 1 && !entry}
+                  className="flex-1 py-4 text-ink"
+                  style={{ fontSize: 18, fontFamily: 'Inter_500Medium', letterSpacing: -0.2 }}
                 />
               </View>
-              {amounts.length > 1 && (
-                <Pressable onPress={() => removeLine(i)} style={styles.removeBtn}>
+              {amountFields.length > 1 && (
+                <Pressable
+                  onPress={() => removeLine(i)}
+                  className="w-[52px] items-center justify-center rounded-2xl border border-line bg-surface-alt"
+                >
                   <Feather name="minus" size={14} color={colors.inkSoft} />
                 </Pressable>
               )}
             </View>
           ))}
 
-          <Pressable onPress={addLine} style={styles.addLineBtn}>
+          <Pressable
+            onPress={addLine}
+            className="mt-1 flex-row items-center justify-center gap-1.5 rounded-2xl border border-line py-3"
+          >
             <Feather name="plus" size={13} color={colors.inkSoft} />
-            <Text style={styles.addLineBtnText}>Add another amount</Text>
+            <Text className="text-ink-soft" style={{ fontSize: 13, fontFamily: 'Inter_500Medium' }}>
+              Add another amount
+            </Text>
           </Pressable>
         </View>
 
-        <View style={[styles.field, { paddingTop: 22 }]}>
-          <Text style={styles.label}>
-            Note <Text style={styles.labelOptional}>(optional)</Text>
+        <View className="px-5 pt-[22px]">
+          <Text
+            className="mb-2 px-1 uppercase text-ink-muted"
+            style={{ fontSize: 10, letterSpacing: 2, fontWeight: '600' }}
+          >
+            Note <Text className="normal-case text-ink-muted" style={{ fontWeight: '400' }}>(optional)</Text>
           </Text>
-          <View style={styles.inputBox}>
+          <View className="flex-row items-center rounded-2xl border border-line bg-surface-alt px-4 py-[15px]">
             <TextInput
               value={note}
               onChangeText={setNote}
               placeholder="groceries, rent, etc."
               placeholderTextColor={colors.inkMuted}
-              style={styles.noteInput}
+              className="flex-1 text-ink"
+              style={{ fontSize: 14, fontFamily: 'Inter_400Regular' }}
             />
           </View>
         </View>
 
-        <View style={styles.actions}>
+        <View className="flex-row gap-2.5 px-5 pt-[26px]">
           {entry && (
-            <Pressable onPress={handleDelete} style={styles.deleteBtn}>
+            <Pressable onPress={handleDelete} className="w-14 items-center justify-center rounded-2xl border border-line bg-surface-alt py-4">
               <Feather name="trash-2" size={14} color={colors.accent} />
             </Pressable>
           )}
           <Pressable
             onPress={handleSave}
             disabled={!canSave}
-            style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}
+            className={clsx(
+              'flex-1 items-center rounded-2xl py-[17px]',
+              canSave ? 'bg-accent' : 'bg-surface-alt',
+            )}
           >
-            <Text style={[styles.saveBtnText, !canSave && styles.saveBtnTextDisabled]}>
+            <Text
+              className={clsx('uppercase', canSave ? 'text-bg' : 'text-ink-muted')}
+              style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, letterSpacing: 0.6 }}
+            >
               {entry ? 'Save changes' : 'Log entry'}
             </Text>
           </Pressable>
         </View>
 
-        <View style={{ height: 8 }} />
+        <View className="h-2" />
       </KeyboardAwareScrollView>
 
       <Modal visible={pickerVisible} transparent animationType="fade">
-        <Pressable style={styles.pickerOverlay} onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }}>
-          <Pressable style={styles.pickerBox}>
-            <DateTimePicker
-              value={isoToDate(dateISO)}
-              mode="date"
-              display="spinner"
-              maximumDate={new Date()}
-              onChange={(_, d) => { if (d) setDateISO(dateToISO(d)); }}
-              style={{ width: '100%' }}
-              textColor={colors.ink}
-            />
-            <Pressable onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }} style={styles.pickerDone}>
-              <Text style={styles.pickerDoneText}>Done</Text>
+        <Pressable
+          className="flex-1 justify-end bg-black/70"
+          onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }}
+        >
+          <Pressable className="rounded-t-3xl bg-surface pt-5 pb-6">
+            <DatePicker value={dateISO} onChange={setDateISO} maximumDate={new Date()} />
+            <Pressable
+              onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }}
+              className="mr-5 mt-2 self-end rounded-full bg-accent px-5 py-2.5"
+            >
+              <Text className="text-bg" style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14 }}>Done</Text>
             </Pressable>
           </Pressable>
         </Pressable>
       </Modal>
     </KeyboardGestureArea>
   );
-}
+};
 
-export function AddEntrySheet() {
+export const AddEntrySheet: React.FC = () => {
   const { sheetOpen, closeSheet } = useEntries();
   return (
     <BottomSheet
@@ -424,4 +217,4 @@ export function AddEntrySheet() {
       {(close) => <SheetContent onClose={close} />}
     </BottomSheet>
   );
-}
+};

@@ -1,50 +1,28 @@
-import { StyleSheet, View } from 'react-native';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { clsx } from 'clsx';
+import type React from 'react';
+import { View } from 'react-native';
 
-interface BarChartProps {
+type BarChartProps = {
   data: { day: number; amount: number }[];
   height?: number;
-}
+};
 
-export function BarChart({ data, height = 120 }: BarChartProps) {
-  const { colors } = useTheme();
+export const BarChart: React.FC<BarChartProps> = ({ data, height = 120 }) => {
   const max = Math.max(...data.map(d => d.amount), 1);
 
   return (
-    <View style={[styles.root, { height }]}>
+    <View className="flex-row items-end gap-0.5" style={{ height }}>
       {data.map((d, i) => {
         const barH = d.amount > 0 ? Math.max((d.amount / max) * height, 5) : 3;
         return (
-          <View key={i} style={styles.barWrap}>
+          <View key={i} className="flex-1 justify-end">
             <View
-              style={[
-                styles.bar,
-                {
-                  height: barH,
-                  backgroundColor: d.amount > 0 ? colors.accent : colors.line,
-                  opacity: d.amount > 0 ? 1 : 0.5,
-                },
-              ]}
+              className={clsx('rounded-t', d.amount > 0 ? 'bg-accent' : 'bg-line opacity-50')}
+              style={{ height: barH }}
             />
           </View>
         );
       })}
     </View>
   );
-}
-
-const styles = StyleSheet.create({
-  root: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 2,
-  },
-  barWrap: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  bar: {
-    borderTopLeftRadius: 4,
-    borderTopRightRadius: 4,
-  },
-});
+};

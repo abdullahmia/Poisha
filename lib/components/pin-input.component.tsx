@@ -1,7 +1,7 @@
 import { Delete02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { useHaptics } from '@/lib/hooks/use-haptics.hook';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { clsx } from 'clsx';
+import type React from 'react';
 import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, {
@@ -10,8 +10,10 @@ import Animated, {
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
 
-interface PinInputProps {
+type PinInputProps = {
   value: string;
   onChange: (val: string) => void;
   onComplete: (pin: string) => void;
@@ -19,11 +21,19 @@ interface PinInputProps {
   onShakeDone?: () => void;
   leftKeyIcon?: typeof Delete02Icon | null;
   onLeftKeyPress?: () => void;
-}
+};
 
 const KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
 
-export function PinInput({ value, onChange, onComplete, shake, onShakeDone, leftKeyIcon, onLeftKeyPress }: PinInputProps) {
+export const PinInput: React.FC<PinInputProps> = ({
+  value,
+  onChange,
+  onComplete,
+  shake,
+  onShakeDone,
+  leftKeyIcon,
+  onLeftKeyPress,
+}) => {
   const { colors } = useTheme();
   const { impact } = useHaptics();
   const shakeX = useSharedValue(0);
@@ -36,12 +46,12 @@ export function PinInput({ value, onChange, onComplete, shake, onShakeDone, left
     if (shake) {
       shakeX.value = withSequence(
         withTiming(-8, { duration: 60 }),
-        withTiming(8,  { duration: 60 }),
+        withTiming(8, { duration: 60 }),
         withTiming(-8, { duration: 60 }),
-        withTiming(8,  { duration: 60 }),
+        withTiming(8, { duration: 60 }),
         withTiming(-8, { duration: 60 }),
-        withTiming(8,  { duration: 60 }),
-        withTiming(0,  { duration: 60 }),
+        withTiming(8, { duration: 60 }),
+        withTiming(0, { duration: 60 }),
       );
       const t = setTimeout(() => onShakeDone?.(), 420);
       return () => clearTimeout(t);
@@ -62,26 +72,17 @@ export function PinInput({ value, onChange, onComplete, shake, onShakeDone, left
   }
 
   return (
-    <View style={{ alignItems: 'center', gap: 40 }}>
-      {/* Dots */}
-      <Animated.View style={[{ flexDirection: 'row', gap: 16 }, dotsStyle]}>
+    <View className="items-center gap-10">
+      <Animated.View className="flex-row gap-4" style={dotsStyle}>
         {[0, 1, 2, 3].map(i => (
           <View
             key={i}
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 10,
-              backgroundColor: i < value.length ? colors.ink : 'transparent',
-              borderWidth: 2,
-              borderColor: i < value.length ? colors.ink : colors.line,
-            }}
+            className={clsx('h-5 w-5 rounded-full border-2', i < value.length ? 'bg-ink border-ink' : 'border-line')}
           />
         ))}
       </Animated.View>
 
-      {/* Keypad */}
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', width: 72 * 3 + 16 * 2, gap: 16, justifyContent: 'center' }}>
+      <View className="flex-row flex-wrap justify-center gap-4" style={{ width: 72 * 3 + 16 * 2 }}>
         {KEYS.map((key, idx) => {
           if (key === '') {
             if (leftKeyIcon) {
@@ -89,40 +90,26 @@ export function PinInput({ value, onChange, onComplete, shake, onShakeDone, left
                 <Pressable
                   key={idx}
                   onPress={onLeftKeyPress}
-                  style={({ pressed }) => ({
-                    width: 72,
-                    height: 72,
-                    borderRadius: 36,
-                    backgroundColor: pressed ? colors.surfaceAlt : 'transparent',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  })}
+                  className="h-[72px] w-[72px] items-center justify-center rounded-full"
+                  style={({ pressed }) => ({ backgroundColor: pressed ? colors.surfaceAlt : 'transparent' })}
                 >
                   <HugeiconsIcon icon={leftKeyIcon} size={32} color={colors.inkSoft} />
                 </Pressable>
               );
             }
-            return <View key={idx} style={{ width: 72, height: 72 }} />;
+            return <View key={idx} className="h-[72px] w-[72px]" />;
           }
           return (
             <Pressable
               key={idx}
               onPress={() => press(key)}
-              style={({ pressed }) => ({
-                width: 72,
-                height: 72,
-                borderRadius: 36,
-                backgroundColor: pressed ? colors.surfaceAlt : colors.surface,
-                alignItems: 'center',
-                justifyContent: 'center',
-                borderWidth: 1,
-                borderColor: colors.line,
-              })}
+              className="h-[72px] w-[72px] items-center justify-center rounded-full border border-line"
+              style={({ pressed }) => ({ backgroundColor: pressed ? colors.surfaceAlt : colors.surface })}
             >
               {key === '⌫' ? (
                 <HugeiconsIcon icon={Delete02Icon} size={22} color={colors.ink} />
               ) : (
-                <Text style={{ fontFamily: 'DMSans_500Medium', fontSize: 24, color: colors.ink }}>
+                <Text className="text-ink" style={{ fontFamily: 'DMSans_500Medium', fontSize: 24 }}>
                   {key}
                 </Text>
               )}
@@ -132,4 +119,4 @@ export function PinInput({ value, onChange, onComplete, shake, onShakeDone, left
       </View>
     </View>
   );
-}
+};

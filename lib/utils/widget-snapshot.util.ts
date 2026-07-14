@@ -1,8 +1,8 @@
 import { File, Paths } from 'expo-file-system';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
-import { DEFAULT_LOCALE, type Locale } from '@/lib/utils/format.util';
-import type { Entry } from '@/lib/types/entry.type';
+import { DEFAULT_LOCALE } from '@/lib/constants';
+import type { TEntry, TLocale } from '@/lib/types';
 
 const APP_GROUP = 'group.com.amia1971.tracker';
 const LOCALE_KEY = 'poisha_locale';
@@ -25,10 +25,10 @@ function todayISO(): string {
   return `${y}-${m}-${day}`;
 }
 
-export async function writeWidgetSnapshot(entries: Entry[]): Promise<void> {
+export async function writeWidgetSnapshot(entries: TEntry[]): Promise<void> {
   try {
     const raw = await AsyncStorage.getItem(LOCALE_KEY);
-    const locale: Locale = raw ? { ...DEFAULT_LOCALE, ...(JSON.parse(raw) as Partial<Locale>) } : DEFAULT_LOCALE;
+    const locale: TLocale = raw ? { ...DEFAULT_LOCALE, ...(JSON.parse(raw) as Partial<TLocale>) } : DEFAULT_LOCALE;
 
     const today = todayISO();
     const todayTotal = entries

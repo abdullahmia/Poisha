@@ -1,14 +1,17 @@
+import '@/global.css';
+
 import { AddEntrySheet } from '@/lib/components/add-entry-sheet.component';
 import { LockScreen } from '@/lib/components/lock-screen.component';
 import { PinOnboarding } from '@/lib/components/pin-onboarding.component';
-import { darkTheme } from '@/lib/constants/theme';
-import { EntriesProvider } from '@/lib/context/entries.context';
+import { queryClient } from '@/lib/config';
+import { DARK_THEME } from '@/lib/constants';
+import { EntriesSheetProvider } from '@/lib/context/entries-sheet.context';
 import { LockProvider } from '@/lib/context/lock.context';
-import { ThemeProvider } from '@/lib/context/theme.context';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { QueryClientProvider } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
-import { router } from 'expo-router';
+import { router, Stack } from 'expo-router';
 import { useEffect } from 'react';
 import {
   DMSans_400Regular,
@@ -29,7 +32,6 @@ import {
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { Modal, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -92,22 +94,22 @@ export default function RootLayout() {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      {fontsLoaded ? (
-        <SafeAreaProvider>
-          <KeyboardProvider>
-            <ThemeProvider>
+      <QueryClientProvider client={queryClient}>
+        {fontsLoaded ? (
+          <SafeAreaProvider>
+            <KeyboardProvider>
               <LockProvider>
-                <EntriesProvider>
+                <EntriesSheetProvider>
                   <AppGate />
                   <AppStatusBar />
-                </EntriesProvider>
+                </EntriesSheetProvider>
               </LockProvider>
-            </ThemeProvider>
-          </KeyboardProvider>
-        </SafeAreaProvider>
-      ) : (
-        <View style={{ flex: 1, backgroundColor: darkTheme.bg }} />
-      )}
+            </KeyboardProvider>
+          </SafeAreaProvider>
+        ) : (
+          <View style={{ flex: 1, backgroundColor: DARK_THEME.bg }} />
+        )}
+      </QueryClientProvider>
     </GestureHandlerRootView>
   );
 }

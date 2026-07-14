@@ -1,0 +1,33 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-bg: 255 255 255;
+  --color-surface: 245 243 240;
+  --color-surface-alt: 237 233 226;
+  --color-ink: 28 21 18;
+  --color-ink-soft: 90 77 60;
+  --color-ink-muted: 138 122 100;
+  --color-accent: 192 74 34;
+  --color-accent-soft: 253 232 222;
+  --color-line: 226 221 214;
+  --color-shadow: 44 31 16;
+  --color-danger: 232 64 64;
+  --color-danger-soft: 253 226 222;
+}
+
+.dark:root {
+  --color-bg: 12 12 14;
+  --color-surface: 20 20 22;
+  --color-surface-alt: 30 30 34;
+  --color-ink: 240 236 229;
+  --color-ink-soft: 152 145 138;
+  --color-ink-muted: 82 76 70;
+  --color-accent: 255 92 53;
+  --color-accent-soft: 34 16 8;
+  --color-line: 36 36 40;
+  --color-shadow: 0 0 0;
+  --color-danger: 232 64 64;
+  --color-danger-soft: 45 20 20;
+}

@@ -1,8 +1,18 @@
-import { useContext } from 'react';
-import { ThemeCtx } from '@/lib/context/theme.context';
+import { useCallback } from 'react';
+import { DARK_THEME, LIGHT_THEME } from '@/lib/constants';
+import { useSetThemePreference, useThemePreference } from '@/lib/services/theme';
 
 export function useTheme() {
-  const ctx = useContext(ThemeCtx);
-  if (!ctx) throw new Error('useTheme must be used within ThemeProvider');
-  return ctx;
+  const { data: scheme } = useThemePreference();
+  const setThemePreference = useSetThemePreference();
+
+  const toggleScheme = useCallback(() => {
+    setThemePreference.mutate(scheme === 'dark' ? 'light' : 'dark');
+  }, [scheme, setThemePreference]);
+
+  return {
+    scheme,
+    colors: scheme === 'dark' ? DARK_THEME : LIGHT_THEME,
+    toggleScheme,
+  };
 }

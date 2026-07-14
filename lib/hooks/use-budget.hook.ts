@@ -1,50 +1,24 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback } from 'react';
+import { useBudget as useBudgetQuery, useSetBudget } from '@/lib/services/budget';
 
-const BUDGET_KEY = 'poisha_monthly_budget';
+export function useBudget() {
+  const budgetQuery = useBudgetQuery();
+  const setBudgetMutation = useSetBudget();
 
-interface UseBudgetReturn {
-  budget: number | null;
-  setBudget: (value: number | null) => Promise<void>;
-  refresh: () => Promise<void>;
-  getProgress: (spent: number) => {
-    percent: number;
-    exceeded: boolean;
-    isSet: boolean;
-  };
-}
-
-export function useBudget(): UseBudgetReturn {
-  const [budget, setBudgetState] = useState<number | null>(null);
+  const setBudget = useCallback(async (value: number | null) => {
+    await setBudgetMutation.mutateAsync(value);
+  }, [setBudgetMutation]);
 
   const refresh = useCallback(async () => {
-    const val = await AsyncStorage.getItem(BUDGET_KEY);
-    if (val) {
-      const parsed = parseFloat(val);
-      setBudgetState(isNaN(parsed) ? null : parsed);
-    } else {
-      setBudgetState(null);
-    }
-  }, []);
+    await budgetQuery.refetch();
+  }, [budgetQuery]);
 
-  useEffect(() => {
-    refresh();
-  }, []);
-
-  async function setBudget(value: number | null): Promise<void> {
-    if (value === null) {
-      await AsyncStorage.removeItem(BUDGET_KEY);
-    } else {
-      await AsyncStorage.setItem(BUDGET_KEY, String(value));
-    }
-    setBudgetState(value);
-  }
-
-  function getProgress(spent: number) {
-    if (budget === null) return { percent: 0, exceeded: false, isSet: false };
+  const getProgress = useCallback((spent: number) => {
+    const budget = budgetQuery.data;
+    if (budget === null || budget === undefined) return { percent: 0, exceeded: false, isSet: false };
     const percent = (spent / budget) * 100;
     return { percent, exceeded: spent > budget, isSet: true };
-  }
+  }, [budgetQuery.data]);
 
-  return { budget, setBudget, refresh, getProgress };
+  return { budget: budgetQuery.data ?? null, setBudget, refresh, getProgress };
 }
