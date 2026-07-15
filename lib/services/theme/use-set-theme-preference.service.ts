@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { colorScheme as nativeWindColorScheme } from 'nativewind';
 import { ASYNC_STORAGE_KEYS, QUERY_KEYS } from '@/lib/constants';
 import { storage } from '@/lib/storages';
 import type { TColorScheme } from '@/lib/types';
@@ -10,9 +9,11 @@ export function useSetThemePreference() {
   return useMutation({
     mutationFn: async (scheme: TColorScheme): Promise<TColorScheme> => {
       await storage.setItem(ASYNC_STORAGE_KEYS.theme, scheme);
-      nativeWindColorScheme.set(scheme);
       return scheme;
     },
-    onSuccess: scheme => queryClient.setQueryData(QUERY_KEYS.theme, scheme),
+    // Applied synchronously in onMutate (not onSuccess) so the UI flips
+    // the instant the toggle is pressed, in step with the crossfade
+    // overlay — not delayed by the AsyncStorage write's latency.
+    onMutate: scheme => queryClient.setQueryData(QUERY_KEYS.theme, scheme),
   });
 }

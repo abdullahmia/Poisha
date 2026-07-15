@@ -7,6 +7,7 @@ import { queryClient } from '@/lib/config';
 import { DARK_THEME } from '@/lib/constants';
 import { EntriesSheetProvider } from '@/lib/context/entries-sheet.context';
 import { LockProvider } from '@/lib/context/lock.context';
+import { ThemeTransitionProvider } from '@/lib/context/theme-transition.context';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -115,12 +116,14 @@ export default function RootLayout() {
         {fontsLoaded ? (
           <SafeAreaProvider>
             <KeyboardProvider>
-              <LockProvider>
-                <EntriesSheetProvider>
-                  <AppGate />
-                  <AppStatusBar />
-                </EntriesSheetProvider>
-              </LockProvider>
+              <ThemeTransitionProvider>
+                <LockProvider>
+                  <EntriesSheetProvider>
+                    <AppGate />
+                    <AppStatusBar />
+                  </EntriesSheetProvider>
+                </LockProvider>
+              </ThemeTransitionProvider>
             </KeyboardProvider>
           </SafeAreaProvider>
         ) : (
