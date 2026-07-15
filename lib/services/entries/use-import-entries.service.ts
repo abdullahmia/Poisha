@@ -9,18 +9,16 @@ interface TImportEntriesInput {
   replace: boolean;
 }
 
-function importEntries({ imported, replace }: TImportEntriesInput): void {
-  if (replace) {
-    for (const e of sqliteStorage.loadEntries()) sqliteStorage.removeEntry(e.id);
-  }
-  for (const e of imported) sqliteStorage.upsertEntry(e);
-}
-
 export function useImportEntries() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async (input: TImportEntriesInput) => importEntries(input),
+    mutationFn: async ({ imported, replace }: TImportEntriesInput) => {
+      if (replace) {
+        for (const e of sqliteStorage.loadEntries()) sqliteStorage.removeEntry(e.id);
+      }
+      for (const e of imported) sqliteStorage.upsertEntry(e);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries.all });
       writeWidgetSnapshot(sqliteStorage.loadEntries()).catch(() => {});

@@ -1,16 +1,12 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { QUERY_KEYS, SECURE_STORAGE_KEYS } from '@/lib/constants';
 import { secureStorage } from '@/lib/storages';
-
-async function fetchBiometricEnabled(): Promise<boolean> {
-  const val = await secureStorage.getItem(SECURE_STORAGE_KEYS.biometricEnabled);
-  return val === '1';
-}
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 export function useBiometricEnabled() {
-  // No initialData: the app-bootstrap gate needs a real isPending signal,
-  // matching use-pin-status.service.ts.
-  return useQuery({ queryKey: QUERY_KEYS.biometric.enabled, queryFn: fetchBiometricEnabled });
+  return useQuery({ queryKey: QUERY_KEYS.biometric.enabled, queryFn: async () => {
+    const enabled = await secureStorage.getItem(SECURE_STORAGE_KEYS.biometricEnabled);
+    return enabled === '1';
+  } });
 }
 
 export function useSetBiometricEnabled() {
