@@ -93,16 +93,5 @@ Naming convention: files are suffixed by role (`*.component.tsx`, `*.hook.ts`, `
 | `bun start` | Start the Metro dev server |
 | `bun run android` | Build and run on a connected Android device/emulator |
 | `bun run ios` | Build and run on an iOS simulator/device |
-| `bun run web` | Run the web build |
 | `bun run lint` | Lint the project with the Expo ESLint config |
 | `bun run build:apk` | Build an Android APK locally via EAS (`local` profile) |
-
-## Building & deployment
-
-This project uses [EAS Build](https://docs.expo.dev/build/introduction/) (see [eas.json](eas.json)) with `development`, `preview`, `production`, and `local` profiles, plus a [GitHub Actions workflow](.github/workflows/build-apk.yml) for building an Android APK in CI.
-
-## Learn more
-
-- [Expo documentation](https://docs.expo.dev/)
-- [Expo Router documentation](https://docs.expo.dev/router/introduction/)
-- [EAS Build documentation](https://docs.expo.dev/build/introduction/)
