@@ -20,6 +20,16 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 
 See [docs/FEATURES.md](docs/FEATURES.md) for the full feature inventory and roadmap, and [docs/ISSUES.md](docs/ISSUES.md) for known issues.
 
+## Screenshots
+
+| Home | Browse | Add entry |
+|---|---|---|
+| ![Home dashboard](docs/screenshots/home.png) | ![Browse entries](docs/screenshots/browse.png) | ![Add entry sheet](docs/screenshots/add-entry.png) |
+
+| PIN lock | Settings | Settings (data & security) |
+|---|---|---|
+| ![PIN lock screen](docs/screenshots/pin-lock.png) | ![Settings screen](docs/screenshots/settings.png) | ![Settings — data and security](docs/screenshots/settings-2.png) |
+
 ## Tech stack
 
 - [Expo SDK 57](https://docs.expo.dev/) + [Expo Router v6](https://docs.expo.dev/router/introduction/) (file-based routing, typed routes)
