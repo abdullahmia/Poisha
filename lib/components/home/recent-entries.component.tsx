@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { EntryCard } from '@/lib/components/entry-card.component';
+import { EntryCard } from '@/lib/components/entries/entry-card.component';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 

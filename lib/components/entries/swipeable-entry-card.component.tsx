@@ -4,11 +4,11 @@ import type React from 'react';
 import { Text, View } from 'react-native';
 import { GestureDetector } from 'react-native-gesture-handler';
 import Animated, { type SharedValue } from 'react-native-reanimated';
-import { EntryCard } from '@/lib/components/entry-card.component';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useSwipeToDelete } from '@/lib/hooks/use-swipe-to-delete.hook';
 import type { TEntry } from '@/lib/types';
+import { EntryCard } from './entry-card.component';
 
 type SwipeableEntryCardProps = {
   entry: TEntry;

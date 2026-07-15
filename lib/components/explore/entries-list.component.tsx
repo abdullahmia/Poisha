@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import type { SharedValue } from 'react-native-reanimated';
-import { SwipeableEntryCard } from '@/lib/components/swipeable-entry-card.component';
+import { SwipeableEntryCard } from '@/lib/components/entries/swipeable-entry-card.component';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import type { TEntry } from '@/lib/types';
 import { formatDateShort } from '@/lib/utils/date.util';

@@ -1,8 +1,8 @@
 import '@/global.css';
 
-import { AddEntrySheet } from '@/lib/components/add-entry-sheet.component';
-import { LockScreen } from '@/lib/components/lock-screen.component';
-import { PinOnboarding } from '@/lib/components/pin-onboarding.component';
+import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
+import { LockScreen } from '@/lib/components/pin/lock-screen.component';
+import { PinOnboarding } from '@/lib/components/pin/pin-onboarding.component';
 import { queryClient } from '@/lib/config';
 import { DARK_THEME } from '@/lib/constants';
 import { EntriesSheetProvider } from '@/lib/context/entries-sheet.context';

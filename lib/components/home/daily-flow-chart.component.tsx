@@ -1,6 +1,6 @@
 import { Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { BarChart } from '@/lib/components/bar-chart.component';
+import { BarChart } from '@/lib/components/common/bar-chart.component';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { Card } from '@/lib/ui/card.ui';

@@ -14,11 +14,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
-import { PinInput } from '@/lib/components/pin-input.component';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { usePinLockout } from '@/lib/hooks/use-pin-lockout.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { biometricIcon } from '@/lib/utils/biometric.utils';
+import { PinInput } from './pin-input.component';
 
 const RADIUS = 54;
 const STROKE = 5;

@@ -4,7 +4,7 @@ import { clsx } from 'clsx';
 import { useState } from 'react';
 import { Alert, Pressable, Switch, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { PinSetupSheet } from '@/lib/components/pin-setup-sheet.component';
+import { PinSetupSheet } from '@/lib/components/pin/pin-setup-sheet.component';
 import { useBiometric } from '@/lib/hooks/use-biometric.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';

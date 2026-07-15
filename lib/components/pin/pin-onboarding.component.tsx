@@ -3,12 +3,12 @@ import type React from 'react';
 import { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { PinInput } from '@/lib/components/pin-input.component';
 import { useBiometric } from '@/lib/hooks/use-biometric.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { usePinWizard } from '@/lib/hooks/use-pin-wizard.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
+import { PinInput } from './pin-input.component';
 
 type OuterStep = 'welcome' | 'wizard' | 'biometric';
 
