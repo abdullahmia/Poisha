@@ -46,7 +46,12 @@
           "icon": "./assets/images/launcher.png",
           "color": "#b8441f"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-sharing",
+      "expo-status-bar",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true,

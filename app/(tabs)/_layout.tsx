@@ -104,7 +104,8 @@ const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
           elevation: 12,
         }}
       >
-        <BlurView intensity={64} tint={scheme === 'dark' ? 'dark' : 'light'} className="overflow-hidden rounded-[32px]">
+        <View className="overflow-hidden rounded-[32px]">
+          <BlurView intensity={64} tint={scheme === 'dark' ? 'dark' : 'light'} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
           <View className="absolute inset-0 rounded-[32px] border border-line bg-surface/55" />
           <View className="flex-row items-center px-2 pb-2 pt-2.5">
             <TabButton
@@ -136,7 +137,7 @@ const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
               onPress={() => handleTabPress(2, state.routes[2])}
             />
           </View>
-        </BlurView>
+        </View>
       </View>
     </View>
   );
