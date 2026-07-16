@@ -6,6 +6,7 @@ import { DataSection } from '@/lib/components/settings/data-section.component';
 import { RegionSection } from '@/lib/components/settings/region-section.component';
 import { SecuritySection } from '@/lib/components/settings/security-section.component';
 import { SettingsHero } from '@/lib/components/settings/settings-hero.component';
+import { UpdatesSection } from '@/lib/components/settings/updates-section.component';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
@@ -22,6 +23,7 @@ export default function SettingsScreen() {
       <DataSection />
       <BudgetSection />
       <SecuritySection />
+      <UpdatesSection />
     </ScrollView>
   );
 }

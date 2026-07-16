@@ -3,10 +3,13 @@
     "name": "poisha",
     "slug": "poisha",
     "version": "1.0.0",
+    "runtimeVersion": { "policy": "fingerprint" },
+    "updates": {
+      "url": "https://u.expo.dev/c1dabdba-05a9-4885-b3f7-250b605167eb"
+    },
     "orientation": "portrait",
     "icon": "./assets/images/launcher.png",
     "scheme": "tracker",
-    "userInterfaceStyle": "dark",
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
@@ -19,7 +22,6 @@
         "backgroundImage": "./assets/images/launcher.png",
         "monochromeImage": "./assets/images/launcher.png"
       },
-      "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
       "package": "com.amia1971.tracker"
     },
