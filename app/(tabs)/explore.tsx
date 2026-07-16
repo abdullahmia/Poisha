@@ -1,4 +1,4 @@
-import { ScrollView, View } from 'react-native';
+import { View } from 'react-native';
 import { useSharedValue } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { EntriesList } from '@/lib/components/explore/entries-list.component';
@@ -32,26 +32,25 @@ export default function ListScreen() {
   } = useEntriesList(entries);
 
   return (
-    <ScrollView
-      className="flex-1 bg-bg"
+    <EntriesList
+      filtered={filtered}
+      grouped={grouped}
+      showGroups={showGroups}
+      period={period}
+      openEdit={openEdit}
+      openCardId={openCardId}
       contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 + insets.bottom }}
-      showsVerticalScrollIndicator={false}
-    >
-      <ExploreHeader />
-      <PeriodSelector period={period} onChange={handlePeriodChange} />
-      <PeriodRangeNav period={period} setOffset={setOffset} range={range} canGoForward={canGoForward} />
-      <StatsGrid stats={stats} period={period} />
-      <SortSelector sort={sort} setSort={setSort} sorts={sorts} />
-      <View className="mx-5 mt-[18px] h-px bg-line" />
-      <ResultsSummary count={filtered.length} total={stats.total} />
-      <EntriesList
-        filtered={filtered}
-        grouped={grouped}
-        showGroups={showGroups}
-        period={period}
-        openEdit={openEdit}
-        openCardId={openCardId}
-      />
-    </ScrollView>
+      ListHeaderComponent={
+        <View style={{ paddingBottom: 12 }}>
+          <ExploreHeader />
+          <PeriodSelector period={period} onChange={handlePeriodChange} />
+          <PeriodRangeNav period={period} setOffset={setOffset} range={range} canGoForward={canGoForward} />
+          <StatsGrid stats={stats} period={period} />
+          <SortSelector sort={sort} setSort={setSort} sorts={sorts} />
+          <View className="mx-5 mt-[18px] h-px bg-line" />
+          <ResultsSummary count={filtered.length} total={stats.total} />
+        </View>
+      }
+    />
   );
 }

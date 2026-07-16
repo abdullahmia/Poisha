@@ -3,13 +3,13 @@ import { type ReactNode, useEffect } from 'react';
 import {
   type StyleProp,
   type ViewStyle,
-  KeyboardAvoidingView,
   Modal,
   Platform,
   Pressable,
   StyleSheet,
   View,
 } from 'react-native';
+import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import Animated, {
   Easing,
   runOnJS,
@@ -78,7 +78,7 @@ export const BottomSheet: React.FC<BottomSheetProps> = ({
   return (
     <Modal visible={visible} transparent animationType="none" onRequestClose={close}>
       {keyboardAvoiding ? (
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <KeyboardAvoidingView behavior="padding" style={{ flex: 1 }}>
           {content}
         </KeyboardAvoidingView>
       ) : content}

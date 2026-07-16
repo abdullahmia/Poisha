@@ -212,7 +212,7 @@ export const AddEntrySheet: React.FC = () => {
     <BottomSheet
       visible={sheetOpen}
       onClose={closeSheet}
-      sheetStyle={{ minHeight: '78%' as unknown as number, maxHeight: '92%' as unknown as number }}
+      sheetStyle={{ minHeight: '88%' as unknown as number, maxHeight: '96%' as unknown as number }}
     >
       {(close) => <SheetContent onClose={close} />}
     </BottomSheet>

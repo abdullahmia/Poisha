@@ -1,5 +1,5 @@
-import { useCallback, useContext } from 'react';
-import { EntriesSheetCtx } from '@/lib/context/entries-sheet.context';
+import { useCallback } from 'react';
+import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
 import {
   useDeleteEntry,
   useEntries as useEntriesQuery,
@@ -9,8 +9,7 @@ import {
 import type { TDraft, TEntry } from '@/lib/types';
 
 export function useEntries() {
-  const sheet = useContext(EntriesSheetCtx);
-  if (!sheet) throw new Error('useEntries must be used within EntriesSheetProvider');
+  const sheet = useEntriesSheet();
 
   const entriesQuery = useEntriesQuery();
   const saveEntryMutation = useSaveEntry();

@@ -1,7 +1,6 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { Add01Icon, Home01Icon, ListViewIcon, Settings01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { BlurView } from 'expo-blur';
 import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
 import type React from 'react';
@@ -10,7 +9,7 @@ import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type { TPalette } from '@/lib/types';
-import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
@@ -79,8 +78,8 @@ const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, col
 
 const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
   const insets = useSafeAreaInsets();
-  const { openAdd } = useEntries();
-  const { scheme, colors } = useTheme();
+  const { openAdd } = useEntriesSheet();
+  const { colors } = useTheme();
   const { impact, selection } = useHaptics();
 
   function handleTabPress(i: number, route: (typeof state.routes)[number]) {
@@ -105,8 +104,7 @@ const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
         }}
       >
         <View className="overflow-hidden rounded-[32px]">
-          <BlurView intensity={64} tint={scheme === 'dark' ? 'dark' : 'light'} style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 }} />
-          <View className="absolute inset-0 rounded-[32px] border border-line bg-surface/55" />
+          <View className="absolute inset-0 rounded-[32px] border border-line bg-surface" />
           <View className="flex-row items-center px-2 pb-2 pt-2.5">
             <TabButton
               label={TABS[0].label}
@@ -149,7 +147,7 @@ export default function TabLayout() {
   return (
     <Tabs
       tabBar={props => <PoishaTabBar {...props} />}
-      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg }, freezeOnBlur: true }}
     >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />

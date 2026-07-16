@@ -1,9 +1,9 @@
-import { useEffect, useState } from 'react';
-import { Text, View } from 'react-native';
-import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { useEffect, useState } from 'react';
+import { Text, View } from 'react-native';
+import Animated, { Easing, useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 
 type BudgetBarProps = {
   spent: number;
@@ -27,7 +27,7 @@ export function BudgetBar({ spent, budget }: BudgetBarProps) {
         { duration: 400, easing: Easing.out(Easing.quad) },
       );
     }
-  }, [percent, trackWidth]);
+  }, [percent, trackWidth, fillSv]);
 
   const fillStyle = useAnimatedStyle(() => ({ width: fillSv.value }));
 

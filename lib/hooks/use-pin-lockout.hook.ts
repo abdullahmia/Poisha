@@ -80,13 +80,27 @@ export function usePinLockout() {
     }
   }
 
-  // Auto-prompt biometric once per mount, only while the app is actually foregrounded
+  // Auto-prompt biometric once per mount, only while the app is actually foregrounded.
+  // The readiness check happens when the prompt is about to fire, not when this
+  // effect first runs — right after returning from background, AppState.currentState
+  // can still briefly report the stale 'inactive'/'background' value, which would
+  // otherwise skip the prompt for the whole lock session (this effect only re-runs
+  // if `biometricEnabled` itself changes, so a missed attempt never retries).
   useEffect(() => {
     if (!biometricEnabled || bioPromptFiredRef.current) return;
-    if (AppState.currentState !== 'active') return;
-    bioPromptFiredRef.current = true;
-    const t = setTimeout(() => { handleBiometric(); }, 400);
-    return () => clearTimeout(t);
+
+    function tryPrompt() {
+      if (bioPromptFiredRef.current || AppState.currentState !== 'active') return;
+      bioPromptFiredRef.current = true;
+      handleBiometric();
+    }
+
+    const t = setTimeout(tryPrompt, 400);
+    const sub = AppState.addEventListener('change', next => { if (next === 'active') tryPrompt(); });
+    return () => {
+      clearTimeout(t);
+      sub.remove();
+    };
   }, [biometricEnabled]);
 
   async function handleComplete(entered: string) {

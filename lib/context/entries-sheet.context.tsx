@@ -1,4 +1,4 @@
-import { createContext, useCallback, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import type { TEntry } from '@/lib/types';
 
 export interface EntriesSheetCtxValue {
@@ -19,9 +19,24 @@ export function EntriesSheetProvider({ children }: { children: React.ReactNode }
   const openEdit = useCallback((e: TEntry) => { setSheetEntry(e); setSheetOpen(true); }, []);
   const closeSheet = useCallback(() => { setSheetOpen(false); setSheetEntry(null); }, []);
 
+  // Memoized so consumers that only need a stable action (e.g. the always-mounted
+  // tab bar's `openAdd`) don't re-render on every provider render — this value is
+  // read by every entry row via useEntries(), so an unmemoized object here fans
+  // out re-renders repo-wide any time sheetOpen/sheetEntry change.
+  const value = useMemo(
+    () => ({ sheetOpen, sheetEntry, openAdd, openEdit, closeSheet }),
+    [sheetOpen, sheetEntry, openAdd, openEdit, closeSheet],
+  );
+
   return (
-    <EntriesSheetCtx.Provider value={{ sheetOpen, sheetEntry, openAdd, openEdit, closeSheet }}>
+    <EntriesSheetCtx.Provider value={value}>
       {children}
     </EntriesSheetCtx.Provider>
   );
+}
+
+export function useEntriesSheet() {
+  const ctx = useContext(EntriesSheetCtx);
+  if (!ctx) throw new Error('useEntriesSheet must be used within EntriesSheetProvider');
+  return ctx;
 }
