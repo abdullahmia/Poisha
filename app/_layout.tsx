@@ -1,8 +1,6 @@
 import '@/global.css';
 
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
-import { LockScreen } from '@/lib/components/pin/lock-screen.component';
-import { PinOnboarding } from '@/lib/components/pin/pin-onboarding.component';
 import { queryClient } from '@/lib/config';
 import { DARK_THEME } from '@/lib/constants';
 import { EntriesSheetProvider } from '@/lib/context/entries-sheet.context';
@@ -35,7 +33,7 @@ import {
 } from '@expo-google-fonts/space-grotesk';
 import { useFonts } from 'expo-font';
 import { StatusBar } from 'expo-status-bar';
-import { Modal, Platform, View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -65,6 +63,7 @@ function AppStatusBar() {
 
 function AppGate() {
   const { isLocked, showOnboarding } = useLock();
+  const { colors } = useTheme();
   const url = Linking.useURL();
 
   useEffect(() => {
@@ -73,23 +72,22 @@ function AppGate() {
     }
   }, [url]);
 
+  const screenOptions = { headerShown: false, gestureEnabled: false, animation: 'none' as const };
+
   return (
     <>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="(tabs)" />
+      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
+        <Stack.Protected guard={!showOnboarding && !isLocked}>
+          <Stack.Screen name="(tabs)" />
+        </Stack.Protected>
+        <Stack.Protected guard={showOnboarding}>
+          <Stack.Screen name="onboarding" options={screenOptions} />
+        </Stack.Protected>
+        <Stack.Protected guard={!showOnboarding && isLocked}>
+          <Stack.Screen name="lock" options={screenOptions} />
+        </Stack.Protected>
       </Stack>
       <AddEntrySheet />
-      {/* Modal renders in a separate native layer — never interacts with the
-          navigation tree, so Expo Router's linking is set up exactly once. */}
-      <Modal
-        visible={isLocked || showOnboarding}
-        transparent={false}
-        animationType="none"
-        onRequestClose={() => {}}
-        statusBarTranslucent
-      >
-        {showOnboarding ? <PinOnboarding /> : <LockScreen />}
-      </Modal>
     </>
   );
 }

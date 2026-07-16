@@ -144,8 +144,13 @@ const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
 };
 
 export default function TabLayout() {
+  const { colors } = useTheme();
+
   return (
-    <Tabs tabBar={props => <PoishaTabBar {...props} />} screenOptions={{ headerShown: false }}>
+    <Tabs
+      tabBar={props => <PoishaTabBar {...props} />}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.bg } }}
+    >
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
       <Tabs.Screen name="settings" />

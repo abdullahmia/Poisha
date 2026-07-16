@@ -42,23 +42,27 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [biometricType, setBiometricType] = useState<TBiometricType>('none');
   const appStateRef = useRef<AppStateStatus>(AppState.currentState);
-  const initializedRef = useRef(false);
+  const [hasMadeInitialDecision, setHasMadeInitialDecision] = useState(false);
 
   useEffect(() => {
     getSupportedType().then(setBiometricType).catch(() => setBiometricType('none'));
   }, [getSupportedType]);
 
-  // Once the pin status query first resolves, decide whether to show onboarding
-  // or start locked — mirrors the original bootstrap-then-gate behavior.
-  useEffect(() => {
-    if (initializedRef.current || pinStatus.isPending) return;
-    initializedRef.current = true;
-    if (!pinStatus.data?.onboarded) {
+  // Decide whether to show onboarding or start locked exactly once, as soon as the
+  // pin status first resolves. This runs during render (not in an effect) so the
+  // decision lands before this render ever commits — children never see a stale
+  // unlocked frame. Gated on a one-shot flag rather than on `pinStatus.data`
+  // identity: every enable/disable/change-PIN mutation invalidates that query and
+  // hands back a new object, which would otherwise re-run this block and clobber
+  // the isLocked/showOnboarding state those actions just set themselves.
+  if (!pinStatus.isPending && pinStatus.data && !hasMadeInitialDecision) {
+    setHasMadeInitialDecision(true);
+    if (!pinStatus.data.onboarded) {
       setShowOnboarding(true);
-    } else if (pinStatus.data?.lockEnabled) {
+    } else if (pinStatus.data.lockEnabled) {
       setIsLocked(true);
     }
-  }, [pinStatus.isPending, pinStatus.data]);
+  }
 
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
