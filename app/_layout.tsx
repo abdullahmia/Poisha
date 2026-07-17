@@ -1,5 +1,6 @@
 import '@/global.css';
 
+import { AppUpdatesGate } from '@/lib/components/common/app-updates-gate.component';
 import { GlobalAlertModal } from '@/lib/components/common/global-alert-modal.component';
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
 import { queryClient } from '@/lib/config';
@@ -91,6 +92,7 @@ function AppGate() {
       </Stack>
       <AddEntrySheet />
       <GlobalAlertModal />
+      {!showOnboarding && !isLocked && <AppUpdatesGate />}
     </>
   );
 }

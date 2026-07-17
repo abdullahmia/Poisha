@@ -7,6 +7,17 @@ export function useAppUpdates() {
   const { currentlyRunning, isUpdatePending } = Updates.useUpdates();
   const [checking, setChecking] = useState(false);
 
+  const notifyUpdateReady = useCallback(() => {
+    showAlert({
+      title: 'Update ready',
+      message: 'A new version has been downloaded. Restart now to apply it?',
+      actions: [
+        { label: 'Later', variant: 'outline' },
+        { label: 'Restart', variant: 'solid', onPress: () => Updates.reloadAsync() },
+      ],
+    });
+  }, [showAlert]);
+
   const checkForUpdate = useCallback(async () => {
     if (__DEV__ || !Updates.isEnabled) {
       showAlert({ title: 'Updates unavailable', message: 'Over-the-air updates aren\'t available in this build.' });
@@ -22,24 +33,39 @@ export function useAppUpdates() {
       }
 
       await Updates.fetchUpdateAsync();
-      showAlert({
-        title: 'Update ready',
-        message: 'A new version has been downloaded. Restart now to apply it?',
-        actions: [
-          { label: 'Later', variant: 'outline' },
-          { label: 'Restart', variant: 'solid', onPress: () => Updates.reloadAsync() },
-        ],
-      });
+      notifyUpdateReady();
     } catch (error) {
       showAlert({ title: 'Update check failed', message: error instanceof Error ? error.message : 'Something went wrong.' });
     } finally {
       setChecking(false);
     }
-  }, [showAlert]);
+  }, [showAlert, notifyUpdateReady]);
+
+  // Same as checkForUpdate but mute on "up to date" / errors — used for the
+  // automatic check on app open, where surfacing every no-op result would be noisy.
+  const checkForUpdateSilently = useCallback(async () => {
+    if (__DEV__ || !Updates.isEnabled) return;
+    try {
+      const result = await Updates.checkForUpdateAsync();
+      if (!result.isAvailable) return;
+      await Updates.fetchUpdateAsync();
+      notifyUpdateReady();
+    } catch {
+      // ignore — the user can still check manually from Settings
+    }
+  }, [notifyUpdateReady]);
 
   const restartToApply = useCallback(() => {
     Updates.reloadAsync();
   }, []);
 
-  return { currentlyRunning, isUpdatePending, checking, checkForUpdate, restartToApply };
+  return {
+    currentlyRunning,
+    isUpdatePending,
+    checking,
+    checkForUpdate,
+    checkForUpdateSilently,
+    notifyUpdateReady,
+    restartToApply,
+  };
 }
