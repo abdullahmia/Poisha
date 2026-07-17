@@ -53,6 +53,10 @@ export const CsvFormatSheetContent: React.FC<CsvFormatSheetProps> = ({ onClose }
         ))}
       </View>
 
+      <Text className="mb-4 text-ink-muted" style={{ fontFamily: 'Inter_400Regular', fontSize: 12, lineHeight: 17 }}>
+        Categories aren&apos;t included in export or import — imported entries always start as Uncategorized.
+      </Text>
+
       <Pressable onPress={onClose} className="items-center py-3">
         <Text className="text-ink-muted" style={{ fontFamily: 'Inter_500Medium', fontSize: 14 }}>Close</Text>
       </Pressable>

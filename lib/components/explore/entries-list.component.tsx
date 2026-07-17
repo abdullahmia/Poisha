@@ -5,7 +5,7 @@ import type { SharedValue } from 'react-native-reanimated';
 import { SwipeableEntryCard } from '@/lib/components/entries/swipeable-entry-card.component';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import type { TEntry } from '@/lib/types';
-import { formatDateShort } from '@/lib/utils/date.util';
+import { formatDateLong, formatDateShort } from '@/lib/utils/date.util';
 import type { TPeriod } from '@/lib/utils/date.util';
 
 type TSection = { title: string; dayTotal: number; data: TEntry[] };
@@ -15,6 +15,7 @@ type EntriesListProps = {
   grouped: Record<string, TEntry[]>;
   showGroups: boolean;
   period: TPeriod;
+  dateFilter?: string | null;
   openEdit: (entry: TEntry) => void;
   openCardId: SharedValue<string | null>;
   ListHeaderComponent?: React.ReactElement;
@@ -30,6 +31,7 @@ export function EntriesList({
   grouped,
   showGroups,
   period,
+  dateFilter,
   openEdit,
   openCardId,
   ListHeaderComponent,
@@ -65,9 +67,11 @@ export function EntriesList({
           </View>
           <Text className="text-ink-soft" style={{ fontFamily: 'SpaceGrotesk_500Medium', fontSize: 17 }}>No entries</Text>
           <Text className="mt-1.5 px-8 text-center text-ink-muted" style={{ fontSize: 12, fontFamily: 'Inter_400Regular' }}>
-            {period === 'all'
-              ? 'Tap + to create your first entry'
-              : 'No spending recorded in this period'}
+            {dateFilter
+              ? `No entries on ${formatDateLong(dateFilter)}`
+              : period === 'all'
+                ? 'Tap + to create your first entry'
+                : 'No spending recorded in this period'}
           </Text>
         </View>
       }

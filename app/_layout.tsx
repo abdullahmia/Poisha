@@ -82,6 +82,7 @@ function AppGate() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Protected guard={!showOnboarding && !isLocked}>
           <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="category-management" />
         </Stack.Protected>
         <Stack.Protected guard={showOnboarding}>
           <Stack.Screen name="onboarding" options={screenOptions} />

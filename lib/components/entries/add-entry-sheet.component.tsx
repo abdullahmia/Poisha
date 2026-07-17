@@ -4,6 +4,7 @@ import type React from 'react';
 import { useRef, useState } from 'react';
 import { KeyboardAwareScrollView, KeyboardGestureArea } from 'react-native-keyboard-controller';
 import { Modal, Platform, Pressable, Text, TextInput, View } from 'react-native';
+import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useEntryForm } from '@/lib/hooks/use-entry-form.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
@@ -11,6 +12,7 @@ import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { DatePicker } from '@/lib/ui/date-picker.ui';
 import { formatDateLong } from '@/lib/utils/date.util';
+import { CategoryPicker } from './category-picker.component';
 
 type SheetContentProps = { onClose: () => void };
 
@@ -18,11 +20,14 @@ const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
   const { sheetEntry: entry } = useEntries();
   const { colors } = useTheme();
   const { locale, fmtFull } = useLocale();
+  const { enabled: categoriesEnabled, categories } = useCategories();
   const {
     dateISO,
     setDateISO,
     note,
     setNote,
+    categoryId,
+    setCategoryId,
     amountFields,
     amounts,
     updateAmount,
@@ -140,6 +145,10 @@ const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
             </Text>
           </Pressable>
         </View>
+
+        {categoriesEnabled && (
+          <CategoryPicker categories={categories} value={categoryId} onChange={setCategoryId} />
+        )}
 
         <View className="px-5 pt-[22px]">
           <Text

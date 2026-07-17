@@ -63,7 +63,7 @@ export function csvToEntries(csv: string): TEntry[] {
       if (!id || !date || !amountsRaw) continue;
       const amounts = JSON.parse(amountsRaw) as number[];
       if (!Array.isArray(amounts)) continue;
-      entries.push({ id, date, amounts, note: note ?? '' });
+      entries.push({ id, date, amounts, note: note ?? '', categoryId: null });
     } catch {
       // skip invalid rows
     }

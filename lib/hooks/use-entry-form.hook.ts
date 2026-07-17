@@ -17,6 +17,7 @@ export function useEntryForm(entry: TEntry | null) {
       date: entry?.date ?? todayISO(),
       amounts: entry ? entry.amounts.map(a => ({ value: String(a) })) : [{ value: '' }],
       note: entry?.note ?? '',
+      categoryId: entry?.categoryId ?? null,
     },
   });
 
@@ -24,6 +25,7 @@ export function useEntryForm(entry: TEntry | null) {
   const amounts = form.watch('amounts');
   const dateISO = form.watch('date');
   const note = form.watch('note');
+  const categoryId = form.watch('categoryId');
 
   const total = amounts.reduce((s, a) => s + (parseFloat(a.value) || 0), 0);
   const canSave = amounts.some(a => parseFloat(a.value) > 0);
@@ -48,7 +50,13 @@ export function useEntryForm(entry: TEntry | null) {
     const values = form.getValues();
     const cleaned = values.amounts.map(a => parseFloat(a.value)).filter(n => !isNaN(n) && n > 0);
     if (cleaned.length === 0) return;
-    saveEntry({ id: entry?.id, date: values.date, amounts: cleaned, note: values.note.trim() });
+    saveEntry({
+      id: entry?.id,
+      date: values.date,
+      amounts: cleaned,
+      note: values.note.trim(),
+      categoryId: values.categoryId,
+    });
     notification(Haptics.NotificationFeedbackType.Success);
     closeSheet();
   }
@@ -64,6 +72,8 @@ export function useEntryForm(entry: TEntry | null) {
     setDateISO: (iso: string) => form.setValue('date', iso),
     note,
     setNote: (next: string) => form.setValue('note', next),
+    categoryId,
+    setCategoryId: (next: string | null) => form.setValue('categoryId', next),
     amountFields: amountFieldArray.fields,
     amounts,
     updateAmount,
