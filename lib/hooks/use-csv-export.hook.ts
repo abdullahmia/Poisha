@@ -1,11 +1,12 @@
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
-import { Alert } from 'react-native';
+import { useAlert } from '@/lib/context/alert.context';
 import type { TEntry } from '@/lib/types';
 import { entriesToCsv } from '@/lib/utils/csv.util';
 
 export function useCsvExport(entries: TEntry[]) {
+  const showAlert = useAlert();
   const [exporting, setExporting] = useState(false);
 
   async function handleExport() {
@@ -16,12 +17,12 @@ export function useCsvExport(entries: TEntry[]) {
       file.write(csv);
       const available = await Sharing.isAvailableAsync();
       if (!available) {
-        Alert.alert('Not available', 'Sharing is not supported on this device.');
+        showAlert({ title: 'Not available', message: 'Sharing is not supported on this device.' });
         return;
       }
       await Sharing.shareAsync(file.uri, { mimeType: 'text/csv', dialogTitle: 'Export Poisha' });
     } catch (e: unknown) {
-      Alert.alert('Export failed', e instanceof Error ? e.message : 'Unknown error');
+      showAlert({ title: 'Export failed', message: e instanceof Error ? e.message : 'Unknown error' });
     } finally {
       setExporting(false);
     }

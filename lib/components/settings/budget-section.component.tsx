@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { clsx } from 'clsx';
 import { useState } from 'react';
-import { Alert, Pressable, Switch, Text, View } from 'react-native';
+import { Pressable, Switch, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
+import { useAlert } from '@/lib/context/alert.context';
 import { useBudget } from '@/lib/hooks/use-budget.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
@@ -16,6 +17,7 @@ import { rowClass, rowLabelStyle, rowSubStyle } from './settings-styles.constant
 
 export function BudgetSection() {
   const { colors } = useTheme();
+  const showAlert = useAlert();
   const { fmtFull } = useLocale();
   const { budget, setBudget } = useBudget();
   const { notificationsEnabled, setNotificationsEnabled } = useNotifications();
@@ -32,7 +34,7 @@ export function BudgetSection() {
   async function saveBudget() {
     const parsed = parseFloat(budgetInput);
     if (!budgetInput.trim() || isNaN(parsed) || parsed <= 0) {
-      Alert.alert('Invalid amount', 'Please enter a positive number.');
+      showAlert({ title: 'Invalid amount', message: 'Please enter a positive number.' });
       return;
     }
     await setBudget(parsed);
@@ -76,7 +78,10 @@ export function BudgetSection() {
             onValueChange={async val => {
               const result = await setNotificationsEnabled(val);
               if (val && !result) {
-                Alert.alert('Permission needed', 'Enable notifications for Poisha in system settings to get budget alerts.');
+                showAlert({
+                  title: 'Permission needed',
+                  message: 'Enable notifications for Poisha in system settings to get budget alerts.',
+                });
               }
             }}
             trackColor={{ false: colors.surfaceAlt, true: colors.accent }}

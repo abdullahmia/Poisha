@@ -1,14 +1,15 @@
 import { useCallback, useState } from 'react';
-import { Alert } from 'react-native';
 import * as Updates from 'expo-updates';
+import { useAlert } from '@/lib/context/alert.context';
 
 export function useAppUpdates() {
+  const showAlert = useAlert();
   const { currentlyRunning, isUpdatePending } = Updates.useUpdates();
   const [checking, setChecking] = useState(false);
 
   const checkForUpdate = useCallback(async () => {
-    if (!Updates.isEnabled) {
-      Alert.alert('Updates unavailable', 'Over-the-air updates only work in production and preview builds, not in this development build.');
+    if (__DEV__ || !Updates.isEnabled) {
+      showAlert({ title: 'Updates unavailable', message: 'Over-the-air updates aren\'t available in this build.' });
       return;
     }
 
@@ -16,21 +17,25 @@ export function useAppUpdates() {
     try {
       const result = await Updates.checkForUpdateAsync();
       if (!result.isAvailable) {
-        Alert.alert("You're up to date", 'No new updates are available.');
+        showAlert({ title: "You're up to date", message: 'No new updates are available.' });
         return;
       }
 
       await Updates.fetchUpdateAsync();
-      Alert.alert('Update ready', 'A new version has been downloaded. Restart now to apply it?', [
-        { text: 'Later', style: 'cancel' },
-        { text: 'Restart', onPress: () => Updates.reloadAsync() },
-      ]);
+      showAlert({
+        title: 'Update ready',
+        message: 'A new version has been downloaded. Restart now to apply it?',
+        actions: [
+          { label: 'Later', variant: 'outline' },
+          { label: 'Restart', variant: 'solid', onPress: () => Updates.reloadAsync() },
+        ],
+      });
     } catch (error) {
-      Alert.alert('Update check failed', error instanceof Error ? error.message : 'Something went wrong.');
+      showAlert({ title: 'Update check failed', message: error instanceof Error ? error.message : 'Something went wrong.' });
     } finally {
       setChecking(false);
     }
-  }, []);
+  }, [showAlert]);
 
   const restartToApply = useCallback(() => {
     Updates.reloadAsync();

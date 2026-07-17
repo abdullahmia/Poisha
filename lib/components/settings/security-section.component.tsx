@@ -2,9 +2,10 @@ import { Feather } from '@expo/vector-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { clsx } from 'clsx';
 import { useState } from 'react';
-import { Alert, Pressable, Switch, Text, View } from 'react-native';
+import { Pressable, Switch, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { PinSetupSheet } from '@/lib/components/pin/pin-setup-sheet.component';
+import { useAlert } from '@/lib/context/alert.context';
 import { useBiometric } from '@/lib/hooks/use-biometric.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
@@ -16,6 +17,7 @@ import { rowClass, rowLabelStyle, rowSubStyle } from './settings-styles.constant
 
 export function SecuritySection() {
   const { colors } = useTheme();
+  const showAlert = useAlert();
   const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric } = useLock();
   const { authenticate } = useBiometric();
   const style = useFadeIn(350);
@@ -82,7 +84,7 @@ export function SecuritySection() {
                     if (result.success) {
                       await enableBiometric();
                     } else {
-                      Alert.alert('Verification failed', 'Biometric verification failed. Please try again.');
+                      showAlert({ title: 'Verification failed', message: 'Biometric verification failed. Please try again.' });
                     }
                   } else {
                     await disableBiometric();
@@ -102,7 +104,7 @@ export function SecuritySection() {
               onPress={async () => {
                 const result = await authenticate(`Re-enroll ${biometricLabel(biometricType)}`);
                 if (!result.success) {
-                  Alert.alert('Verification failed', 'Could not verify biometric credential.');
+                  showAlert({ title: 'Verification failed', message: 'Could not verify biometric credential.' });
                 }
               }}
               className={clsx(rowClass, 'active:opacity-60')}

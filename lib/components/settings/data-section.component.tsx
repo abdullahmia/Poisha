@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { clsx } from 'clsx';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useCsvExport } from '@/lib/hooks/use-csv-export.hook';
 import { useCsvImport } from '@/lib/hooks/use-csv-import.hook';
@@ -10,6 +10,7 @@ import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { Card } from '@/lib/ui/card.ui';
+import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
 import { CsvFormatSheetContent } from './csv-format-sheet.component';
 import { RowIcon, SectionHeader } from './settings-row.component';
 import { rowClass, rowLabelStyle, rowSubStyle } from './settings-styles.constants';
@@ -22,6 +23,7 @@ export function DataSection() {
   const style = useFadeIn(210);
 
   const [formatSheetOpen, setFormatSheetOpen] = useState(false);
+  const [resetModalOpen, setResetModalOpen] = useState(false);
 
   return (
     <Animated.View className="mt-7" style={style}>
@@ -64,16 +66,7 @@ export function DataSection() {
         <View className="mx-4 h-px bg-line" />
 
         <Pressable
-          onPress={() => {
-            Alert.alert(
-              'Reset All Data',
-              'This will permanently delete all your entries. This cannot be undone.',
-              [
-                { text: 'Cancel', style: 'cancel' },
-                { text: 'Reset', style: 'destructive', onPress: () => importEntries([], true) },
-              ],
-            );
-          }}
+          onPress={() => setResetModalOpen(true)}
           className={clsx(rowClass, 'active:opacity-60')}
           accessibilityLabel="Reset all data"
         >
@@ -91,6 +84,19 @@ export function DataSection() {
       <BottomSheet visible={formatSheetOpen} onClose={() => setFormatSheetOpen(false)}>
         {() => <CsvFormatSheetContent onClose={() => setFormatSheetOpen(false)} />}
       </BottomSheet>
+
+      <ConfirmModal
+        visible={resetModalOpen}
+        onClose={() => setResetModalOpen(false)}
+        title="Reset All Data"
+        message="This will permanently delete all your entries. This cannot be undone."
+        icon="trash-2"
+        destructive
+        actions={[
+          { label: 'Cancel', variant: 'outline' },
+          { label: 'Reset', variant: 'danger', onPress: () => importEntries([], true) },
+        ]}
+      />
     </Animated.View>
   );
 }

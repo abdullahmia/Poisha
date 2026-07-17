@@ -17,7 +17,11 @@ export function UpdatesSection() {
   const versionLabel = currentlyRunning.isEmbeddedLaunch
     ? 'Built-in version'
     : `Update ${currentlyRunning.updateId?.slice(0, 8) ?? ''}`;
-  const channelLabel = currentlyRunning.channel ? `Channel: ${currentlyRunning.channel}` : 'No update channel';
+  const channelLabel = currentlyRunning.channel
+    ? `Channel: ${currentlyRunning.channel}`
+    : __DEV__
+      ? 'Development build'
+      : 'No update channel';
 
   return (
     <Animated.View className="mt-7" style={style}>

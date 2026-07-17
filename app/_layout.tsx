@@ -1,8 +1,10 @@
 import '@/global.css';
 
+import { GlobalAlertModal } from '@/lib/components/common/global-alert-modal.component';
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
 import { queryClient } from '@/lib/config';
 import { DARK_THEME } from '@/lib/constants';
+import { AlertProvider } from '@/lib/context/alert.context';
 import { EntriesSheetProvider } from '@/lib/context/entries-sheet.context';
 import { LockProvider } from '@/lib/context/lock.context';
 import { ThemeTransitionProvider } from '@/lib/context/theme-transition.context';
@@ -88,6 +90,7 @@ function AppGate() {
         </Stack.Protected>
       </Stack>
       <AddEntrySheet />
+      <GlobalAlertModal />
     </>
   );
 }
@@ -116,10 +119,12 @@ export default function RootLayout() {
             <KeyboardProvider>
               <ThemeTransitionProvider>
                 <LockProvider>
-                  <EntriesSheetProvider>
-                    <AppGate />
-                    <AppStatusBar />
-                  </EntriesSheetProvider>
+                  <AlertProvider>
+                    <EntriesSheetProvider>
+                      <AppGate />
+                      <AppStatusBar />
+                    </EntriesSheetProvider>
+                  </AlertProvider>
                 </LockProvider>
               </ThemeTransitionProvider>
             </KeyboardProvider>

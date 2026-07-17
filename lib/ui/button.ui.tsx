@@ -9,6 +9,7 @@ const buttonVariants = cva('flex-row items-center justify-center rounded-2xl', {
       solid: 'bg-accent',
       outline: 'border border-line bg-transparent',
       ghost: 'bg-transparent',
+      danger: 'bg-danger',
     },
     size: {
       md: 'px-5 py-3',
@@ -27,6 +28,7 @@ const labelVariants = cva('text-center font-medium', {
       solid: 'text-white',
       outline: 'text-ink',
       ghost: 'text-ink',
+      danger: 'text-white',
     },
     size: {
       md: 'text-base',
