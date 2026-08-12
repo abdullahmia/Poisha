@@ -8,9 +8,10 @@ type MonthHeroProps = {
   count: number;
   txCount: number;
   avgDay: number;
+  plannedTotal: number;
 };
 
-export function MonthHero({ total, count, txCount, avgDay }: MonthHeroProps) {
+export function MonthHero({ total, count, txCount, avgDay, plannedTotal }: MonthHeroProps) {
   const { fmt, fmtFull } = useLocale();
   const style = useFadeIn(140);
 
@@ -34,6 +35,17 @@ export function MonthHero({ total, count, txCount, avgDay }: MonthHeroProps) {
           <Text className="text-ink" style={{ fontWeight: '500' }}>{fmt(Math.round(avgDay))}</Text>
           {' / day'}
         </Text>
+        {/* The hero number stays actual-only; planned spend is called out
+            separately so it can never be mistaken for money already gone. */}
+        {plannedTotal > 0 && (
+          <>
+            <Text className="text-line" style={{ fontSize: 12 }}>·</Text>
+            <Text className="text-ink-soft" style={{ fontSize: 12 }}>
+              <Text className="text-ink" style={{ fontWeight: '500' }}>{fmt(plannedTotal)}</Text>
+              {' planned'}
+            </Text>
+          </>
+        )}
       </View>
     </Animated.View>
   );

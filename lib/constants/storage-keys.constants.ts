@@ -6,6 +6,7 @@ export const ASYNC_STORAGE_KEYS = {
   budgetExceededMonth: 'poisha_budget_exceeded_month',
   notificationsEnabled: 'poisha_notifications_enabled',
   categoriesEnabled: 'poisha_categories_enabled',
+  planModeEnabled: 'poisha_plan_mode_enabled',
   sqliteMigrated: 'poisha_sqlite_migrated',
   legacyEntries: 'tracker_entries',
 } as const;

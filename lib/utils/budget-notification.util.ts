@@ -3,6 +3,8 @@ import * as Notifications from 'expo-notifications';
 import { ASYNC_STORAGE_KEYS, DEFAULT_LOCALE, QUERY_KEYS } from '@/lib/constants';
 import { sqliteStorage, storage } from '@/lib/storages';
 import type { TEntry, TLocale } from '@/lib/types';
+import { isUpcomingISO, NO_CUTOFF, todayISO } from '@/lib/utils/date.util';
+import { sumEntries } from '@/lib/utils/entries.util';
 import { fmtFull } from '@/lib/utils/format.util';
 
 const MESSAGE_TEMPLATES: Array<(spent: string, budget: string) => string> = [
@@ -23,6 +25,12 @@ export async function notifyBudgetExceeded(spentFmt: string, budgetFmt: string):
   });
 }
 
+// This util runs from use-save-entry.service.ts's onSuccess, outside React, so
+// the flag is read straight from AsyncStorage rather than through usePlanMode.
+async function loadPlanModeEnabled(): Promise<boolean> {
+  return (await storage.getItem(ASYNC_STORAGE_KEYS.planModeEnabled)) === 'true';
+}
+
 async function loadLocale(): Promise<TLocale> {
   const raw = await storage.getItem(ASYNC_STORAGE_KEYS.locale);
   if (!raw) return DEFAULT_LOCALE;
@@ -37,6 +45,16 @@ export async function checkBudgetAndNotify(entry: TEntry, queryClient: QueryClie
   const notificationsEnabled = await storage.getItem(ASYNC_STORAGE_KEYS.notificationsEnabled);
   if (notificationsEnabled !== 'true') return;
 
+  // Planned money isn't spent money: with Plan Mode on, saving a future-dated
+  // entry must not evaluate the budget at all. Without this, scheduling next
+  // month's rent would fire "you've crossed your budget" on the spot *and* stamp
+  // budgetExceededMonth, permanently suppressing that month's real alert.
+  // With Plan Mode off there is no such thing as planned spend, so a
+  // future-dated save is evaluated like any other — which is correct: if future
+  // entries count as spend, one crossing the budget *should* alert.
+  const planMode = await loadPlanModeEnabled();
+  if (planMode && isUpcomingISO(entry.date)) return;
+
   const budgetRaw = await storage.getItem(ASYNC_STORAGE_KEYS.budget);
   const budget = budgetRaw ? parseFloat(budgetRaw) : NaN;
   if (Number.isNaN(budget)) return;
@@ -45,10 +63,13 @@ export async function checkBudgetAndNotify(entry: TEntry, queryClient: QueryClie
   const exceededMonth = await storage.getItem(ASYNC_STORAGE_KEYS.budgetExceededMonth);
   if (exceededMonth === monthKey) return;
 
-  const total = sqliteStorage
-    .loadEntries()
-    .filter(e => e.date.startsWith(monthKey))
-    .reduce((sum, e) => sum + e.amounts.reduce((s, a) => s + a, 0), 0);
+  // Cut at today so planned entries already sitting later in this month (from a
+  // CSV import, or scheduled before this save) can't inflate the total either.
+  // NO_CUTOFF makes this byte-for-byte the pre-feature sum when Plan Mode is off.
+  const cutoff = planMode ? todayISO() : NO_CUTOFF;
+  const total = sumEntries(
+    sqliteStorage.loadEntries().filter(e => e.date.startsWith(monthKey) && e.date <= cutoff),
+  );
   if (total <= budget) return;
 
   const locale = await loadLocale();

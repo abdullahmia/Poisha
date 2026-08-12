@@ -8,10 +8,12 @@ import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useEntryForm } from '@/lib/hooks/use-entry-form.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
+import { usePlanCutoff } from '@/lib/hooks/use-plan-cutoff.hook';
+import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { DatePicker } from '@/lib/ui/date-picker.ui';
-import { formatDateLong } from '@/lib/utils/date.util';
+import { formatDateLong, formatDateShort, isUpcomingISO } from '@/lib/utils/date.util';
 import { CategoryPicker } from './category-picker.component';
 
 type SheetContentProps = { onClose: () => void };
@@ -41,6 +43,9 @@ const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
 
   const [pickerVisible, setPickerVisible] = useState(false);
   const pickerJustClosed = useRef(false);
+  const { enabled: planModeEnabled } = usePlanMode();
+  const cutoff = usePlanCutoff();
+  const planned = isUpcomingISO(dateISO, cutoff);
 
   return (
     <KeyboardGestureArea interpolator={Platform.OS === 'ios' ? 'ios' : 'linear'} className="flex-1">
@@ -86,6 +91,11 @@ const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
             </Text>
             <Feather name="calendar" size={15} color={colors.inkMuted} />
           </Pressable>
+          {planned && (
+            <Text className="mt-2 px-1 text-ink-muted" style={{ fontSize: 11, fontFamily: 'Inter_400Regular' }}>
+              Planned — won&apos;t count toward spending until {formatDateShort(dateISO)}.
+            </Text>
+          )}
         </View>
 
         <View className="px-5 pt-5">
@@ -187,7 +197,9 @@ const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
               className={clsx('uppercase', canSave ? 'text-bg' : 'text-ink-muted')}
               style={{ fontFamily: 'Inter_600SemiBold', fontSize: 14, letterSpacing: 0.6 }}
             >
-              {entry ? 'Save changes' : 'Log entry'}
+              {entry
+                ? planned ? 'Save planned entry' : 'Save changes'
+                : planned ? 'Schedule entry' : 'Log entry'}
             </Text>
           </Pressable>
         </View>
@@ -201,7 +213,13 @@ const SheetContent: React.FC<SheetContentProps> = ({ onClose }) => {
           onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }}
         >
           <Pressable className="rounded-t-3xl bg-surface pt-5 pb-6">
-            <DatePicker value={dateISO} onChange={setDateISO} maximumDate={new Date()} />
+            {/* Uncapped only when Plan Mode is on; otherwise the picker is
+                capped at today exactly as it was before the feature. */}
+            <DatePicker
+              value={dateISO}
+              onChange={setDateISO}
+              maximumDate={planModeEnabled ? undefined : new Date()}
+            />
             <Pressable
               onPress={() => { pickerJustClosed.current = true; setPickerVisible(false); }}
               className="mr-5 mt-2 self-end rounded-full bg-accent px-5 py-2.5"

@@ -66,7 +66,9 @@ export default function ListScreen() {
               )}
             />
             {!isDateFiltering && <PeriodSelector period={period} onChange={handlePeriodChange} />}
-            {!isDateFiltering && (
+            {/* Upcoming has no previous/next window to step through, same as
+                the exact-day filter. */}
+            {!isDateFiltering && period !== 'upcoming' && (
               <PeriodRangeNav period={period} setOffset={setOffset} range={range} canGoForward={canGoForward} />
             )}
             {categoriesEnabled && (

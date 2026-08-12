@@ -7,6 +7,7 @@ import { useLocale } from '@/lib/hooks/use-locale.hook';
 import type { TEntry } from '@/lib/types';
 import { formatDateLong, formatDateShort } from '@/lib/utils/date.util';
 import type { TPeriod } from '@/lib/utils/date.util';
+import { sumEntries } from '@/lib/utils/entries.util';
 
 type TSection = { title: string; dayTotal: number; data: TEntry[] };
 
@@ -21,10 +22,6 @@ type EntriesListProps = {
   ListHeaderComponent?: React.ReactElement;
   contentContainerStyle?: StyleProp<ViewStyle>;
 };
-
-function sumAmounts(entries: TEntry[]) {
-  return entries.reduce((s, e) => s + e.amounts.reduce((a, b) => a + b, 0), 0);
-}
 
 export function EntriesList({
   filtered,
@@ -46,7 +43,7 @@ export function EntriesList({
     if (!showGroups) return [{ title: '', dayTotal: 0, data: filtered }];
     return Object.entries(grouped).map(([date, items]) => ({
       title: date,
-      dayTotal: sumAmounts(items),
+      dayTotal: sumEntries(items),
       data: items,
     }));
   }, [filtered, grouped, showGroups]);
@@ -69,9 +66,11 @@ export function EntriesList({
           <Text className="mt-1.5 px-8 text-center text-ink-muted" style={{ fontSize: 12, fontFamily: 'Inter_400Regular' }}>
             {dateFilter
               ? `No entries on ${formatDateLong(dateFilter)}`
-              : period === 'all'
-                ? 'Tap + to create your first entry'
-                : 'No spending recorded in this period'}
+              : period === 'upcoming'
+                ? 'Nothing planned. Pick a future date when adding an entry to schedule it.'
+                : period === 'all'
+                  ? 'Tap + to create your first entry'
+                  : 'No spending recorded in this period'}
           </Text>
         </View>
       }

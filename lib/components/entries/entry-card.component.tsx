@@ -3,9 +3,10 @@ import type React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
+import { usePlanCutoff } from '@/lib/hooks/use-plan-cutoff.hook';
 import type { TEntry } from '@/lib/types';
 import { Card } from '@/lib/ui/card.ui';
-import { isoToDate } from '@/lib/utils/date.util';
+import { isoToDate, isUpcomingISO } from '@/lib/utils/date.util';
 
 type EntryCardProps = {
   entry: TEntry;
@@ -15,10 +16,12 @@ type EntryCardProps = {
 export const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick }) => {
   const { fmt, fmtFull } = useLocale();
   const { categories } = useCategories();
+  const cutoff = usePlanCutoff();
 
   const category = entry.categoryId ? categories.find(c => c.id === entry.categoryId) : undefined;
   const total = entry.amounts.reduce((a, b) => a + b, 0);
   const multi = entry.amounts.length > 1;
+  const planned = isUpcomingISO(entry.date, cutoff);
   const d = isoToDate(entry.date);
 
   return (
@@ -34,7 +37,7 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick }) => {
       >
         {(category || multi) && (
           <View
-            className={clsx('absolute bottom-0 left-0 top-0 w-[3px]', !category && 'bg-accent')}
+            className={clsx('absolute bottom-0 left-0 top-0 w-[3px]', !category && 'bg-accent', planned && 'opacity-40')}
             style={category ? { backgroundColor: category.color } : undefined}
           />
         )}
@@ -70,15 +73,27 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick }) => {
             <Text className="text-ink" style={{ fontFamily: 'Inter_500Medium', fontSize: 13, letterSpacing: -0.1 }}>
               {d.toLocaleDateString('en-US', { weekday: 'long' })}
             </Text>
-            <Text className="mt-0.5 text-ink-muted" style={{ fontSize: 11 }} numberOfLines={1}>
-              {multi ? `${entry.amounts.length} items` : entry.note || category?.name || '—'}
-            </Text>
+            <View className="mt-0.5 flex-row items-center gap-1.5">
+              {planned && (
+                <View className="rounded-full border border-line px-1.5 py-[1px]">
+                  <Text
+                    className="uppercase text-ink-muted"
+                    style={{ fontSize: 8, letterSpacing: 1, fontFamily: 'Inter_600SemiBold' }}
+                  >
+                    Planned
+                  </Text>
+                </View>
+              )}
+              <Text className="min-w-0 flex-1 text-ink-muted" style={{ fontSize: 11 }} numberOfLines={1}>
+                {multi ? `${entry.amounts.length} items` : entry.note || category?.name || '—'}
+              </Text>
+            </View>
           </View>
         </View>
 
         <View className="items-end pl-3">
           <Text
-            className={clsx(multi ? 'text-accent' : 'text-ink')}
+            className={clsx(planned ? 'text-ink-soft' : multi ? 'text-accent' : 'text-ink')}
             style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 18, letterSpacing: -0.3 }}
           >
             {fmtFull(total)}

@@ -2,6 +2,20 @@ export function todayISO(): string {
   return dateToISO(new Date());
 }
 
+// A date no real entry can exceed. Used as the "plan cutoff" when Plan Mode is
+// off: every `date <= NO_CUTOFF` test passes and every `isUpcomingISO(date,
+// NO_CUTOFF)` is false, so the planned-entry model collapses to "everything is
+// actual" with no branching at any consumer.
+export const NO_CUTOFF = '9999-12-31';
+
+// ISO YYYY-MM-DD strings sort chronologically, so "is this date in the future"
+// is a plain string comparison — no Date objects, no timezone surface. `today`
+// is a parameter so callers can pass a stable value from `useToday()` and stay
+// referentially correct inside `useMemo` instead of each reading the clock.
+export function isUpcomingISO(iso: string, today: string = todayISO()): boolean {
+  return iso > today;
+}
+
 export function isoToDate(iso: string): Date {
   const [y, m, d] = iso.split('-').map(Number);
   return new Date(y, m - 1, d);
@@ -31,7 +45,7 @@ export function formatDateShort(iso: string): string {
   });
 }
 
-export type TPeriod = 'day' | 'week' | 'month' | 'year' | 'all';
+export type TPeriod = 'day' | 'week' | 'month' | 'year' | 'all' | 'upcoming';
 
 export interface TPeriodRange {
   start: string;
@@ -42,6 +56,7 @@ export interface TPeriodRange {
 
 export function getPeriodRange(period: TPeriod, offset: number): TPeriodRange {
   if (period === 'all') return { start: '', end: '', label: 'All Time', sublabel: 'every entry' };
+  if (period === 'upcoming') return { start: '', end: '', label: 'Upcoming', sublabel: 'planned entries' };
 
   const now = new Date();
 

@@ -1,5 +1,7 @@
 import { clsx } from 'clsx';
+import { useMemo } from 'react';
 import { Pressable, ScrollView, Text } from 'react-native';
+import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import type { TPeriod } from '@/lib/utils/date.util';
 
 const PERIODS: { key: TPeriod; label: string }[] = [
@@ -8,6 +10,10 @@ const PERIODS: { key: TPeriod; label: string }[] = [
   { key: 'month', label: 'Month' },
   { key: 'year', label: 'Year' },
   { key: 'all', label: 'All' },
+  // Rendered unconditionally, not gated on having planned entries — a chip that
+  // only appears once you've used the feature can't teach you it exists. The
+  // list's empty state does the teaching.
+  { key: 'upcoming', label: 'Upcoming' },
 ];
 
 type PeriodSelectorProps = {
@@ -16,6 +22,14 @@ type PeriodSelectorProps = {
 };
 
 export function PeriodSelector({ period, onChange }: PeriodSelectorProps) {
+  // Read the flag here rather than taking a prop: PERIODS is module-level and
+  // the parent screen has no other reason to know about Plan Mode.
+  const { enabled } = usePlanMode();
+  const periods = useMemo(
+    () => (enabled ? PERIODS : PERIODS.filter(p => p.key !== 'upcoming')),
+    [enabled],
+  );
+
   return (
     <ScrollView
       horizontal
@@ -23,7 +37,7 @@ export function PeriodSelector({ period, onChange }: PeriodSelectorProps) {
       className="mt-5"
       contentContainerStyle={{ paddingHorizontal: 20, gap: 8 }}
     >
-      {PERIODS.map(p => (
+      {periods.map(p => (
         <Pressable
           key={p.key}
           onPress={() => onChange(p.key)}

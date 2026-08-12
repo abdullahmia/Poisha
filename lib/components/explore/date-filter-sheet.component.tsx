@@ -1,4 +1,5 @@
 import { Pressable, Text, View } from 'react-native';
+import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { DatePicker } from '@/lib/ui/date-picker.ui';
 import { todayISO } from '@/lib/utils/date.util';
@@ -12,14 +13,19 @@ type DateFilterSheetProps = {
 };
 
 export function DateFilterSheet({ visible, value, onSelect, onClear, onClose }: DateFilterSheetProps) {
+  const { enabled } = usePlanMode();
+
   return (
     <BottomSheet visible={visible} onClose={onClose}>
       {(close) => (
         <View className="pt-2">
+          {/* Uncapped while Plan Mode is on: picking a future day is the natural
+              "what's planned on the 20th" gesture, and it's unambiguous because
+              the chosen day is shown in the header. Capped at today otherwise. */}
           <DatePicker
             value={value ?? todayISO()}
             onChange={(iso) => { onSelect(iso); close(); }}
-            maximumDate={new Date()}
+            maximumDate={enabled ? undefined : new Date()}
           />
           {value && (
             <Pressable

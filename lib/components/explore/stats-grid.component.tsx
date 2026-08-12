@@ -9,6 +9,7 @@ type TStats = {
   items: number;
   uniqueDays: number;
   avgDay: number;
+  avgEntry: number;
   highest: number;
 };
 
@@ -19,13 +20,31 @@ type StatsGridProps = {
 
 export function StatsGrid({ stats, period }: StatsGridProps) {
   const { fmt, fmtFull } = useLocale();
+  const upcoming = period === 'upcoming';
+
+  // A per-day average over arbitrary future dates is meaningless, so Upcoming
+  // averages per entry instead. Collapsed into one object rather than three
+  // parallel three-way ternaries inline.
+  const avg = upcoming
+    ? { label: 'Avg / Entry', value: stats.avgEntry, sub: `${stats.count} planned` }
+    : period === 'day'
+      ? {
+          label: 'Avg / Item',
+          value: stats.items > 0 ? Math.round(stats.total / stats.items) : 0,
+          sub: `${stats.items} item${stats.items !== 1 ? 's' : ''}`,
+        }
+      : {
+          label: 'Avg / Day',
+          value: stats.avgDay,
+          sub: `${stats.uniqueDays} active day${stats.uniqueDays !== 1 ? 's' : ''}`,
+        };
 
   return (
     <View className="mt-5 gap-2.5 px-4">
       <View className="flex-row gap-2.5">
         <Card variant="accent" className="min-h-[90px] flex-1 justify-between p-4">
           <Text className="uppercase text-accent" style={{ fontSize: 10, letterSpacing: 1.5, fontFamily: 'Inter_500Medium' }}>
-            Total Spent
+            {upcoming ? 'Total Planned' : 'Total Spent'}
           </Text>
           <Text className="text-accent" style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 22, letterSpacing: -0.5 }} numberOfLines={1} adjustsFontSizeToFit>
             {stats.total > 0 ? fmt(stats.total) : fmtFull(0)}
@@ -36,17 +55,13 @@ export function StatsGrid({ stats, period }: StatsGridProps) {
         </Card>
         <Card className="min-h-[90px] flex-1 justify-between p-4">
           <Text className="uppercase text-ink-muted" style={{ fontSize: 10, letterSpacing: 1.5, fontFamily: 'Inter_500Medium' }}>
-            {period === 'day' ? 'Avg / Item' : 'Avg / Day'}
+            {avg.label}
           </Text>
           <Text className="text-ink" style={{ fontFamily: 'SpaceGrotesk_600SemiBold', fontSize: 22, letterSpacing: -0.5 }} numberOfLines={1} adjustsFontSizeToFit>
-            {period === 'day'
-              ? (stats.items > 0 ? fmt(Math.round(stats.total / stats.items)) : '—')
-              : (stats.avgDay > 0 ? fmt(stats.avgDay) : '—')}
+            {avg.value > 0 ? fmt(avg.value) : '—'}
           </Text>
           <Text className="mt-1 text-ink-muted" style={{ fontSize: 10, fontFamily: 'Inter_400Regular' }}>
-            {period === 'day'
-              ? `${stats.items} item${stats.items !== 1 ? 's' : ''}`
-              : `${stats.uniqueDays} active day${stats.uniqueDays !== 1 ? 's' : ''}`}
+            {avg.sub}
           </Text>
         </Card>
       </View>

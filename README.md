@@ -6,7 +6,8 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 
 ## Features
 
-- **Entry management** — log expenses with multiple amount line-items per entry, an optional note, and a date picker (capped at today)
+- **Entry management** — log expenses with multiple amount line-items per entry, an optional note, and a date picker
+- **Plan Mode** — opt in from Settings › Planning (off by default) to schedule future-dated expenses (rent, a subscription). A future entry is held as *planned*: excluded from every spend total, chart, and budget figure until its date arrives, then counted automatically. Surfaced in an Upcoming section on Home and an Upcoming filter on Browse. With Plan Mode off the date picker caps at today and the app behaves exactly as it did before the feature
 - **Home dashboard** — monthly hero total, entry/item stats, a custom daily spending bar chart, and recent entries
 - **Browse screen** — full entry list grouped by date, with Day/Week/Month/Year/All period filters, a date-range navigator, stats grid, and sort controls
 - **App lock** — mandatory PIN onboarding, SHA-256 salted PIN storage in `expo-secure-store`, 5-attempt lockout with cooldown, and optional Face ID / Fingerprint unlock
