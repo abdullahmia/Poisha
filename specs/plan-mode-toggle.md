@@ -165,7 +165,7 @@ New section, structurally a trimmed `CategoriesSection` (same `SectionHeader` + 
 
 - `SectionHeader` icon `calendar`, label `Planning`.
 - Row: `RowIcon` `calendar`, label **Enable Plan Mode**, sub-label `Schedule future entries` when off and `On` when on — the off state is where the explanatory copy earns its place, since that's when the user is deciding whether to flip it.
-- **No second row.** `CategoriesSection` gains a "Manage Categories" row when enabled because categories are editable objects; Plan Mode has nothing to manage. A row that merely counted planned entries was considered and dropped — it can't deep-link to Browse › Upcoming (that period lives in `useEntriesList` local state, not the router), so it would be a dead-end stat in the wrong screen.
+- **No second row.** ~~`CategoriesSection` gains a "Manage Categories" row when enabled because categories are editable objects; Plan Mode has nothing to manage.~~ **Superseded by [`plan-tab.md`](./plan-tab.md)** — planned entries do warrant a surface; it's a reporting one rather than a CRUD one, and it landed as a conditional bottom tab instead of a Settings row. The Planning section itself remains toggle-only. A row that merely counted planned entries was considered and dropped — it can't deep-link to Browse › Upcoming (that period lives in `useEntriesList` local state, not the router), so it would be a dead-end stat in the wrong screen.
 
 Mounted in [app/(tabs)/settings.tsx](<../app/(tabs)/settings.tsx>) between `BudgetSection` and `CategoriesSection`, with `useFadeIn(300)` — the existing sections run 0 / 70 / 140 / 210 / 280 / 315 / 350 / 420, so 300 slots cleanly into the gap and keeps the two feature toggles (Plan Mode, Categories) adjacent to each other.
 

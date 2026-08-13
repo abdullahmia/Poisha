@@ -11,5 +11,9 @@ export function usePlanMode() {
     await setEnabledMutation.mutateAsync(value);
   }, [setEnabledMutation]);
 
-  return { enabled, setEnabled };
+  // `loading` matters only to the /plan route guard: the query has no
+  // initialData, so `enabled` is false for the first render while AsyncStorage
+  // resolves. Redirecting on that would bounce a cold-start deep link away from
+  // /plan even when Plan Mode is genuinely on.
+  return { enabled, setEnabled, loading: enabledQuery.isPending };
 }

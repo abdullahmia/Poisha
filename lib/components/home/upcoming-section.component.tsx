@@ -45,7 +45,7 @@ export function UpcomingSection() {
         ))}
         {upcoming.length > MAX_VISIBLE && (
           <Text className="pb-1 pt-0.5 text-center text-ink-muted" style={{ fontSize: 11 }}>
-            +{upcoming.length - MAX_VISIBLE} more in Browse › Upcoming
+            +{upcoming.length - MAX_VISIBLE} more in Plan
           </Text>
         )}
       </View>

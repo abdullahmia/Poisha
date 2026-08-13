@@ -1,6 +1,6 @@
 # Plan Tab — a dedicated screen for planned entries
 
-> **Status:** `[ ] Planned`
+> **Status:** `[x] Implemented`
 > **Effort:** Medium (one tab-bar refactor, one new screen with five blocks, one derivation hook — ~12 files, no schema change)
 > **Depends on:** [`upcoming-entries.md`](./upcoming-entries.md), [`plan-mode-toggle.md`](./plan-mode-toggle.md) (both implemented)
 
