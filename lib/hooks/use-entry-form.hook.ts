@@ -8,13 +8,13 @@ import type { TEntry } from '@/lib/types';
 import { todayISO } from '@/lib/utils/date.util';
 
 export function useEntryForm(entry: TEntry | null) {
-  const { saveEntry, deleteEntry, closeSheet } = useEntries();
+  const { saveEntry, deleteEntry, closeSheet, sheetDefaultDate } = useEntries();
   const { notification } = useHaptics();
 
   const form = useForm<TEntryFormData>({
     resolver: zodResolver(entryFormSchema),
     defaultValues: {
-      date: entry?.date ?? todayISO(),
+      date: entry?.date ?? sheetDefaultDate ?? todayISO(),
       amounts: entry ? entry.amounts.map(a => ({ value: String(a) })) : [{ value: '' }],
       note: entry?.note ?? '',
       categoryId: entry?.categoryId ?? null,

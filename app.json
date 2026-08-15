@@ -8,6 +8,7 @@
       "url": "https://u.expo.dev/c1dabdba-05a9-4885-b3f7-250b605167eb"
     },
     "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
     "icon": "./assets/images/launcher.png",
     "scheme": "tracker",
     "newArchEnabled": true,

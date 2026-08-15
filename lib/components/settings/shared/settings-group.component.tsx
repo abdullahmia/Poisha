@@ -6,9 +6,6 @@ type SettingsGroupProps = {
   children: ReactNode;
 };
 
-// A labelled run of rows separated by hairlines — no card, no shadow. The rule
-// sits between rows only, never above the first or below the last, so a group
-// reads as one block rather than a boxed list.
 export function SettingsGroup({ label, children }: SettingsGroupProps) {
   const rows = Children.toArray(children).filter(Boolean);
 
@@ -22,7 +19,7 @@ export function SettingsGroup({ label, children }: SettingsGroupProps) {
       </Text>
       {rows.map((row, i) => (
         <View key={i}>
-          {i > 0 && <View className="h-px bg-line" />}
+          {i > 0 && <View className="ml-7 h-px bg-line" />}
           {row}
         </View>
       ))}

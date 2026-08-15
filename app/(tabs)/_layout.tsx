@@ -1,24 +1,25 @@
-import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
-import { Add01Icon, Calendar01Icon, Home01Icon, ListViewIcon, Settings01Icon } from '@hugeicons/core-free-icons';
+import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
+import { useCategories } from '@/lib/hooks/use-categories.hook';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
+import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
+import type { TPalette } from '@/lib/types';
+import { Add01Icon, Calendar01Icon, Home01Icon, ListViewIcon, Settings01Icon, TagsIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
-import { Tabs } from 'expo-router';
 import * as Haptics from 'expo-haptics';
+import { Tabs } from 'expo-router';
 import type React from 'react';
 import { useEffect, useMemo } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import type { TPalette } from '@/lib/types';
-import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
-import { useHaptics } from '@/lib/hooks/use-haptics.hook';
-import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
-import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
 
 const ALL_TABS = [
   { name: 'index', label: 'Home', icon: Home01Icon },
   { name: 'explore', label: 'Entries', icon: ListViewIcon },
   { name: 'plan', label: 'Plan', icon: Calendar01Icon },
+  { name: 'categories', label: 'Categories', icon: TagsIcon },
   { name: 'settings', label: 'Settings', icon: Settings01Icon },
 ];
 
@@ -78,16 +79,28 @@ const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, col
   );
 };
 
-const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
+
+// Derived from what expo-router's <Tabs> actually passes, rather than imported
+// from @react-navigation — the two packages ship structurally different tab-bar
+// prop types, and importing the wrong one fails to typecheck at the call site.
+type PoishaTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0];
+
+const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, navigation }) => {
   const insets = useSafeAreaInsets();
   const { openAdd } = useEntriesSheet();
   const { colors } = useTheme();
   const { impact, selection } = useHaptics();
   const { enabled: planEnabled } = usePlanMode();
+  const { enabled: categoriesEnabled } = useCategories();
 
   const tabs = useMemo(
-    () => (planEnabled ? ALL_TABS : ALL_TABS.filter(t => t.name !== 'plan')),
-    [planEnabled],
+    () =>
+      ALL_TABS.filter(t => {
+        if (t.name === 'plan') return planEnabled;
+        if (t.name === 'categories') return categoriesEnabled;
+        return true;
+      }),
+    [planEnabled, categoriesEnabled],
   );
 
   function handleTabPress(i: number, route: (typeof state.routes)[number]) {
@@ -99,10 +112,6 @@ const PoishaTabBar: React.FC<BottomTabBarProps> = ({ state, navigation }) => {
     }
   }
 
-  // Look routes up by name, never by position. expo-router registers every file
-  // in (tabs)/ as a screen, so `plan` is in state.routes even when its button is
-  // hidden — with positional indices that would shift `settings` and silently
-  // light up / navigate to the wrong tab.
   function renderTab(tab: (typeof ALL_TABS)[number]) {
     const i = state.routes.findIndex(r => r.name === tab.name);
     if (i === -1) return null;
@@ -162,6 +171,7 @@ export default function TabLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
       <Tabs.Screen name="plan" />
+      <Tabs.Screen name="categories" />
       <Tabs.Screen name="settings" />
     </Tabs>
   );

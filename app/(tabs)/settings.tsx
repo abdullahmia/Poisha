@@ -2,8 +2,8 @@ import { router } from 'expo-router';
 import { ScrollView, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { SettingsGroup } from '@/lib/components/settings/settings-group.component';
-import { SettingsNavRow } from '@/lib/components/settings/settings-nav-row.component';
+import { SettingsGroup } from '@/lib/components/settings/shared/settings-group.component';
+import { SettingsNavRow } from '@/lib/components/settings/shared/settings-nav-row.component';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 
@@ -30,20 +30,20 @@ export default function SettingsScreen() {
 
       <Animated.View style={bodyStyle}>
         <SettingsGroup label="General">
-          <SettingsNavRow icon="sun" label="Appearance" onPress={() => router.push('/settings-appearance')} />
-          <SettingsNavRow icon="bell" label="Notifications" onPress={() => router.push('/settings-notifications')} />
-          <SettingsNavRow icon="grid" label="Features" onPress={() => router.push('/settings-features')} />
-          <SettingsNavRow icon="target" label="Budget" onPress={() => router.push('/settings-budget')} />
-          <SettingsNavRow icon="globe" label="Region" value={locale.symbol} onPress={() => router.push('/settings-region')} />
-          <SettingsNavRow icon="shield" label="Security" onPress={() => router.push('/settings-security')} />
+          <SettingsNavRow icon="sun" label="Appearance" onPress={() => router.push('/settings/appearance')} />
+          <SettingsNavRow icon="bell" label="Notifications" onPress={() => router.push('/settings/notifications')} />
+          <SettingsNavRow icon="grid" label="Features" onPress={() => router.push('/settings/features')} />
+          <SettingsNavRow icon="target" label="Budget" onPress={() => router.push('/settings/budget')} />
+          <SettingsNavRow icon="globe" label="Region" value={locale.symbol} onPress={() => router.push('/settings/region')} />
+          <SettingsNavRow icon="shield" label="Security" onPress={() => router.push('/settings/security')} />
         </SettingsGroup>
 
         <SettingsGroup label="Data">
-          <SettingsNavRow icon="database" label="Import & Export" onPress={() => router.push('/settings-data')} />
+          <SettingsNavRow icon="database" label="Import & Export" onPress={() => router.push('/settings/data')} />
         </SettingsGroup>
 
         <SettingsGroup label="Support">
-          <SettingsNavRow icon="info" label="About & Updates" onPress={() => router.push('/settings-about')} />
+          <SettingsNavRow icon="info" label="About & Updates" onPress={() => router.push('/settings/about')} />
         </SettingsGroup>
 
         <View className="h-8" />

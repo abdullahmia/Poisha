@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { usePlanSummary } from '@/lib/hooks/use-plan-summary.hook';
 import { PlanCategoryBreakdown } from './plan-category-breakdown.component';
+import { PlanEmptyState } from './plan-empty-state.component';
 import { PlanEntriesList } from './plan-entries-list.component';
 import { PlanHeader } from './plan-header.component';
 import { PlanMonthBudget } from './plan-month-budget.component';
@@ -30,7 +31,9 @@ export function PlanScreen() {
       months={months}
       openEdit={openEdit}
       openCardId={openCardId}
-      contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 110 + insets.bottom }}
+      // flexGrow so the empty state can claim the space under the header and
+      // centre in it, instead of hugging the top with a void beneath.
+      contentContainerStyle={{ flexGrow: 1, paddingTop: insets.top, paddingBottom: 110 + insets.bottom }}
       ListHeaderComponent={
         <View style={{ paddingBottom: 12 }}>
           <PlanHeader />
@@ -55,19 +58,7 @@ export function PlanScreen() {
           )}
         </View>
       }
-      ListEmptyComponent={
-        <View className="items-center px-8 py-14">
-          <View className="mb-4 h-[52px] w-[52px] items-center justify-center rounded-full border border-line bg-surface">
-            <Text style={{ fontSize: 20 }}>🗓</Text>
-          </View>
-          <Text className="text-ink-soft" style={{ fontFamily: 'SpaceGrotesk_500Medium', fontSize: 17 }}>
-            Nothing planned yet
-          </Text>
-          <Text className="mt-1.5 text-center text-ink-muted" style={{ fontSize: 12, fontFamily: 'Inter_400Regular' }}>
-            Tap + and pick a future date to schedule an expense.
-          </Text>
-        </View>
-      }
+      ListEmptyComponent={<PlanEmptyState />}
     />
   );
 }

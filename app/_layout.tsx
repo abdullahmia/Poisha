@@ -12,11 +12,6 @@ import { ThemeTransitionProvider } from '@/lib/context/theme-transition.context'
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { usePlanNotifications } from '@/lib/hooks/use-plan-notifications.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { QueryClientProvider } from '@tanstack/react-query';
-import * as Linking from 'expo-linking';
-import * as Notifications from 'expo-notifications';
-import { router, Stack } from 'expo-router';
-import { useEffect } from 'react';
 import {
   DMSans_400Regular,
   DMSans_500Medium,
@@ -35,8 +30,13 @@ import {
   SpaceGrotesk_600SemiBold,
   SpaceGrotesk_700Bold,
 } from '@expo-google-fonts/space-grotesk';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
+import * as Linking from 'expo-linking';
+import * as Notifications from 'expo-notifications';
+import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
@@ -61,8 +61,8 @@ if (Platform.OS === 'android') {
 }
 
 function AppStatusBar() {
-  const { scheme, colors } = useTheme();
-  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} backgroundColor={colors.bg} />;
+  const { scheme } = useTheme();
+  return <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />;
 }
 
 function AppGate() {
@@ -85,15 +85,7 @@ function AppGate() {
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }}>
         <Stack.Protected guard={!showOnboarding && !isLocked}>
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="category-management" />
-          <Stack.Screen name="settings-appearance" />
-          <Stack.Screen name="settings-notifications" />
-          <Stack.Screen name="settings-features" />
-          <Stack.Screen name="settings-budget" />
-          <Stack.Screen name="settings-region" />
-          <Stack.Screen name="settings-security" />
-          <Stack.Screen name="settings-data" />
-          <Stack.Screen name="settings-about" />
+          <Stack.Screen name="settings" />
         </Stack.Protected>
         <Stack.Protected guard={showOnboarding}>
           <Stack.Screen name="onboarding" options={screenOptions} />

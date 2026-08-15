@@ -1,6 +1,6 @@
+import type React from 'react';
 import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCategories } from '@/lib/hooks/use-categories.hook';
@@ -11,17 +11,12 @@ import { Card } from '@/lib/ui/card.ui';
 import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
 import { CategoryFormSheetContent, COLOR_SWATCHES } from './category-form-sheet.component';
 
-export function CategoryManagementScreen() {
+// Rendered only as the Categories bottom tab. The route itself guards on the
+// feature flag, so there is no in-component redirect and nothing to go back to.
+export const Categories: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { enabled, categories, saveCategory, archiveCategory, reorderCategories } = useCategories();
-
-  // Defends against reaching this screen while the feature is off (e.g. a stale
-  // back-forward-cache restore) — the only in-app entry point already hides
-  // behind the "enabled" check on the Settings row.
-  useEffect(() => {
-    if (!enabled) router.back();
-  }, [enabled]);
+  const { categories, saveCategory, archiveCategory, reorderCategories } = useCategories();
 
   const [query, setQuery] = useState('');
   const [archiveTarget, setArchiveTarget] = useState<TCategory | null>(null);
@@ -87,13 +82,6 @@ export function CategoryManagementScreen() {
   return (
     <View className="flex-1 bg-bg" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center gap-3 px-6 pt-2">
-        <Pressable
-          onPress={() => router.back()}
-          className="h-9 w-9 items-center justify-center rounded-full bg-surface-alt active:opacity-60"
-          accessibilityLabel="Back"
-        >
-          <Feather name="chevron-left" size={18} color={colors.inkSoft} />
-        </Pressable>
         <View className="flex-1">
           <Text className="text-ink" style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 24, letterSpacing: -0.5 }}>
             Categories
@@ -141,7 +129,12 @@ export function CategoryManagementScreen() {
       <ScrollView
         showsVerticalScrollIndicator={false}
         className="flex-1"
-        contentContainerStyle={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: insets.bottom + 24 }}
+        contentContainerStyle={{
+          paddingHorizontal: 20,
+          paddingTop: 18,
+          // The floating pill tab bar overlays the bottom of the screen.
+          paddingBottom: 110 + insets.bottom,
+        }}
       >
         {categories.length === 0 ? (
           <View className="items-center py-16">
@@ -288,4 +281,4 @@ export function CategoryManagementScreen() {
       />
     </View>
   );
-}
+};

@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import type { TThemePreference } from '@/lib/types';
 import { DARK_THEME, LIGHT_THEME } from '@/lib/constants';
-import { ScreenHeader } from './screen-header.component';
+import { ScreenHeader } from '../shared/screen-header.component';
 
 type TOption = { key: TThemePreference; label: string };
 
@@ -50,7 +50,7 @@ const Preview: React.FC<{ option: TThemePreference; systemScheme: 'light' | 'dar
   );
 };
 
-export function AppearanceScreen() {
+export const Appearance: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { preference, systemScheme, colors, setPreference } = useTheme();
 
@@ -97,4 +97,4 @@ export function AppearanceScreen() {
       </Text>
     </ScrollView>
   );
-}
+};

@@ -1,3 +1,4 @@
+import type React from 'react';
 import { useState } from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -8,10 +9,10 @@ import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
 import { CsvFormatSheetContent } from './csv-format-sheet.component';
-import { ScreenHeader } from './screen-header.component';
-import { SettingsNavRow } from './settings-nav-row.component';
+import { ScreenHeader } from '../shared/screen-header.component';
+import { SettingsNavRow } from '../shared/settings-nav-row.component';
 
-export function DataScreen() {
+export const Data: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { entries, importEntries } = useEntries();
@@ -75,4 +76,4 @@ export function DataScreen() {
       />
     </ScrollView>
   );
-}
+};

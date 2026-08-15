@@ -38,6 +38,10 @@ export function useCategories() {
   return {
     enabled,
     setEnabled,
+    // Consumed by the /categories tab guard: the flag query has no initialData,
+    // so `enabled` is false for the first render while AsyncStorage resolves —
+    // redirecting on that would bounce a cold start off its own tab.
+    loading: enabledQuery.isPending,
     categories: enabled ? categoriesQuery.data ?? [] : [],
     saveCategory,
     archiveCategory,

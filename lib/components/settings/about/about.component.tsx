@@ -1,9 +1,10 @@
+import type React from 'react';
 import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useAppUpdates } from '@/lib/hooks/use-app-updates.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { ScreenHeader } from './screen-header.component';
-import { SettingsNavRow } from './settings-nav-row.component';
+import { ScreenHeader } from '../shared/screen-header.component';
+import { SettingsNavRow } from '../shared/settings-nav-row.component';
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
@@ -18,7 +19,7 @@ function InfoRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-export function AboutScreen() {
+export const About: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { currentlyRunning, isUpdatePending, checking, checkForUpdate, restartToApply } = useAppUpdates();
@@ -68,4 +69,4 @@ export function AboutScreen() {
       </Text>
     </ScrollView>
   );
-}
+};

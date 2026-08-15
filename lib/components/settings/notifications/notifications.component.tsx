@@ -1,3 +1,4 @@
+import type React from 'react';
 import { ScrollView, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNotifications } from '@/lib/hooks/use-notifications.hook';
@@ -8,8 +9,8 @@ import {
   useSetPlanRemindersEnabled,
 } from '@/lib/services/notifications';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
-import { ScreenHeader } from './screen-header.component';
-import { SettingsToggleRow } from './settings-toggle-row.component';
+import { ScreenHeader } from '../shared/screen-header.component';
+import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
 function GroupLabel({ title, description }: { title: string; description: string }) {
   return (
@@ -24,7 +25,7 @@ function GroupLabel({ title, description }: { title: string; description: string
   );
 }
 
-export function NotificationsScreen() {
+export const Notifications: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { notificationsEnabled, setNotificationsEnabled } = useNotifications();
   const { enabled: planModeEnabled } = usePlanMode();
@@ -78,4 +79,4 @@ export function NotificationsScreen() {
       />
     </ScrollView>
   );
-}
+};

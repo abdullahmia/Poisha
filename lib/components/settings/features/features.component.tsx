@@ -1,14 +1,13 @@
-import { router } from 'expo-router';
+import type React from 'react';
 import { ScrollView, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
-import { ScreenHeader } from './screen-header.component';
-import { SettingsNavRow } from './settings-nav-row.component';
-import { SettingsToggleRow } from './settings-toggle-row.component';
+import { ScreenHeader } from '../shared/screen-header.component';
+import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
-export function FeaturesScreen() {
+export const Features: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { enabled: planEnabled, setEnabled: setPlanEnabled } = usePlanMode();
   const { enabled: categoriesEnabled, setEnabled: setCategoriesEnabled } = useCategories();
@@ -38,17 +37,6 @@ export function FeaturesScreen() {
         onValueChange={setCategoriesEnabled}
       />
 
-      {categoriesEnabled && (
-        <>
-          <View className="h-px bg-line" />
-          <SettingsNavRow
-            icon="list"
-            label="Manage categories"
-            onPress={() => router.push('/category-management')}
-          />
-        </>
-      )}
-
       <View className="h-px bg-line" />
 
       <SettingsToggleRow
@@ -59,4 +47,4 @@ export function FeaturesScreen() {
       />
     </ScrollView>
   );
-}
+};

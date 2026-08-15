@@ -1,3 +1,4 @@
+import type React from 'react';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { useState } from 'react';
 import { ScrollView, Text, View } from 'react-native';
@@ -8,11 +9,11 @@ import { useBiometric } from '@/lib/hooks/use-biometric.hook';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
-import { ScreenHeader } from './screen-header.component';
-import { SettingsNavRow } from './settings-nav-row.component';
-import { SettingsToggleRow } from './settings-toggle-row.component';
+import { ScreenHeader } from '../shared/screen-header.component';
+import { SettingsNavRow } from '../shared/settings-nav-row.component';
+import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
-export function SecurityScreen() {
+export const Security: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const showAlert = useAlert();
@@ -107,4 +108,4 @@ export function SecurityScreen() {
       />
     </ScrollView>
   );
-}
+};

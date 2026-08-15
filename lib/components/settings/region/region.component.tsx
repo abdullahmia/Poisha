@@ -1,3 +1,4 @@
+import type React from 'react';
 import { clsx } from 'clsx';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
@@ -5,9 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { DEFAULT_LOCALE } from '@/lib/constants';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { ScreenHeader } from './screen-header.component';
+import { ScreenHeader } from '../shared/screen-header.component';
 
-export function RegionScreen() {
+export const Region: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const { locale, setLocale } = useLocale();
@@ -89,4 +90,4 @@ export function RegionScreen() {
       </Text>
     </ScrollView>
   );
-}
+};
