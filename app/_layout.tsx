@@ -10,6 +10,7 @@ import { EntriesSheetProvider } from '@/lib/context/entries-sheet.context';
 import { LockProvider } from '@/lib/context/lock.context';
 import { ThemeTransitionProvider } from '@/lib/context/theme-transition.context';
 import { useLock } from '@/lib/hooks/use-lock.hook';
+import { usePlanNotifications } from '@/lib/hooks/use-plan-notifications.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import { QueryClientProvider } from '@tanstack/react-query';
 import * as Linking from 'expo-linking';
@@ -68,6 +69,8 @@ function AppGate() {
   const { isLocked, showOnboarding } = useLock();
   const { colors } = useTheme();
   const url = Linking.useURL();
+
+  usePlanNotifications();
 
   useEffect(() => {
     if (url?.startsWith('tracker://home')) {

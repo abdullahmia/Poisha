@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { ASYNC_STORAGE_KEYS, QUERY_KEYS } from '@/lib/constants';
 import { storage } from '@/lib/storages';
+import { syncPlanDueNotifications } from '@/lib/utils/plan-notification.util';
 
 export function useSetPlanModeEnabled() {
   const queryClient = useQueryClient();
@@ -19,6 +20,10 @@ export function useSetPlanModeEnabled() {
     onSuccess: enabled => {
       queryClient.setQueryData(QUERY_KEYS.planMode.enabled, enabled);
       queryClient.setQueryData(QUERY_KEYS.budget.exceededMonth, null);
+      // Turning Plan Mode off must clear the pending due-date notifications;
+      // turning it on schedules them. syncPlanDueNotifications reads the flag
+      // itself, so one call covers both directions.
+      syncPlanDueNotifications();
     },
   });
 }

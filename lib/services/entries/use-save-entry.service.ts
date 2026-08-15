@@ -3,6 +3,7 @@ import { QUERY_KEYS } from '@/lib/constants';
 import { sqliteStorage } from '@/lib/storages';
 import type { TDraft, TEntry } from '@/lib/types';
 import { checkBudgetAndNotify } from '@/lib/utils/budget-notification.util';
+import { syncPlanDueNotifications } from '@/lib/utils/plan-notification.util';
 import { writeWidgetSnapshot } from '@/lib/utils/widget-snapshot.util';
 
 export function useSaveEntry() {
@@ -19,6 +20,7 @@ export function useSaveEntry() {
     onSuccess: entry => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.entries.all });
       writeWidgetSnapshot(sqliteStorage.loadEntries()).catch(() => {});
+      syncPlanDueNotifications();
       checkBudgetAndNotify(entry, queryClient).catch(() => {});
     },
   });
