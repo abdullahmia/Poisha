@@ -13,9 +13,9 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 - **App lock** — mandatory PIN onboarding, SHA-256 salted PIN storage in `expo-secure-store`, 5-attempt lockout with cooldown, and optional Face ID / Fingerprint unlock
 - **CSV import & export** — export all entries to CSV via the native share sheet, or import from a CSV file with a merge-or-replace flow
 - **Budget tracking** — set a monthly budget with a progress indicator on the home screen
-- **Light & dark themes** — toggle in Settings, persisted across launches
+- **Light, dark & system themes** — pick one in Settings › Appearance; System follows your device and repaints live
 - **Currency & locale settings** — configurable currency symbol and number formatting
-- **Notifications** — daily reminders via `expo-notifications`
+- **Notifications** — budget alerts when the month's spending passes your limit, and 9 AM reminders on the day a planned entry starts counting; each toggleable in Settings › Notifications
 - **Haptics** — tactile feedback across key interactions
 - **Swipe to delete** — swipe an entry card to remove it without opening the edit sheet
 

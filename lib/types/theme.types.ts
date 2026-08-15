@@ -1,4 +1,8 @@
+/** The resolved scheme actually painted on screen. */
 export type TColorScheme = 'light' | 'dark';
+
+/** What the user picked. `system` resolves to TColorScheme at render time. */
+export type TThemePreference = TColorScheme | 'system';
 
 export interface TPalette {
   bg: string;

@@ -86,6 +86,14 @@ function AppGate() {
         <Stack.Protected guard={!showOnboarding && !isLocked}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="category-management" />
+          <Stack.Screen name="settings-appearance" />
+          <Stack.Screen name="settings-notifications" />
+          <Stack.Screen name="settings-features" />
+          <Stack.Screen name="settings-budget" />
+          <Stack.Screen name="settings-region" />
+          <Stack.Screen name="settings-security" />
+          <Stack.Screen name="settings-data" />
+          <Stack.Screen name="settings-about" />
         </Stack.Protected>
         <Stack.Protected guard={showOnboarding}>
           <Stack.Screen name="onboarding" options={screenOptions} />

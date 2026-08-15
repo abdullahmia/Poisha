@@ -45,6 +45,11 @@ export async function checkBudgetAndNotify(entry: TEntry, queryClient: QueryClie
   const notificationsEnabled = await storage.getItem(ASYNC_STORAGE_KEYS.notificationsEnabled);
   if (notificationsEnabled !== 'true') return;
 
+  // Sub-channel under the master permission. Absent means on — see
+  // use-notification-channels.service.ts.
+  const budgetAlerts = await storage.getItem(ASYNC_STORAGE_KEYS.budgetAlertsEnabled);
+  if (budgetAlerts === 'false') return;
+
   // Planned money isn't spent money: with Plan Mode on, saving a future-dated
   // entry must not evaluate the budget at all. Without this, scheduling next
   // month's rent would fire "you've crossed your budget" on the spot *and* stamp

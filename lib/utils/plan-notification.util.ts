@@ -71,6 +71,11 @@ export async function syncPlanDueNotifications(): Promise<void> {
     const notificationsEnabled = await storage.getItem(ASYNC_STORAGE_KEYS.notificationsEnabled);
     if (notificationsEnabled !== 'true') return;
 
+    // Sub-channel under the master permission. Absent means on — see
+    // use-notification-channels.service.ts.
+    const planReminders = await storage.getItem(ASYNC_STORAGE_KEYS.planRemindersEnabled);
+    if (planReminders === 'false') return;
+
     // With Plan Mode off nothing is "planned", so there is no maturity moment
     // to announce — future entries already count as spend.
     const planMode = await storage.getItem(ASYNC_STORAGE_KEYS.planModeEnabled);
