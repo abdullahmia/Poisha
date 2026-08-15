@@ -41,3 +41,6 @@ app-example
 # generated native folders
 /ios
 /android
+
+# Legacy bun binary lockfile — bun >= 1.2 uses the text bun.lock
+bun.lockb
