@@ -1,6 +1,7 @@
 import type React from 'react';
 import { Feather } from '@expo/vector-icons';
-import { useMemo, useState } from 'react';
+import { router } from 'expo-router';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCategories } from '@/lib/hooks/use-categories.hook';
@@ -11,12 +12,18 @@ import { Card } from '@/lib/ui/card.ui';
 import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
 import { CategoryFormSheetContent, COLOR_SWATCHES } from './category-form-sheet.component';
 
-// Rendered only as the Categories bottom tab. The route itself guards on the
-// feature flag, so there is no in-component redirect and nothing to go back to.
+// Pushed from Settings, so it owns a back button. The Settings row that opens
+// it is already gated on the feature flag; this guard only covers the odd case
+// of landing here after the flag flips, and waits for `loading` so a pending
+// flag query can't bounce the screen straight back on mount.
 export const Categories: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
-  const { categories, saveCategory, archiveCategory, reorderCategories } = useCategories();
+  const { enabled, loading, categories, saveCategory, archiveCategory, reorderCategories } = useCategories();
+
+  useEffect(() => {
+    if (!loading && !enabled) router.back();
+  }, [loading, enabled]);
 
   const [query, setQuery] = useState('');
   const [archiveTarget, setArchiveTarget] = useState<TCategory | null>(null);
@@ -82,6 +89,13 @@ export const Categories: React.FC = () => {
   return (
     <View className="flex-1 bg-bg" style={{ paddingTop: insets.top }}>
       <View className="flex-row items-center gap-3 px-6 pt-2">
+        <Pressable
+          onPress={() => router.back()}
+          className="h-9 w-9 items-center justify-center rounded-full bg-surface-alt active:opacity-60"
+          accessibilityLabel="Back"
+        >
+          <Feather name="chevron-left" size={18} color={colors.inkSoft} />
+        </Pressable>
         <View className="flex-1">
           <Text className="text-ink" style={{ fontFamily: 'SpaceGrotesk_700Bold', fontSize: 24, letterSpacing: -0.5 }}>
             Categories
@@ -132,8 +146,7 @@ export const Categories: React.FC = () => {
         contentContainerStyle={{
           paddingHorizontal: 20,
           paddingTop: 18,
-          // The floating pill tab bar overlays the bottom of the screen.
-          paddingBottom: 110 + insets.bottom,
+          paddingBottom: 24 + insets.bottom,
         }}
       >
         {categories.length === 0 ? (

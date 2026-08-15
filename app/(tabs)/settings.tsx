@@ -4,12 +4,14 @@ import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SettingsGroup } from '@/lib/components/settings/shared/settings-group.component';
 import { SettingsNavRow } from '@/lib/components/settings/shared/settings-nav-row.component';
+import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
+  const { enabled: categoriesEnabled } = useCategories();
   const titleStyle = useFadeIn(0);
   const bodyStyle = useFadeIn(70);
 
@@ -33,6 +35,10 @@ export default function SettingsScreen() {
           <SettingsNavRow icon="sun" label="Appearance" onPress={() => router.push('/settings/appearance')} />
           <SettingsNavRow icon="bell" label="Notifications" onPress={() => router.push('/settings/notifications')} />
           <SettingsNavRow icon="grid" label="Features" onPress={() => router.push('/settings/features')} />
+          {/* Only when the feature is on — there is nothing to manage otherwise. */}
+          {categoriesEnabled && (
+            <SettingsNavRow icon="tag" label="Categories" onPress={() => router.push('/settings/categories')} />
+          )}
           <SettingsNavRow icon="target" label="Budget" onPress={() => router.push('/settings/budget')} />
           <SettingsNavRow icon="globe" label="Region" value={locale.symbol} onPress={() => router.push('/settings/region')} />
           <SettingsNavRow icon="shield" label="Security" onPress={() => router.push('/settings/security')} />

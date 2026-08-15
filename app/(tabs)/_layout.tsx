@@ -1,11 +1,10 @@
 import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
-import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import type { TPalette } from '@/lib/types';
-import { Add01Icon, Calendar01Icon, Home01Icon, ListViewIcon, Settings01Icon, TagsIcon } from '@hugeicons/core-free-icons';
+import { Add01Icon, Calendar01Icon, Home01Icon, ListViewIcon, Settings01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
@@ -19,7 +18,6 @@ const ALL_TABS = [
   { name: 'index', label: 'Home', icon: Home01Icon },
   { name: 'explore', label: 'Entries', icon: ListViewIcon },
   { name: 'plan', label: 'Plan', icon: Calendar01Icon },
-  { name: 'categories', label: 'Categories', icon: TagsIcon },
   { name: 'settings', label: 'Settings', icon: Settings01Icon },
 ];
 
@@ -91,16 +89,10 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, navigation }) => {
   const { colors } = useTheme();
   const { impact, selection } = useHaptics();
   const { enabled: planEnabled } = usePlanMode();
-  const { enabled: categoriesEnabled } = useCategories();
 
   const tabs = useMemo(
-    () =>
-      ALL_TABS.filter(t => {
-        if (t.name === 'plan') return planEnabled;
-        if (t.name === 'categories') return categoriesEnabled;
-        return true;
-      }),
-    [planEnabled, categoriesEnabled],
+    () => (planEnabled ? ALL_TABS : ALL_TABS.filter(t => t.name !== 'plan')),
+    [planEnabled],
   );
 
   function handleTabPress(i: number, route: (typeof state.routes)[number]) {
@@ -171,7 +163,6 @@ export default function TabLayout() {
       <Tabs.Screen name="index" />
       <Tabs.Screen name="explore" />
       <Tabs.Screen name="plan" />
-      <Tabs.Screen name="categories" />
       <Tabs.Screen name="settings" />
     </Tabs>
   );
