@@ -37,4 +37,4 @@ jobs:
 
             - name: Trigger EAS workflow
               run: |
-                  bunx eas-cli@latest workflow:run create-${BUILD_TARGET}-build.yaml -F need_android_build=$NEED_ANDROID_BUILD
+                 bunx eas-cli@latest workflow:run .eas/workflows/create-${BUILD_TARGET}-build.yml -F need_android_build=$NEED_ANDROID_BUILD
