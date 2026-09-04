@@ -12,6 +12,12 @@ export function useThemePreference() {
       // 'light' or 'dark', so they keep resolving to themselves. No migration.
       return raw === 'light' || raw === 'dark' || raw === 'system' ? raw : 'dark';
     },
-    initialData: 'dark' as TThemePreference,
+    // `placeholderData`, never `initialData`. With the app-wide
+    // `staleTime: Infinity`, initialData marks the query as already-fetched
+    // (non-zero dataUpdatedAt ⇒ never stale ⇒ no fetch on mount), so the
+    // queryFn would never run and the saved preference would be replaced by
+    // this default on every cold start. placeholderData renders the same value
+    // immediately — no boot flash — while still letting the read happen.
+    placeholderData: 'dark' as TThemePreference,
   });
 }

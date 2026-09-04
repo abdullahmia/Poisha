@@ -7,7 +7,12 @@ import type { TColorScheme, TThemePreference } from '@/lib/types';
 import { getSystemScheme, subscribeToSystemScheme } from '@/lib/utils/system-scheme.util';
 
 export function useTheme() {
-  const { data: preference } = useThemePreference();
+  // Optional in the types because the service uses placeholderData, not
+  // initialData — see use-theme-preference.service.ts. In practice the
+  // placeholder means this is 'dark' from the very first render, so there is
+  // no boot flash; the fallback exists to keep `scheme` non-optional.
+  const { data } = useThemePreference();
+  const preference: TThemePreference = data ?? 'dark';
   const setThemePreference = useSetThemePreference();
   const { flash } = useThemeTransition();
 

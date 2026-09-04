@@ -1,21 +1,19 @@
-import type React from 'react';
-import { Feather } from '@expo/vector-icons';
-import { router } from 'expo-router';
-import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import type { TCategory } from '@/lib/types';
 import { BottomSheet } from '@/lib/ui/bottom-sheet.ui';
 import { Card } from '@/lib/ui/card.ui';
 import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
+import { Feather } from '@expo/vector-icons';
+import * as Crypto from 'expo-crypto';
+import { router } from 'expo-router';
+import type React from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { CategoryFormSheetContent, COLOR_SWATCHES } from './category-form-sheet.component';
 
-// Pushed from Settings, so it owns a back button. The Settings row that opens
-// it is already gated on the feature flag; this guard only covers the odd case
-// of landing here after the flag flips, and waits for `loading` so a pending
-// flag query can't bounce the screen straight back on mount.
+
 export const Categories: React.FC = () => {
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
@@ -67,7 +65,8 @@ export const Categories: React.FC = () => {
   function handleFormSave() {
     if (!formName.trim()) return;
     saveCategory({
-      id: editingCategory?.id ?? `cat_${Date.now()}`,
+      // Random rather than `Date.now()` — see the note in use-save-entry.service.ts.
+      id: editingCategory?.id ?? `cat_${Crypto.randomUUID()}`,
       name: formName.trim(),
       icon: formIcon,
       color: formColor,

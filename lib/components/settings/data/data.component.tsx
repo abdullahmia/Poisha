@@ -30,7 +30,7 @@ export const Data: React.FC = () => {
       contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 32 + insets.bottom, paddingHorizontal: 24 }}
       showsVerticalScrollIndicator={false}
     >
-      <ScreenHeader title="Import & Export" subtitle="CSV is Poisha's backup format. There's no cloud sync — a file is the only way to move data between devices." />
+      <ScreenHeader title="Import & Export" subtitle="A CSV file you control, for moving entries somewhere else or keeping an offline copy. For automatic copies of everything, use Settings › Backup." />
 
       <SettingsNavRow icon="upload" label="Export CSV" onPress={handleExport} />
       <View className="h-px bg-line" />

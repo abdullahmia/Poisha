@@ -98,6 +98,18 @@ class SqliteStorage {
     return rows.map(row => ({ ...row, archived: row.archived === 1 }));
   }
 
+  /**
+   * Every category including archived ones. `loadCategories()` filters archived
+   * rows out for pickers and chips, but a backup that did the same would orphan
+   * every entry whose `category_id` points at an archived category.
+   */
+  loadAllCategories(): TCategory[] {
+    const rows = this.db.getAllSync<CategoryRow>(
+      'SELECT id, name, icon, color, sortOrder, archived FROM categories ORDER BY sortOrder ASC'
+    );
+    return rows.map(row => ({ ...row, archived: row.archived === 1 }));
+  }
+
   upsertCategory(category: TCategory): void {
     this.db.runSync(
       'INSERT OR REPLACE INTO categories (id, name, icon, color, sortOrder, archived) VALUES (?, ?, ?, ?, ?, ?)',
@@ -117,6 +129,31 @@ class SqliteStorage {
   reorderCategories(ids: string[]): void {
     ids.forEach((id, index) => {
       this.db.runSync('UPDATE categories SET sortOrder = ? WHERE id = ?', index, id);
+    });
+  }
+
+  /**
+   * Wipe and refill both tables as one atomic unit — the restore path.
+   *
+   * Deliberately not reused by CSV import, which keeps its existing row-by-row
+   * Replace. A half-applied restore is the one state a backup feature must
+   * never produce, so this either lands whole or rolls back.
+   *
+   * Note `withTransactionSync` blocks the JS thread for the duration; callers
+   * are expected to show a blocking modal rather than pretend otherwise.
+   */
+  replaceAll(entries: TEntry[], categories: TCategory[]): void {
+    this.db.withTransactionSync(() => {
+      this.db.execSync('DELETE FROM entries');
+      this.db.execSync('DELETE FROM categories');
+
+      // Categories first: entries reference them, and a caller inspecting the
+      // db mid-transaction should never see entries without their categories.
+      // An empty incoming list falls back to the defaults, because seeding
+      // otherwise only happens in the constructor — i.e. not until next launch.
+      const restored = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
+      for (const category of restored) this.upsertCategory(category);
+      for (const entry of entries) this.upsertEntry(entry);
     });
   }
 }

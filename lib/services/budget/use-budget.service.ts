@@ -11,6 +11,7 @@ export function useBudget() {
       const parsed = parseFloat(val);
       return Number.isNaN(parsed) ? null : parsed;
     },
-    initialData: null,
+    // placeholderData, not initialData — see use-theme-preference.service.ts.
+    placeholderData: null,
   });
 }

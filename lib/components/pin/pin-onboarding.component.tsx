@@ -1,3 +1,11 @@
+import { useBiometric } from '@/lib/hooks/use-biometric.hook';
+import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
+import { useHaptics } from '@/lib/hooks/use-haptics.hook';
+import { useLock } from '@/lib/hooks/use-lock.hook';
+import { usePinWizard } from '@/lib/hooks/use-pin-wizard.hook';
+import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
+import { useTheme } from '@/lib/hooks/use-theme.hook';
+import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import { clsx } from 'clsx';
 import * as Haptics from 'expo-haptics';
@@ -15,15 +23,8 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useBiometric } from '@/lib/hooks/use-biometric.hook';
-import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
-import { useHaptics } from '@/lib/hooks/use-haptics.hook';
-import { useLock } from '@/lib/hooks/use-lock.hook';
-import { usePinWizard } from '@/lib/hooks/use-pin-wizard.hook';
-import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
-import { useTheme } from '@/lib/hooks/use-theme.hook';
-import { biometricIcon, biometricLabel } from '@/lib/utils/biometric.utils';
 import { OnboardingProgress } from './onboarding-progress.component';
+import { OnboardingRestoreLink } from './onboarding-restore-link.component';
 import { PinInput } from './pin-input.component';
 
 type OuterStep = 'welcome' | 'wizard' | 'biometric';
@@ -88,6 +89,7 @@ export const PinOnboarding: React.FC = () => {
           <StepText title="Secure your Poisha" subtitle="Set a 4-digit PIN to keep your data private." />
         </View>
         <OnboardingButton label="Set PIN" onPress={() => setOuterStep('wizard')} />
+        <OnboardingRestoreLink />
       </Animated.View>
     );
   }

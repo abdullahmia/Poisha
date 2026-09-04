@@ -1,6 +1,8 @@
 import '@/global.css';
+import '@/lib/config/google.config';
 
 import { AppUpdatesGate } from '@/lib/components/common/app-updates-gate.component';
+import { AutoBackupGate } from '@/lib/components/common/auto-backup-gate.component';
 import { GlobalAlertModal } from '@/lib/components/common/global-alert-modal.component';
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
 import { queryClient } from '@/lib/config';
@@ -40,7 +42,7 @@ import { useEffect } from 'react';
 import { Platform, View } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 
 export const unstable_settings = { anchor: '(tabs)' };
 
@@ -68,6 +70,7 @@ function AppStatusBar() {
 function AppGate() {
   const { isLocked, showOnboarding } = useLock();
   const { colors } = useTheme();
+  const insets = useSafeAreaInsets();
   const url = Linking.useURL();
 
   usePlanNotifications();
@@ -94,9 +97,21 @@ function AppGate() {
           <Stack.Screen name="lock" options={screenOptions} />
         </Stack.Protected>
       </Stack>
+      <View
+        pointerEvents="none"
+        style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          height: insets.top,
+          backgroundColor: colors.bg,
+        }}
+      />
       <AddEntrySheet />
       <GlobalAlertModal />
       {!showOnboarding && !isLocked && <AppUpdatesGate />}
+      {!showOnboarding && !isLocked && <AutoBackupGate />}
     </>
   );
 }

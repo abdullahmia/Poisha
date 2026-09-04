@@ -9,6 +9,11 @@ export function useNotificationsEnabled() {
       const val = await storage.getItem(ASYNC_STORAGE_KEYS.notificationsEnabled);
       return val === 'true';
     },
-    initialData: false,
+    // placeholderData, not initialData — see use-theme-preference.service.ts.
+    // This one mattered most: the toggle could read false while AsyncStorage
+    // still said 'true', and plan-notification.util.ts / budget-notification.
+    // util.ts read AsyncStorage directly — so alerts kept firing that the UI
+    // claimed were off.
+    placeholderData: false,
   });
 }

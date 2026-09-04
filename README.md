@@ -11,6 +11,7 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 - **Home dashboard** — monthly hero total, entry/item stats, a custom daily spending bar chart, and recent entries
 - **Browse screen** — full entry list grouped by date, with Day/Week/Month/Year/All period filters, a date-range navigator, stats grid, and sort controls
 - **App lock** — mandatory PIN onboarding, SHA-256 salted PIN storage in `expo-secure-store`, 5-attempt lockout with cooldown, and optional Face ID / Fingerprint unlock
+- **Google Drive backup** — opt in from Settings › Backup to keep a copy of every entry, category and setting in a private per-app folder in your own Google Drive, uploaded automatically when you open the app. Restore onto a fresh install straight from the onboarding screen. Your PIN is never backed up
 - **CSV import & export** — export all entries to CSV via the native share sheet, or import from a CSV file with a merge-or-replace flow
 - **Budget tracking** — set a monthly budget with a progress indicator on the home screen
 - **Light, dark & system themes** — pick one in Settings › Appearance; System follows your device and repaints live
@@ -18,8 +19,6 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 - **Notifications** — budget alerts when the month's spending passes your limit, and 9 AM reminders on the day a planned entry starts counting; each toggleable in Settings › Notifications
 - **Haptics** — tactile feedback across key interactions
 - **Swipe to delete** — swipe an entry card to remove it without opening the edit sheet
-
-See [docs/FEATURES.md](docs/FEATURES.md) for the full feature inventory and roadmap, and [docs/ISSUES.md](docs/ISSUES.md) for known issues.
 
 ## Screenshots
 
@@ -64,7 +63,7 @@ lib/
   config/                  Env, error, and query-client configuration
   utils/                   Formatting, date, CSV, and other pure helpers
 
-docs/                      Feature specs and known issues
+docs/                      Feature specs and screenshots
 ```
 
 Naming convention: files are suffixed by role (`*.component.tsx`, `*.hook.ts`, `*.service.ts`, `*.util.ts`, `*.types.ts`, etc.).

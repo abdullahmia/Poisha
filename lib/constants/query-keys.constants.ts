@@ -13,4 +13,10 @@ export const QUERY_KEYS = {
   planMode: { enabled: ['planMode', 'enabled'] },
   pin: { status: ['pin', 'status'] },
   biometric: { enabled: ['biometric', 'enabled'] },
+  backup: {
+    account: ['backup', 'account'],
+    settings: ['backup', 'settings'],
+    list: ['backup', 'list'],
+    promoDismissed: ['backup', 'promoDismissed'],
+  },
 } as const;

@@ -15,6 +15,7 @@ export function useLocale() {
         return DEFAULT_LOCALE;
       }
     },
-    initialData: DEFAULT_LOCALE,
+    // placeholderData, not initialData — see use-theme-preference.service.ts.
+    placeholderData: DEFAULT_LOCALE,
   });
 }

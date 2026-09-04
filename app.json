@@ -3,7 +3,9 @@
     "name": "Poisha",
     "slug": "poisha",
     "version": "1.0.0",
-    "runtimeVersion": { "policy": "fingerprint" },
+    "runtimeVersion": {
+      "policy": "fingerprint"
+    },
     "updates": {
       "url": "https://u.expo.dev/c1dabdba-05a9-4885-b3f7-250b605167eb"
     },
@@ -53,7 +55,15 @@
       "expo-font",
       "expo-sharing",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-system-ui",
+      "expo-web-browser",
+      "./plugins/with-ndk-version",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.642347879269-mcdp314bg8o2tev5cbqtvrl1kthgpf5s"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

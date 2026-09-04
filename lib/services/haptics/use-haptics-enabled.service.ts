@@ -9,6 +9,7 @@ export function useHapticsEnabled() {
       const val = await storage.getItem(ASYNC_STORAGE_KEYS.haptics);
       return val !== '0';
     },
-    initialData: true,
+    // placeholderData, not initialData — see use-theme-preference.service.ts.
+    placeholderData: true,
   });
 }
