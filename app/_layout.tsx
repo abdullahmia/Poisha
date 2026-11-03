@@ -4,6 +4,7 @@ import '@/lib/config/google.config';
 import { AppUpdatesGate } from '@/lib/components/common/app-updates-gate.component';
 import { AutoBackupGate } from '@/lib/components/common/auto-backup-gate.component';
 import { GlobalAlertModal } from '@/lib/components/common/global-alert-modal.component';
+import { ThemeVars } from '@/lib/components/common/theme-vars.component';
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
 import { queryClient } from '@/lib/config';
 import { DARK_THEME } from '@/lib/constants';
@@ -13,6 +14,7 @@ import { LockProvider } from '@/lib/context/lock.context';
 import { ThemeTransitionProvider } from '@/lib/context/theme-transition.context';
 import { useLock } from '@/lib/hooks/use-lock.hook';
 import { usePlanNotifications } from '@/lib/hooks/use-plan-notifications.hook';
+import { useTodoNotifications } from '@/lib/hooks/use-todo-notifications.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import {
   DMSans_400Regular,
@@ -77,6 +79,7 @@ function AppGate() {
   const url = Linking.useURL();
 
   usePlanNotifications();
+  useTodoNotifications();
 
   useEffect(() => {
     if (url?.startsWith('tracker://home')) {
@@ -145,8 +148,12 @@ export default function RootLayout() {
                 <LockProvider>
                   <AlertProvider>
                     <EntriesSheetProvider>
-                      <AppGate />
-                      <AppStatusBar />
+                      {/* Must sit inside the providers it reads from, and must
+                          wrap everything that renders a className colour. */}
+                      <ThemeVars>
+                        <AppGate />
+                        <AppStatusBar />
+                      </ThemeVars>
                     </EntriesSheetProvider>
                   </AlertProvider>
                 </LockProvider>

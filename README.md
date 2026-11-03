@@ -8,15 +8,16 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 
 - **Entry management** — log expenses with multiple amount line-items per entry, an optional note, and a date picker
 - **Plan Mode** — opt in from Settings › Planning (off by default) to schedule future-dated expenses (rent, a subscription). A future entry is held as *planned*: excluded from every spend total, chart, and budget figure until its date arrives, then counted automatically. Enabling it adds a **Plan** tab — planned entries grouped by month, a spent/planned/projected summary, per-month budget projections, and a category breakdown — alongside an Upcoming section on Home and an Upcoming filter on Browse. With Plan Mode off the tab disappears, the date picker caps at today, and the app behaves exactly as it did before the feature
+- **Todo** — opt in from Settings › Features (off by default) for a deeply customizable todo list on its own tab. Todos carry a note, steps (subtasks with progress), a due date and time, a reminder, and a repeat rule (daily/weekly/monthly/yearly, every *n*, specific weekdays, counted from the due date or from when you finish it). Organise them with your own **lists**, **priorities** and **tags** — all three fully editable in Settings › Todo, with names, colours, emoji and order under your control. The view is yours too: sort (manual/due/priority/created/A–Z), group (list/priority/due/tag), filter, choose how completed todos appear, pick compact or comfortable density, decide which fields show on a card, what a swipe does, and whether overdue todos roll forward to today. Todos are entirely independent of your expenses, and nothing is deleted when you switch the feature off
 - **Home dashboard** — monthly hero total, entry/item stats, a custom daily spending bar chart, and recent entries
 - **Browse screen** — full entry list grouped by date, with Day/Week/Month/Year/All period filters, a date-range navigator, stats grid, and sort controls
 - **App lock** — mandatory PIN onboarding, SHA-256 salted PIN storage in `expo-secure-store`, 5-attempt lockout with cooldown, and optional Face ID / Fingerprint unlock
-- **Google Drive backup** — opt in from Settings › Backup to keep a copy of every entry, category and setting in a private per-app folder in your own Google Drive, uploaded automatically when you open the app. Restore onto a fresh install straight from the onboarding screen. Your PIN is never backed up
+- **Google Drive backup** — opt in from Settings › Backup to keep a copy of every entry, category, todo and setting in a private per-app folder in your own Google Drive, uploaded automatically when you open the app. Restore onto a fresh install straight from the onboarding screen. Your PIN is never backed up
 - **CSV import & export** — export all entries to CSV via the native share sheet, or import from a CSV file with a merge-or-replace flow
 - **Budget tracking** — set a monthly budget with a progress indicator on the home screen
 - **Light, dark & system themes** — pick one in Settings › Appearance; System follows your device and repaints live
 - **Currency & locale settings** — configurable currency symbol and number formatting
-- **Notifications** — budget alerts when the month's spending passes your limit, and 9 AM reminders on the day a planned entry starts counting; each toggleable in Settings › Notifications
+- **Notifications** — budget alerts when the month's spending passes your limit, 9 AM reminders on the day a planned entry starts counting, and todo reminders at (or ahead of) a todo's due time; each toggleable in Settings › Notifications
 - **Haptics** — tactile feedback across key interactions
 - **Swipe to delete** — swipe an entry card to remove it without opening the edit sheet
 
@@ -47,7 +48,7 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 
 ```
 app/                      Expo Router routes
-  (tabs)/                 Tab navigator: home, browse, settings
+  (tabs)/                 Tab navigator: home, browse, plan, todo, settings
   _layout.tsx             Root layout — fonts, providers, lock gate, add-entry sheet
 
 lib/

@@ -1,10 +1,13 @@
-import { colorScheme as nativeWindColorScheme } from 'nativewind';
 import { useCallback, useEffect, useSyncExternalStore } from 'react';
 import { DARK_THEME, LIGHT_THEME } from '@/lib/constants';
 import { useThemeTransition } from '@/lib/context/theme-transition.context';
 import { useSetThemePreference, useThemePreference } from '@/lib/services/theme';
 import type { TColorScheme, TThemePreference } from '@/lib/types';
-import { getSystemScheme, subscribeToSystemScheme } from '@/lib/utils/system-scheme.util';
+import {
+  applyColorSchemeOverride,
+  getSystemScheme,
+  subscribeToSystemScheme,
+} from '@/lib/utils/system-scheme.util';
 
 export function useTheme() {
   // Optional in the types because the service uses placeholderData, not
@@ -24,13 +27,17 @@ export function useTheme() {
   const scheme: TColorScheme = preference === 'system' ? systemScheme : preference;
   const colors = scheme === 'dark' ? DARK_THEME : LIGHT_THEME;
 
-  // NativeWind's own colorScheme (drives every className color) tracks the
-  // system appearance by default and is otherwise unrelated to this query,
-  // so it must be kept in sync here on every render — not just on toggle —
-  // or className- and inline-styled colors can disagree on boot.
+  // Applies the choice as the app-wide *native* appearance, so system chrome
+  // follows the theme. The className colors no longer ride on this — they read
+  // the CSS variables `ThemeVars` publishes from `scheme` — which is what makes
+  // the two styling paths agree on the first frame under React Native 0.88.
+  //
+  // Deliberately the preference, not `scheme`: forcing a resolved value here
+  // would override the device appearance even under System and hide it from
+  // `getSystemScheme()`. See applyColorSchemeOverride.
   useEffect(() => {
-    if (scheme) nativeWindColorScheme.set(scheme);
-  }, [scheme]);
+    applyColorSchemeOverride(preference);
+  }, [preference]);
 
   const setPreference = useCallback((next: TThemePreference) => {
     flash(colors.bg);

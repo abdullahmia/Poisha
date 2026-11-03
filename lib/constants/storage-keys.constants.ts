@@ -7,6 +7,10 @@ export const ASYNC_STORAGE_KEYS = {
   notificationsEnabled: "poisha_notifications_enabled",
   categoriesEnabled: "poisha_categories_enabled",
   planModeEnabled: "poisha_plan_mode_enabled",
+  todoEnabled: "poisha_todo_enabled",
+  todoPrefs: "poisha_todo_prefs",
+  todoRemindersEnabled: "poisha_todo_reminders_enabled",
+  todoCarryOverDate: "poisha_todo_carry_over_date",
   budgetAlertsEnabled: "poisha_budget_alerts_enabled",
   planRemindersEnabled: "poisha_plan_reminders_enabled",
   sqliteMigrated: "poisha_sqlite_migrated",
@@ -29,6 +33,12 @@ export const BACKED_UP_SETTING_KEYS = [
   ASYNC_STORAGE_KEYS.planModeEnabled,
   ASYNC_STORAGE_KEYS.budgetAlertsEnabled,
   ASYNC_STORAGE_KEYS.planRemindersEnabled,
+  // `todoCarryOverDate` is deliberately absent — it is a device-local "already
+  // rolled forward today" stamp, like budgetExceededMonth, and restoring
+  // another device's stamp would skip this device's first carry-over.
+  ASYNC_STORAGE_KEYS.todoEnabled,
+  ASYNC_STORAGE_KEYS.todoPrefs,
+  ASYNC_STORAGE_KEYS.todoRemindersEnabled,
 ] as const;
 
 export const SECURE_STORAGE_KEYS = {

@@ -7,8 +7,11 @@ import {
   usePlanRemindersEnabled,
   useSetBudgetAlertsEnabled,
   useSetPlanRemindersEnabled,
+  useSetTodoRemindersEnabled,
+  useTodoRemindersEnabled,
 } from '@/lib/services/notifications';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
+import { useTodo } from '@/lib/hooks/use-todo.hook';
 import { ScreenHeader } from '../shared/screen-header.component';
 import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
@@ -29,11 +32,14 @@ export const Notifications: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { notificationsEnabled, setNotificationsEnabled } = useNotifications();
   const { enabled: planModeEnabled } = usePlanMode();
+  const { enabled: todoEnabled } = useTodo();
 
   const budgetAlerts = useBudgetAlertsEnabled();
   const setBudgetAlerts = useSetBudgetAlertsEnabled();
   const planReminders = usePlanRemindersEnabled();
   const setPlanReminders = useSetPlanRemindersEnabled();
+  const todoReminders = useTodoRemindersEnabled();
+  const setTodoReminders = useSetTodoRemindersEnabled();
 
   return (
     <ScrollView
@@ -76,6 +82,23 @@ export const Notifications: React.FC = () => {
         // Doubly gated: a reminder about planned entries is meaningless when
         // Plan Mode is off, since nothing can be planned in the first place.
         disabled={!notificationsEnabled || !planModeEnabled}
+      />
+
+      <View className="h-px bg-line" />
+
+      <GroupLabel title="Todo" description="Alerts about things you've put on your list." />
+      <SettingsToggleRow
+        label="Todo reminders"
+        description={
+          todoEnabled
+            ? 'At the time you set on a todo, or ahead of it.'
+            : 'Turn on Todo in Features to start a list.'
+        }
+        value={todoReminders.data ?? true}
+        onValueChange={v => setTodoReminders.mutate(v)}
+        // Doubly gated, like the plan reminders: with the Todo module off
+        // there are no todos to be reminded about.
+        disabled={!notificationsEnabled || !todoEnabled}
       />
     </ScrollView>
   );

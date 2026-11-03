@@ -7,11 +7,13 @@ import { SettingsNavRow } from '@/lib/components/settings/shared/settings-nav-ro
 import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
+import { useTodo } from '@/lib/hooks/use-todo.hook';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { enabled: categoriesEnabled } = useCategories();
+  const { enabled: todoEnabled } = useTodo();
   const titleStyle = useFadeIn(0);
   const bodyStyle = useFadeIn(70);
 
@@ -38,6 +40,9 @@ export default function SettingsScreen() {
           {/* Only when the feature is on — there is nothing to manage otherwise. */}
           {categoriesEnabled && (
             <SettingsNavRow icon="tag" label="Categories" onPress={() => router.push('/settings/categories')} />
+          )}
+          {todoEnabled && (
+            <SettingsNavRow icon="check-square" label="Todo" onPress={() => router.push('/settings/todo')} />
           )}
           <SettingsNavRow icon="target" label="Budget" onPress={() => router.push('/settings/budget')} />
           <SettingsNavRow icon="globe" label="Region" value={locale.symbol} onPress={() => router.push('/settings/region')} />
