@@ -3,6 +3,7 @@ import * as Notifications from 'expo-notifications';
 import { ASYNC_STORAGE_KEYS, QUERY_KEYS } from '@/lib/constants';
 import { storage } from '@/lib/storages';
 import { syncPlanDueNotifications } from '@/lib/utils/plan-notification.util';
+import { syncBackgroundAlerts } from '@/lib/utils/sms-alerts.util';
 
 export function useSetNotificationsEnabled() {
   const queryClient = useQueryClient();
@@ -24,6 +25,9 @@ export function useSetNotificationsEnabled() {
       // Granting permission schedules the pending due-date notifications;
       // revoking clears them. The sync reads the flag itself either way.
       syncPlanDueNotifications();
+      // The SMS background receiver is gated on this master switch too, and it
+      // enforces that natively — so the flag has to be pushed across.
+      void syncBackgroundAlerts();
     },
   });
 }

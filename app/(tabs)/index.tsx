@@ -10,6 +10,7 @@ import { LoadingSplash } from '@/lib/components/home/loading-splash.component';
 import { MonthHero } from '@/lib/components/home/month-hero.component';
 import { MonthNav } from '@/lib/components/home/month-nav.component';
 import { RecentEntries } from '@/lib/components/home/recent-entries.component';
+import { SmsReviewBanner } from '@/lib/components/home/sms-review-banner.component';
 import { UpcomingSection } from '@/lib/components/home/upcoming-section.component';
 import { useBudget } from '@/lib/hooks/use-budget.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
@@ -52,6 +53,8 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <HomeHeader />
+      {/* Above the backup promo: this is work waiting, not an announcement. */}
+      <SmsReviewBanner />
       <BackupPromoBanner />
       <MonthNav monthOffset={monthOffset} setMonthOffset={setMonthOffset} monthLabel={monthLabel} />
       <MonthHero total={total} count={count} txCount={txCount} avgDay={avgDay} plannedTotal={plannedTotal} />

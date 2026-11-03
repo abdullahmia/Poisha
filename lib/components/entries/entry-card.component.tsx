@@ -84,6 +84,19 @@ export const EntryCard: React.FC<EntryCardProps> = ({ entry, onClick }) => {
                   </Text>
                 </View>
               )}
+              {/* Provenance, so an entry Poisha suggested is never mistaken for
+                  one the user typed — it is the difference between checking a
+                  figure and trusting it. */}
+              {entry.source === 'sms' && (
+                <View className="rounded-full border border-line px-1.5 py-[1px]">
+                  <Text
+                    className="uppercase text-ink-muted"
+                    style={{ fontSize: 8, letterSpacing: 1, fontFamily: 'Inter_600SemiBold' }}
+                  >
+                    Auto
+                  </Text>
+                </View>
+              )}
               <Text className="min-w-0 flex-1 text-ink-muted" style={{ fontSize: 11 }} numberOfLines={1}>
                 {multi ? `${entry.amounts.length} items` : entry.note || category?.name || '—'}
               </Text>

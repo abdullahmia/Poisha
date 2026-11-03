@@ -7,11 +7,12 @@ import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { usePlanSummary } from '@/lib/hooks/use-plan-summary.hook';
+import { useSms } from '@/lib/hooks/use-sms.hook';
 import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
 import { ScreenHeader } from '../shared/screen-header.component';
 import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
-type TPendingOff = 'plan' | 'categories' | null;
+type TPendingOff = 'plan' | 'categories' | 'sms' | null;
 
 export const Features: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -20,6 +21,13 @@ export const Features: React.FC = () => {
   const { enabled: categoriesEnabled, setEnabled: setCategoriesEnabled } = useCategories();
   const { hapticsEnabled, setHapticsEnabled } = useHaptics();
   const { count: plannedCount, plannedTotal } = usePlanSummary();
+  const {
+    available: smsAvailable,
+    enabled: smsEnabled,
+    pendingCount: smsPendingCount,
+    setEnabled: setSmsEnabled,
+    requestPermission: requestSmsPermission,
+  } = useSms();
 
   const [pendingOff, setPendingOff] = useState<TPendingOff>(null);
 
@@ -33,6 +41,13 @@ export const Features: React.FC = () => {
   function handleCategoriesChange(next: boolean) {
     if (next) setCategoriesEnabled(true);
     else setPendingOff('categories');
+  }
+
+  // Turning this one on also asks for the permission, because a flag that's on
+  // while the permission is missing does nothing and looks broken.
+  function handleSmsChange(next: boolean) {
+    if (next) void setSmsEnabled(true).then(() => requestSmsPermission());
+    else setPendingOff('sms');
   }
 
   // The consequence is specific and worth stating: planned money stops being
@@ -68,6 +83,20 @@ export const Features: React.FC = () => {
 
       <View className="h-px bg-line" />
 
+      {/* Android-only, and hidden rather than disabled where it can't work:
+          a greyed-out switch implies a setting the user could reach. */}
+      {smsAvailable && (
+        <>
+          <SettingsToggleRow
+            label="Automatic expenses"
+            description="Read bank and wallet messages to suggest entries. Nothing is added without your confirmation."
+            value={smsEnabled}
+            onValueChange={handleSmsChange}
+          />
+          <View className="h-px bg-line" />
+        </>
+      )}
+
       <SettingsToggleRow
         label="Haptic feedback"
         description="Small vibrations when you tap, save, and delete."
@@ -98,6 +127,22 @@ export const Features: React.FC = () => {
         actions={[
           { label: 'Cancel', variant: 'outline' },
           { label: 'Turn off', variant: 'solid', onPress: () => setCategoriesEnabled(false) },
+        ]}
+      />
+
+      <ConfirmModal
+        visible={pendingOff === 'sms'}
+        onClose={() => setPendingOff(null)}
+        title="Turn off Automatic expenses?"
+        message={
+          smsPendingCount > 0
+            ? `Poisha stops reading new messages, and the ${smsPendingCount} ${smsPendingCount === 1 ? 'transaction' : 'transactions'} waiting for review will be deleted.\n\nEntries you already confirmed are untouched.`
+            : 'Poisha stops reading new messages. Entries you already confirmed are untouched.\n\nIf you turn this back on later, it starts from that moment — it won’t go back and read the messages in between.'
+        }
+        icon="message-square"
+        actions={[
+          { label: 'Cancel', variant: 'outline' },
+          { label: 'Turn off', variant: 'solid', onPress: () => void setSmsEnabled(false) },
         ]}
       />
     </ScrollView>

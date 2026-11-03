@@ -6,12 +6,14 @@ const COLUMNS = [
   { col: 'date', desc: 'ISO date', example: 'YYYY-MM-DD' },
   { col: 'amounts', desc: 'JSON array of numbers', example: '[150, 80]' },
   { col: 'note', desc: 'Label (optional)', example: 'groceries' },
+  { col: 'source', desc: 'How it was added (optional)', example: 'manual' },
+  { col: 'source_ref', desc: 'Internal reference (optional)', example: '' },
 ];
 
 const EXAMPLE_LINES = [
-  'id,date,amounts,note',
-  'e_001,2024-01-15,"[150,80]",groceries',
-  'e_002,2024-01-16,[200],rent',
+  'id,date,amounts,note,source,source_ref',
+  'e_001,2024-01-15,"[150,80]",groceries,manual,',
+  'e_002,2024-01-16,[200],rent,manual,',
 ];
 
 type CsvFormatSheetProps = { onClose: () => void };
@@ -23,7 +25,7 @@ export const CsvFormatSheetContent: React.FC<CsvFormatSheetProps> = ({ onClose }
         CSV Format
       </Text>
       <Text className="mb-5 text-ink-muted" style={{ fontFamily: 'Inter_400Regular', fontSize: 13 }}>
-        Your file must include these four columns in order.
+        Your file must include the first four columns in order. The last two are optional.
       </Text>
 
       {COLUMNS.map(({ col, desc, example }) => (

@@ -17,6 +17,11 @@ export const ASYNC_STORAGE_KEYS = {
   backupLastStatus: "poisha_backup_last_status",
   backupAccountEmail: "poisha_backup_account_email",
   backupPromoDismissed: "poisha_backup_promo_dismissed",
+  smsEnabled: "poisha_sms_enabled",
+  smsScanCursor: "poisha_sms_scan_cursor",
+  smsLastScanAt: "poisha_sms_last_scan_at",
+  smsPresetPrefs: "poisha_sms_preset_prefs",
+  smsAlertsEnabled: "poisha_sms_alerts_enabled",
 } as const;
 
 export const BACKED_UP_SETTING_KEYS = [
@@ -29,6 +34,12 @@ export const BACKED_UP_SETTING_KEYS = [
   ASYNC_STORAGE_KEYS.planModeEnabled,
   ASYNC_STORAGE_KEYS.budgetAlertsEnabled,
   ASYNC_STORAGE_KEYS.planRemindersEnabled,
+  // The feature flag travels; the scan cursor and last-scan time deliberately
+  // do not. Both describe how far *this* device has read *its* inbox, and
+  // restoring either onto another phone would make it skip real messages.
+  ASYNC_STORAGE_KEYS.smsEnabled,
+  ASYNC_STORAGE_KEYS.smsPresetPrefs,
+  ASYNC_STORAGE_KEYS.smsAlertsEnabled,
 ] as const;
 
 export const SECURE_STORAGE_KEYS = {

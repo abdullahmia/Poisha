@@ -16,9 +16,15 @@ export function useSaveEntry() {
       // outlive the install, and two devices creating an entry in the same
       // millisecond would collide — which INSERT OR REPLACE resolves by
       // silently destroying a row rather than erroring.
-      const entry: TEntry = draft.id
-        ? ({ ...draft, id: draft.id } as TEntry)
-        : ({ ...draft, id: `e_${Crypto.randomUUID()}` } as TEntry);
+      // Provenance is optional on the draft so manual call sites stay untouched;
+      // it is required on the row, so default it here — the one place every
+      // single-entry write passes through.
+      const entry: TEntry = {
+        ...draft,
+        id: draft.id ?? `e_${Crypto.randomUUID()}`,
+        source: draft.source ?? 'manual',
+        sourceRef: draft.sourceRef ?? null,
+      };
       sqliteStorage.upsertEntry(entry);
       return entry;
     },

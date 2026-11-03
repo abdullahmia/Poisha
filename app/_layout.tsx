@@ -4,6 +4,7 @@ import '@/lib/config/google.config';
 import { AppUpdatesGate } from '@/lib/components/common/app-updates-gate.component';
 import { AutoBackupGate } from '@/lib/components/common/auto-backup-gate.component';
 import { GlobalAlertModal } from '@/lib/components/common/global-alert-modal.component';
+import { SmsScanGate } from '@/lib/components/common/sms-scan-gate.component';
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
 import { queryClient } from '@/lib/config';
 import { DARK_THEME } from '@/lib/constants';
@@ -92,6 +93,9 @@ function AppGate() {
         <Stack.Protected guard={!showOnboarding && !isLocked}>
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="settings" />
+          {/* Inside the guard: the review queue lists amounts and merchants,
+              so it belongs behind App Lock like every other financial screen. */}
+          <Stack.Screen name="review" />
         </Stack.Protected>
         <Stack.Protected guard={showOnboarding}>
           <Stack.Screen name="onboarding" options={screenOptions} />
@@ -115,6 +119,7 @@ function AppGate() {
       <GlobalAlertModal />
       {!showOnboarding && !isLocked && <AppUpdatesGate />}
       {!showOnboarding && !isLocked && <AutoBackupGate />}
+      {!showOnboarding && !isLocked && <SmsScanGate />}
     </>
   );
 }

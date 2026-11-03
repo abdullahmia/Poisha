@@ -7,11 +7,13 @@ import { SettingsNavRow } from '@/lib/components/settings/shared/settings-nav-ro
 import { useCategories } from '@/lib/hooks/use-categories.hook';
 import { useFadeIn } from '@/lib/hooks/use-fade-in.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
+import { useSmsBadge } from '@/lib/hooks/use-sms-badge.hook';
 
 export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { locale } = useLocale();
   const { enabled: categoriesEnabled } = useCategories();
+  const { available: smsAvailable, pendingCount } = useSmsBadge();
   const titleStyle = useFadeIn(0);
   const bodyStyle = useFadeIn(70);
 
@@ -45,6 +47,16 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <SettingsGroup label="Data">
+          {/* Hidden where it can't work at all (iOS, tablets) rather than shown
+              as a row that only ever explains itself. */}
+          {smsAvailable && (
+            <SettingsNavRow
+              icon="message-square"
+              label="Automatic expenses"
+              value={pendingCount > 0 ? String(pendingCount) : undefined}
+              onPress={() => router.push('/settings/sms')}
+            />
+          )}
           <SettingsNavRow icon="cloud" label="Backup" onPress={() => router.push('/settings/backup')} />
           <SettingsNavRow icon="database" label="Import & Export" onPress={() => router.push('/settings/data')} />
         </SettingsGroup>

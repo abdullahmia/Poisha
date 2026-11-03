@@ -9,7 +9,11 @@ export async function migrateLegacyEntries(): Promise<void> {
   const raw = await storage.getItem(ASYNC_STORAGE_KEYS.legacyEntries);
   if (raw) {
     const legacy = JSON.parse(raw) as TEntry[];
-    for (const entry of legacy) sqliteStorage.upsertEntry(entry);
+    // The legacy blob predates provenance entirely — everything in it was typed
+    // in by hand. Stated explicitly rather than relying on the NULL coalesce.
+    for (const entry of legacy) {
+      sqliteStorage.upsertEntry({ ...entry, source: 'manual', sourceRef: null });
+    }
   }
 
   await storage.setItem(ASYNC_STORAGE_KEYS.sqliteMigrated, '1');

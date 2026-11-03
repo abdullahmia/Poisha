@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { BACKUP_SCHEMA_VERSION, type TBackupSnapshot } from '@/lib/types';
+import { smsUserRuleSchema } from './sms.schemas';
 
 const entrySchema = z.object({
   id: z.string().min(1),
@@ -7,6 +8,11 @@ const entrySchema = z.object({
   amounts: z.array(z.number()),
   note: z.string(),
   categoryId: z.string().nullable(),
+  // `.default()` is what makes v1 payloads restorable: the field stays optional
+  // on the way in, but the parsed output is always populated, so `applySnapshot`
+  // never hands SQLite an entry without provenance. Do not tighten to required.
+  source: z.enum(['manual', 'sms', 'import']).default('manual'),
+  sourceRef: z.string().nullable().default(null),
 });
 
 const categorySchema = z.object({
@@ -39,6 +45,8 @@ export const backupSnapshotSchema = z
     data: z.object({
       entries: z.array(entrySchema),
       categories: z.array(categorySchema),
+      // Defaulted, so a v1 payload that predates rules entirely still parses.
+      smsRules: z.array(smsUserRuleSchema).default([]),
       settings: z.record(z.string(), z.string().nullable()),
     }),
   })

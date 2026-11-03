@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ASYNC_STORAGE_KEYS, QUERY_KEYS } from '@/lib/constants';
 import { storage } from '@/lib/storages';
 import { syncPlanDueNotifications } from '@/lib/utils/plan-notification.util';
+import { syncBackgroundAlerts } from '@/lib/utils/sms-alerts.util';
 
 // The two sub-channels under the master notifications permission. Both default
 // to ON: the master switch used to gate everything by itself, so anyone who had
@@ -49,5 +50,26 @@ export function useSetPlanRemindersEnabled() {
       // stop future ones being made.
       syncPlanDueNotifications();
     },
+  });
+}
+
+export function useSmsAlertsEnabled() {
+  return useQuery({
+    queryKey: QUERY_KEYS.sms.alerts,
+    queryFn: () => readChannel(ASYNC_STORAGE_KEYS.smsAlertsEnabled),
+  });
+}
+
+export function useSetSmsAlertsEnabled() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (value: boolean): Promise<boolean> => {
+      await storage.setItem(ASYNC_STORAGE_KEYS.smsAlertsEnabled, String(value));
+      // Unlike the other two channels, this one is enforced in native code, so
+      // the flag has to be pushed across rather than merely stored.
+      await syncBackgroundAlerts();
+      return value;
+    },
+    onSuccess: value => queryClient.setQueryData(QUERY_KEYS.sms.alerts, value),
   });
 }

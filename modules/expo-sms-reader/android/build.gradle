@@ -1,0 +1,13 @@
+plugins {
+  id 'com.android.library'
+  id 'expo-module-gradle-plugin'
+}
+
+// Required: expo-module-gradle-plugin on SDK 58 fails project evaluation
+// outright if `version` is unset, even for a local, unpublished module.
+group = 'com.amia1971.tracker'
+version = '1.0.0'
+
+android {
+  namespace "expo.modules.smsreader"
+}

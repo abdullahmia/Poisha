@@ -1,0 +1,7 @@
+{
+  "name": "expo-sms-reader",
+  "version": "1.0.0",
+  "description": "Reads bank transaction SMS from the Android inbox. Android-only, local-only.",
+  "main": "src/index.ts",
+  "private": true
+}

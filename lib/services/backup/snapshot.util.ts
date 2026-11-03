@@ -23,6 +23,7 @@ export async function buildSnapshot(): Promise<TBackupSnapshot> {
     data: {
       entries: sqliteStorage.loadEntries(),
       categories: sqliteStorage.loadAllCategories(),
+      smsRules: sqliteStorage.loadSmsRules(),
       settings,
     },
   };
@@ -39,9 +40,14 @@ export async function buildSnapshot(): Promise<TBackupSnapshot> {
  * running it before the settings write publishes the old currency symbol.
  */
 export async function applySnapshot(snapshot: TBackupSnapshot): Promise<void> {
-  const { entries, categories, settings } = snapshot.data;
+  const { entries, categories, smsRules, settings } = snapshot.data;
 
   sqliteStorage.replaceAll(entries, categories);
+
+  // Separate from replaceAll: rules are independent of the entries/categories
+  // pair that has to land atomically, and a v1 snapshot carries an empty list,
+  // which should clear local rules just as any other restore would.
+  sqliteStorage.replaceSmsRules(smsRules);
 
   // Restrict to the allowlist even on the way in: a snapshot from a future
   // build (or a hand-edited file) must not be able to write arbitrary keys.
@@ -54,4 +60,12 @@ export async function applySnapshot(snapshot: TBackupSnapshot): Promise<void> {
   // Device-local alert state that must not survive a restore: whatever month
   // the old device had already warned about says nothing about this one.
   await storage.removeItem(ASYNC_STORAGE_KEYS.budgetExceededMonth);
+
+  // Same category of state, and the more consequential one. `replaceAll` has
+  // just emptied the SMS queue; if the cursor were left where it was, the next
+  // scan would re-detect every message behind the entries the restore just
+  // brought back and offer the user hundreds of duplicates. Forward-only is the
+  // safe reset — deliberate backfill stays an explicit action in Settings.
+  await storage.setItem(ASYNC_STORAGE_KEYS.smsScanCursor, String(Date.now()));
+  await storage.removeItem(ASYNC_STORAGE_KEYS.smsLastScanAt);
 }

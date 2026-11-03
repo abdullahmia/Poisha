@@ -19,4 +19,14 @@ export const QUERY_KEYS = {
     list: ['backup', 'list'],
     promoDismissed: ['backup', 'promoDismissed'],
   },
+  sms: {
+    enabled: ['sms', 'enabled'],
+    permission: ['sms', 'permission'],
+    queue: ['sms', 'queue'],
+    pendingCount: ['sms', 'pendingCount'],
+    lastScanAt: ['sms', 'lastScanAt'],
+    rules: ['sms', 'rules'],
+    presetPrefs: ['sms', 'presetPrefs'],
+    alerts: ['sms', 'alerts'],
+  },
 } as const;

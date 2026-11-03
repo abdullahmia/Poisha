@@ -1,6 +1,10 @@
-import type { TEntry } from '@/lib/types';
+import type { TEntry, TEntrySource } from '@/lib/types';
 
-const HEADER = 'id,date,amounts,note';
+// New columns are appended, never inserted: the reader is positional, so a file
+// exported before provenance existed still parses on its first four fields.
+const HEADER = 'id,date,amounts,note,source,source_ref';
+
+const SOURCES: TEntrySource[] = ['manual', 'sms', 'import'];
 
 function escapeField(val: string): string {
   if (/[,"\n]/.test(val)) return `"${val.replace(/"/g, '""')}"`;
@@ -9,7 +13,14 @@ function escapeField(val: string): string {
 
 export function entriesToCsv(entries: TEntry[]): string {
   const rows = entries.map(e =>
-    [e.id, e.date, escapeField(JSON.stringify(e.amounts)), escapeField(e.note)].join(',')
+    [
+      e.id,
+      e.date,
+      escapeField(JSON.stringify(e.amounts)),
+      escapeField(e.note),
+      e.source,
+      escapeField(e.sourceRef ?? ''),
+    ].join(',')
   );
   return [HEADER, ...rows].join('\n');
 }
@@ -59,11 +70,24 @@ export function csvToEntries(csv: string): TEntry[] {
     try {
       const fields = parseRow(line);
       if (fields.length < 4) continue;
-      const [id, date, amountsRaw, note] = fields;
+      const [id, date, amountsRaw, note, sourceRaw, sourceRefRaw] = fields;
       if (!id || !date || !amountsRaw) continue;
       const amounts = JSON.parse(amountsRaw) as number[];
       if (!Array.isArray(amounts)) continue;
-      entries.push({ id, date, amounts, note: note ?? '', categoryId: null });
+      // A file without the column, or with an unrecognised value, is 'import' —
+      // which is what the row genuinely is from this device's point of view.
+      const source = SOURCES.includes(sourceRaw as TEntrySource)
+        ? (sourceRaw as TEntrySource)
+        : 'import';
+      entries.push({
+        id,
+        date,
+        amounts,
+        note: note ?? '',
+        categoryId: null,
+        source,
+        sourceRef: sourceRefRaw ? sourceRefRaw : null,
+      });
     } catch {
       // skip invalid rows
     }

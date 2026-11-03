@@ -2,6 +2,7 @@ import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
+import { useSmsBadge } from '@/lib/hooks/use-sms-badge.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
 import type { TPalette } from '@/lib/types';
 import { Add01Icon, Calendar01Icon, Home01Icon, ListViewIcon, Settings01Icon } from '@hugeicons/core-free-icons';
@@ -27,9 +28,11 @@ type TabButtonProps = {
   active: boolean;
   onPress: () => void;
   colors: TPalette;
+  /** Shows an unread dot on the icon when > 0. */
+  badge?: number;
 };
 
-const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, colors }) => {
+const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, colors, badge = 0 }) => {
   const press = usePressScale(0.85);
   const focusBump = useSharedValue(1);
 
@@ -55,6 +58,15 @@ const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, col
     >
       <Animated.View style={iconStyle} pointerEvents="none">
         <HugeiconsIcon icon={icon} size={20} color={active ? colors.accent : colors.inkMuted} strokeWidth={active ? 2 : 1.5} />
+        {/* The only nudge the user gets while they're not on Home. A count
+            would not fit at this size, and the dot's job is only to say
+            "there's something here". */}
+        {badge > 0 && (
+          <View
+            className="absolute -right-1 -top-0.5 h-[7px] w-[7px] rounded-full"
+            style={{ backgroundColor: colors.accent }}
+          />
+        )}
       </Animated.View>
       <Text
         style={{
@@ -89,6 +101,7 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, emitter, navigateToT
   const { colors } = useTheme();
   const { impact, selection } = useHaptics();
   const { enabled: planEnabled } = usePlanMode();
+  const { pendingCount } = useSmsBadge();
 
   const tabs = useMemo(
     () => (planEnabled ? ALL_TABS : ALL_TABS.filter(t => t.name !== 'plan')),
@@ -114,6 +127,9 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, emitter, navigateToT
         icon={tab.icon}
         active={state.index === i}
         colors={colors}
+        // Settings is where "Automatic expenses" lives, so that is where the
+        // queue announces itself from any tab.
+        badge={tab.name === 'settings' ? pendingCount : 0}
         onPress={() => handleTabPress(i, state.routes[i])}
       />
     );

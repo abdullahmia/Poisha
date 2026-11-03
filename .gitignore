@@ -44,5 +44,12 @@ app-example
 /ios
 /android
 
+# Gradle output for local Expo modules. The module sources under modules/ ARE
+# tracked — only what the build produces from them is not. The /android rule
+# above doesn't reach these, since they sit inside the module, not the app.
+modules/*/android/build/
+modules/*/android/.gradle/
+modules/*/android/.cxx/
+
 # Legacy bun binary lockfile — bun >= 1.2 uses the text bun.lock
 bun.lockb

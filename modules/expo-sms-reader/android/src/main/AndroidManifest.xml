@@ -1,0 +1,39 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!--
+    Declared here rather than in app.json so the capability travels with the
+    code that needs it. AGP's manifest merger folds library manifests into the
+    app manifest at build time, which is also how expo-local-authentication's
+    USE_BIOMETRIC reaches the APK. Note this means the permissions will NOT
+    appear in the prebuilt android/app/src/main/AndroidManifest.xml — check the
+    merged manifest, or `aapt dump permissions`, to verify.
+
+    READ_SMS is a Google Play restricted permission and expense tracking is not
+    an approved use case. This module is for sideloaded builds only.
+  -->
+  <uses-permission android:name="android.permission.READ_SMS" />
+  <uses-permission android:name="android.permission.RECEIVE_SMS" />
+
+  <application>
+    <!--
+      Wakes the process when a message arrives with the app closed, purely to
+      post a notification — it never parses. See SmsBackgroundReceiver for why.
+
+      exported="true" is required: SMS_RECEIVED is a system broadcast, and an
+      unexported receiver would simply never fire. android:permission restricts
+      the sender to the OS, so no other app can spoof the broadcast.
+
+      It stays inert until the user opts in — the receiver's first action is to
+      read the enabled flag out of SharedPreferences and return if it is false.
+    -->
+    <receiver
+      android:name="expo.modules.smsreader.SmsBackgroundReceiver"
+      android:exported="true"
+      android:permission="android.permission.BROADCAST_SMS">
+      <intent-filter android:priority="500">
+        <action android:name="android.provider.Telephony.SMS_RECEIVED" />
+      </intent-filter>
+    </receiver>
+  </application>
+
+</manifest>

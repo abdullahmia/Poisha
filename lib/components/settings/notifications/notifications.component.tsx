@@ -7,8 +7,11 @@ import {
   usePlanRemindersEnabled,
   useSetBudgetAlertsEnabled,
   useSetPlanRemindersEnabled,
+  useSetSmsAlertsEnabled,
+  useSmsAlertsEnabled,
 } from '@/lib/services/notifications';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
+import { useSmsBadge } from '@/lib/hooks/use-sms-badge.hook';
 import { ScreenHeader } from '../shared/screen-header.component';
 import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
@@ -34,6 +37,9 @@ export const Notifications: React.FC = () => {
   const setBudgetAlerts = useSetBudgetAlertsEnabled();
   const planReminders = usePlanRemindersEnabled();
   const setPlanReminders = useSetPlanRemindersEnabled();
+  const { available: smsAvailable, enabled: smsEnabled } = useSmsBadge();
+  const smsAlerts = useSmsAlertsEnabled();
+  const setSmsAlerts = useSetSmsAlertsEnabled();
 
   return (
     <ScrollView
@@ -77,6 +83,38 @@ export const Notifications: React.FC = () => {
         // Plan Mode is off, since nothing can be planned in the first place.
         disabled={!notificationsEnabled || !planModeEnabled}
       />
+
+      {smsAvailable && (
+        <>
+          <View className="h-px bg-line" />
+
+          <GroupLabel
+            title="Bank messages"
+            description="Alerts when a transaction message arrives while Poisha is closed."
+          />
+          <SettingsToggleRow
+            label="Detected transactions"
+            description={
+              smsEnabled
+                ? 'A nudge to review it. The message itself is never shown in the notification.'
+                : 'Turn on Automatic expenses in Features to use this.'
+            }
+            value={smsAlerts.data ?? true}
+            onValueChange={v => setSmsAlerts.mutate(v)}
+            disabled={!notificationsEnabled || !smsEnabled}
+          />
+          {smsEnabled && notificationsEnabled && (smsAlerts.data ?? true) && (
+            <Text
+              className="pb-2 text-ink-muted"
+              style={{ fontFamily: 'Inter_400Regular', fontSize: 11, lineHeight: 16 }}
+            >
+              Some phones — Xiaomi, Realme, Oppo, Vivo and others — aggressively stop background apps, which can delay
+              or skip this notification. Nothing is lost either way: anything missed is picked up next time you open
+              Poisha.
+            </Text>
+          )}
+        </>
+      )}
     </ScrollView>
   );
 };

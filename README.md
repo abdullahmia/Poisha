@@ -11,6 +11,7 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 - **Home dashboard** — monthly hero total, entry/item stats, a custom daily spending bar chart, and recent entries
 - **Browse screen** — full entry list grouped by date, with Day/Week/Month/Year/All period filters, a date-range navigator, stats grid, and sort controls
 - **App lock** — mandatory PIN onboarding, SHA-256 salted PIN storage in `expo-secure-store`, 5-attempt lockout with cooldown, and optional Face ID / Fingerprint unlock
+- **Automatic expenses from bank SMS** *(Android only)* — opt in from Settings › Features. Poisha reads the transaction messages your bank and wallet already send, works out the amount, merchant and reference, and puts each one in a **Review** queue. One tap turns it into an entry; nothing is ever added without your confirmation. Built-in rules cover bKash, Nagad, Rocket, BRAC, DBBL, City Bank, EBL and IBBL, plus a generic parser for everything else. Messages are read on-device and never uploaded — the text is deleted as soon as you confirm or dismiss. Credits are detected and skipped; only debits become entries. **Not Play Store distributable:** `READ_SMS` is a Google Play restricted permission and expense tracking is not an approved use case, so this is for sideloaded builds only
 - **Google Drive backup** — opt in from Settings › Backup to keep a copy of every entry, category and setting in a private per-app folder in your own Google Drive, uploaded automatically when you open the app. Restore onto a fresh install straight from the onboarding screen. Your PIN is never backed up
 - **CSV import & export** — export all entries to CSV via the native share sheet, or import from a CSV file with a merge-or-replace flow
 - **Budget tracking** — set a monthly budget with a progress indicator on the home screen
@@ -32,8 +33,8 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 
 ## Tech stack
 
-- [Expo SDK 57](https://docs.expo.dev/) + [Expo Router v6](https://docs.expo.dev/router/introduction/) (file-based routing, typed routes)
-- React 19 / React Native 0.86, New Architecture enabled
+- [Expo SDK 58](https://docs.expo.dev/) + [Expo Router v6](https://docs.expo.dev/router/introduction/) (file-based routing, typed routes)
+- React 19 / React Native 0.88, New Architecture enabled
 - [NativeWind](https://www.nativewind.dev/) (Tailwind CSS for React Native)
 - [TanStack Query](https://tanstack.com/query) for data/state management
 - [`expo-sqlite`](https://docs.expo.dev/versions/latest/sdk/sqlite/) as the local database (migrated from AsyncStorage)
@@ -61,7 +62,14 @@ lib/
   types/                   Shared TypeScript types
   constants/               Theme, locale, storage key, and query key constants
   config/                  Env, error, and query-client configuration
-  utils/                   Formatting, date, CSV, and other pure helpers
+  utils/                   Formatting, date, CSV, SMS parsing, and other pure helpers
+
+modules/
+  expo-sms-reader/         Local Expo module (Kotlin, Android-only) — reads the SMS
+                           inbox and nothing else. All parsing lives in TypeScript so
+                           rule fixes ship over the air.
+
+plugins/                   Local Expo config plugins
 
 docs/                      Feature specs and screenshots
 ```
