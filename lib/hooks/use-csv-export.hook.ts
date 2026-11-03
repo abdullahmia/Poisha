@@ -14,7 +14,7 @@ export function useCsvExport(entries: TEntry[]) {
     try {
       const csv = entriesToCsv(entries);
       const file = new File(Paths.cache, 'poisha-export.csv');
-      file.write(csv);
+      await file.write(csv);
       const available = await Sharing.isAvailableAsync();
       if (!available) {
         showAlert({ title: 'Not available', message: 'Sharing is not supported on this device.' });

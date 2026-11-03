@@ -83,7 +83,7 @@ const TabButton: React.FC<TabButtonProps> = ({ label, icon, active, onPress, col
 // prop types, and importing the wrong one fails to typecheck at the call site.
 type PoishaTabBarProps = Parameters<NonNullable<React.ComponentProps<typeof Tabs>['tabBar']>>[0];
 
-const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, navigation }) => {
+const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, emitter, navigateToTab }) => {
   const insets = useSafeAreaInsets();
   const { openAdd } = useEntriesSheet();
   const { colors } = useTheme();
@@ -98,9 +98,9 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, navigation }) => {
   function handleTabPress(i: number, route: (typeof state.routes)[number]) {
     selection();
     const isFocused = state.index === i;
-    const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+    const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
     if (!isFocused && !event.defaultPrevented) {
-      navigation.navigate(route.name, route.params);
+      navigateToTab(route.key);
     }
   }
 
