@@ -1,5 +1,31 @@
 import type { TPalette } from '@/lib/types';
 
+/** '#0c0c0e' → '12 12 14' — the space-separated channel form Tailwind's
+ *  `rgb(var(--color-x) / <alpha-value>)` colors expect. */
+function toRgbChannels(hex: string): string {
+  const value = parseInt(hex.slice(1), 16);
+  return `${(value >> 16) & 255} ${(value >> 8) & 255} ${value & 255}`;
+}
+
+/**
+ * A palette as NativeWind CSS variables.
+ *
+ * Derived from the palette rather than written out, so the variables can never
+ * drift from the constants below — the two used to be maintained separately
+ * (here and in `global.css`) with nothing keeping them in step.
+ *
+ * Key names follow the `--color-<kebab-case-palette-key>` convention the
+ * Tailwind config reads, so adding a key to `TPalette` is enough to publish it.
+ */
+export function paletteToCssVars(palette: TPalette): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(palette).map(([key, hex]) => [
+      `--color-${key.replace(/[A-Z]/g, c => `-${c.toLowerCase()}`)}`,
+      toRgbChannels(hex),
+    ]),
+  );
+}
+
 export const DARK_THEME: TPalette = {
   bg: '#0c0c0e',
   surface: '#141416',
@@ -29,3 +55,6 @@ export const LIGHT_THEME: TPalette = {
   danger: '#e84040',
   dangerSoft: '#fde2de',
 } as const;
+
+export const DARK_THEME_VARS = paletteToCssVars(DARK_THEME);
+export const LIGHT_THEME_VARS = paletteToCssVars(LIGHT_THEME);

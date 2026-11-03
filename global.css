@@ -2,6 +2,19 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * Static fallback only — the palette the app actually paints is published at
+ * runtime by `ThemeVars` (lib/components/common/theme-vars.component.tsx),
+ * which derives these same variables from DARK_THEME / LIGHT_THEME.
+ *
+ * There is deliberately no `.dark:root` counterpart any more. That block
+ * depended on NativeWind's own colour scheme, which React Native 0.88 stopped
+ * keeping up to date: `Appearance.setColorScheme()` no longer emits a change
+ * event, so NativeWind never learned about the user's choice and class-driven
+ * colours disagreed with the inline `colors.*` ones. Restoring a dark block
+ * here would reintroduce a second, racier source of truth for the same
+ * variables.
+ */
 :root {
   --color-bg: 255 255 255;
   --color-surface: 245 243 240;
@@ -15,19 +28,4 @@
   --color-shadow: 44 31 16;
   --color-danger: 232 64 64;
   --color-danger-soft: 253 226 222;
-}
-
-.dark:root {
-  --color-bg: 12 12 14;
-  --color-surface: 20 20 22;
-  --color-surface-alt: 30 30 34;
-  --color-ink: 240 236 229;
-  --color-ink-soft: 152 145 138;
-  --color-ink-muted: 82 76 70;
-  --color-accent: 255 92 53;
-  --color-accent-soft: 34 16 8;
-  --color-line: 36 36 40;
-  --color-shadow: 0 0 0;
-  --color-danger: 232 64 64;
-  --color-danger-soft: 45 20 20;
 }

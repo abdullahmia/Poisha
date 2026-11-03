@@ -18,6 +18,65 @@ const categorySchema = z.object({
   archived: z.boolean(),
 });
 
+const todoListSchema = categorySchema;
+
+const todoPrioritySchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  color: z.string(),
+  level: z.number(),
+  sortOrder: z.number(),
+});
+
+const todoTagSchema = z.object({
+  id: z.string().min(1),
+  name: z.string(),
+  color: z.string(),
+  sortOrder: z.number(),
+});
+
+const todoRepeatSchema = z.object({
+  unit: z.enum(['day', 'week', 'month', 'year']),
+  interval: z.number().int().positive(),
+  weekdays: z.array(z.number().int().min(0).max(6)),
+  anchor: z.enum(['dueDate', 'completion']),
+});
+
+const subtaskSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  done: z.boolean(),
+});
+
+const todoSchema = z.object({
+  id: z.string().min(1),
+  title: z.string(),
+  note: z.string(),
+  listId: z.string().nullable(),
+  priorityId: z.string().nullable(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'dueDate must be YYYY-MM-DD').nullable(),
+  dueTime: z.string().regex(/^\d{2}:\d{2}$/, 'dueTime must be HH:MM').nullable(),
+  repeat: todoRepeatSchema.nullable(),
+  reminderMinutesBefore: z.number().nullable(),
+  tagIds: z.array(z.string()),
+  subtasks: z.array(subtaskSchema),
+  completed: z.boolean(),
+  completedAt: z.string().nullable(),
+  createdAt: z.string(),
+  updatedAt: z.string(),
+  sortOrder: z.number(),
+});
+
+// Optional, not defaulted: a v1 backup carries no todo data at all, and the
+// restore path distinguishes "absent, leave local todos alone" from "present
+// but empty, wipe them" — a `.default({...})` here would collapse the two.
+const todoDataSchema = z.object({
+  todos: z.array(todoSchema),
+  lists: z.array(todoListSchema),
+  priorities: z.array(todoPrioritySchema),
+  tags: z.array(todoTagSchema),
+});
+
 function duplicates(ids: string[]): string[] {
   const seen = new Set<string>();
   const dupes = new Set<string>();
@@ -39,11 +98,12 @@ export const backupSnapshotSchema = z
     data: z.object({
       entries: z.array(entrySchema),
       categories: z.array(categorySchema),
+      todo: todoDataSchema.optional(),
       settings: z.record(z.string(), z.string().nullable()),
     }),
   })
   .superRefine((snapshot, ctx) => {
-    const { entries, categories } = snapshot.data;
+    const { entries, categories, todo } = snapshot.data;
 
     // `upsertEntry`/`upsertCategory` use INSERT OR REPLACE, so a duplicate id
     // inside one payload silently destroys a row instead of erroring. It also
@@ -82,6 +142,41 @@ export const backupSnapshotSchema = z
         code: 'custom',
         path: ['data', 'entries'],
         message: `entries reference unknown categories: ${dangling.slice(0, 5).join(', ')}`,
+      });
+    }
+
+    if (!todo) return;
+
+    // Same reasoning as the entries/categories checks above: every todo table
+    // is written with INSERT OR REPLACE, so a duplicate id inside one payload
+    // destroys a row instead of erroring, and produces duplicate React keys.
+    for (const [label, ids] of [
+      ['todo', todo.todos.map(t => t.id)],
+      ['todo list', todo.lists.map(l => l.id)],
+      ['todo priority', todo.priorities.map(p => p.id)],
+      ['todo tag', todo.tags.map(t => t.id)],
+    ] as const) {
+      const dupes = duplicates([...ids]);
+      if (dupes.length > 0) {
+        ctx.addIssue({
+          code: 'custom',
+          path: ['data', 'todo'],
+          message: `duplicate ${label} ids: ${dupes.slice(0, 5).join(', ')}`,
+        });
+      }
+    }
+
+    // Dangling list/priority/tag references are deliberately *not* refused.
+    // Unlike an entry without its category, a todo resolves a missing list to
+    // Inbox and a missing priority to none at read time, so the file still
+    // restores to something coherent — refusing it would cost the user every
+    // todo over a cosmetic inconsistency.
+    const duplicateSubtasks = todo.todos.filter(t => duplicates(t.subtasks.map(s => s.id)).length > 0);
+    if (duplicateSubtasks.length > 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['data', 'todo'],
+        message: `todos with duplicate subtask ids: ${duplicateSubtasks.slice(0, 5).map(t => t.id).join(', ')}`,
       });
     }
   });

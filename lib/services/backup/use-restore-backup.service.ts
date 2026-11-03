@@ -3,6 +3,7 @@ import { QUERY_KEYS } from '@/lib/constants';
 import { parseBackupSnapshot } from '@/lib/schemas/backup.schemas';
 import { sqliteStorage } from '@/lib/storages';
 import { syncPlanDueNotifications } from '@/lib/utils/plan-notification.util';
+import { syncTodoReminders } from '@/lib/utils/todo-notification.util';
 import { writeWidgetSnapshot } from '@/lib/utils/widget-snapshot.util';
 import { withBackupLock } from './backup-lock.util';
 import { downloadBackup } from './drive.client';
@@ -59,6 +60,9 @@ export function useRestoreBackup() {
       // has written the restored settings — not in parallel with it.
       writeWidgetSnapshot(sqliteStorage.loadEntries()).catch(() => {});
       syncPlanDueNotifications();
+      // The restored todos carry their own due dates and reminder offsets, so
+      // the pending schedule has to be rebuilt from them rather than inherited.
+      syncTodoReminders();
     },
   });
 }

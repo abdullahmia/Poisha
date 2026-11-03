@@ -23,6 +23,10 @@ export async function buildSnapshot(): Promise<TBackupSnapshot> {
     data: {
       entries: sqliteStorage.loadEntries(),
       categories: sqliteStorage.loadAllCategories(),
+      // Always captured, even with the Todo module switched off: the flag is
+      // just a flag, and someone who turns it off, backs up, and restores onto
+      // a new phone must still find their todos waiting when they turn it on.
+      todo: sqliteStorage.loadTodoBundle(),
       settings,
     },
   };
@@ -39,9 +43,12 @@ export async function buildSnapshot(): Promise<TBackupSnapshot> {
  * running it before the settings write publishes the old currency symbol.
  */
 export async function applySnapshot(snapshot: TBackupSnapshot): Promise<void> {
-  const { entries, categories, settings } = snapshot.data;
+  const { entries, categories, todo, settings } = snapshot.data;
 
-  sqliteStorage.replaceAll(entries, categories);
+  // `todo` is undefined for a v1 backup, and `replaceAll` leaves the local todo
+  // tables alone in that case — restoring a pre-Todo file must not wipe todos
+  // the file never knew existed.
+  sqliteStorage.replaceAll(entries, categories, todo);
 
   // Restrict to the allowlist even on the way in: a snapshot from a future
   // build (or a hand-edited file) must not be able to write arbitrary keys.
@@ -52,6 +59,8 @@ export async function applySnapshot(snapshot: TBackupSnapshot): Promise<void> {
   await storage.multiSet(allowed);
 
   // Device-local alert state that must not survive a restore: whatever month
-  // the old device had already warned about says nothing about this one.
+  // the old device had already warned about says nothing about this one, and
+  // the same goes for whether it had already carried overdue todos forward.
   await storage.removeItem(ASYNC_STORAGE_KEYS.budgetExceededMonth);
+  await storage.removeItem(ASYNC_STORAGE_KEYS.todoCarryOverDate);
 }

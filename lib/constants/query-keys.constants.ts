@@ -8,9 +8,18 @@ export const QUERY_KEYS = {
     enabled: ['notifications', 'enabled'],
     budgetAlerts: ['notifications', 'budgetAlerts'],
     planReminders: ['notifications', 'planReminders'],
+    todoReminders: ['notifications', 'todoReminders'],
   },
   categories: { all: ['categories'], enabled: ['categories', 'enabled'] },
   planMode: { enabled: ['planMode', 'enabled'] },
+  todo: {
+    enabled: ['todo', 'enabled'],
+    all: ['todo', 'all'],
+    lists: ['todo', 'lists'],
+    priorities: ['todo', 'priorities'],
+    tags: ['todo', 'tags'],
+    prefs: ['todo', 'prefs'],
+  },
   pin: { status: ['pin', 'status'] },
   biometric: { enabled: ['biometric', 'enabled'] },
   backup: {
