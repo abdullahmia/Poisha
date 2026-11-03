@@ -35,7 +35,7 @@ export async function writeWidgetSnapshot(entries: TEntry[]): Promise<void> {
       .filter(e => e.date === today)
       .reduce((sum, e) => sum + e.amounts.reduce((s, a) => s + a, 0), 0);
 
-    getSnapshotFile().write(JSON.stringify({
+    await getSnapshotFile().write(JSON.stringify({
       todayTotal,
       todayDate: today,
       symbol: locale.symbol,

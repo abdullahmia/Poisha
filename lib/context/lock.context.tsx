@@ -28,6 +28,13 @@ export interface LockCtxValue {
 }
 
 export const LockCtx = createContext<LockCtxValue | null>(null);
+
+// RN 0.88's strict types widen AppState.currentState to `?string`, reflecting
+// that it is null until the native module reports the initial state. At runtime
+// the non-null values are the AppStateStatus union; only 'active' and
+// 'background'/'inactive' drive the lock, so 'unknown' is a safe stand-in.
+const currentAppState = (): AppStateStatus =>
+  (AppState.currentState as AppStateStatus | null | undefined) ?? 'unknown';
 const SUPPRESS_GRACE_MS = 1500;
 
 export function LockProvider({ children }: { children: React.ReactNode }) {
@@ -43,7 +50,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
   const [isLocked, setIsLocked] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [biometricType, setBiometricType] = useState<TBiometricType>('none');
-  const appStateRef = useRef<AppStateStatus>(AppState.currentState);
+  const appStateRef = useRef<AppStateStatus>(currentAppState());
   const suppressAutoLockRef = useRef(false);
   const suppressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [hasMadeInitialDecision, setHasMadeInitialDecision] = useState(false);
@@ -105,7 +112,7 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
         suppressTimerRef.current = null;
         // Resync so the next real background→active pair is judged from where
         // the app actually is, not from wherever it was when the task began.
-        appStateRef.current = AppState.currentState;
+        appStateRef.current = currentAppState();
       }, SUPPRESS_GRACE_MS);
     }
   }, []);

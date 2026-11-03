@@ -36,6 +36,9 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import * as Linking from 'expo-linking';
 import * as Notifications from 'expo-notifications';
+// eslint's import/namespace rule can't follow the `export *` chain that
+// expo-notifications 58 re-exports its enums through, so this one comes in by name.
+import { AndroidImportance } from 'expo-notifications';
 import { router, Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
@@ -58,7 +61,7 @@ Notifications.setNotificationHandler({
 if (Platform.OS === 'android') {
   Notifications.setNotificationChannelAsync('default', {
     name: 'Default',
-    importance: Notifications.AndroidImportance.HIGH,
+    importance: AndroidImportance.HIGH,
   });
 }
 
