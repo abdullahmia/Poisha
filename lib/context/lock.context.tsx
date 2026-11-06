@@ -77,9 +77,10 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
     const sub = AppState.addEventListener('change', (next: AppStateStatus) => {
       const prev = appStateRef.current;
       appStateRef.current = next;
-      // Some flows hand control to another Activity on purpose — the Google
-      // account picker most of all. Backgrounding for those is not the user
-      // leaving the app, so it must not arm the lock. See runWithoutAutoLock.
+      // Some flows hand control to the OS on purpose — permission prompts, the
+      // biometric sheet, file pickers, the share sheet. Leaving 'active' for
+      // those is not the user leaving the app, so it must not arm the lock.
+      // See runWithoutAutoLock.
       if (suppressAutoLockRef.current) return;
       if (prev === 'active' && (next === 'background' || next === 'inactive') && pinStatus.data?.lockEnabled) {
         setIsLocked(true);
@@ -91,10 +92,10 @@ export function LockProvider({ children }: { children: React.ReactNode }) {
   /**
    * Runs `task` with auto-lock suppressed.
    *
-   * Without this, connecting a Google account is impossible with App Lock on:
-   * the account picker is a separate Activity, so the app backgrounds, the lock
+   * Without this, anything that raises system UI is broken with App Lock on:
+   * a permission prompt or file picker takes the app out of 'active', the lock
    * arms, and `Stack.Protected` in app/_layout.tsx drops the whole settings
-   * group out of the navigator — unmounting the screen that is mid-sign-in.
+   * group out of the navigator — unmounting the screen that asked.
    *
    * The guard is released a beat after the task settles rather than
    * immediately, because the return-to-foreground transition can be delivered

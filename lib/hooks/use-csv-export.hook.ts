@@ -2,11 +2,13 @@ import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { useState } from 'react';
 import { useAlert } from '@/lib/context/alert.context';
+import { useLock } from '@/lib/hooks/use-lock.hook';
 import type { TEntry } from '@/lib/types';
 import { entriesToCsv } from '@/lib/utils/csv.util';
 
 export function useCsvExport(entries: TEntry[]) {
   const showAlert = useAlert();
+  const { runWithoutAutoLock } = useLock();
   const [exporting, setExporting] = useState(false);
 
   async function handleExport() {
@@ -20,7 +22,10 @@ export function useCsvExport(entries: TEntry[]) {
         showAlert({ title: 'Not available', message: 'Sharing is not supported on this device.' });
         return;
       }
-      await Sharing.shareAsync(file.uri, { mimeType: 'text/csv', dialogTitle: 'Export Poisha' });
+      // The Android share chooser is its own Activity; see runWithoutAutoLock.
+      await runWithoutAutoLock(() =>
+        Sharing.shareAsync(file.uri, { mimeType: 'text/csv', dialogTitle: 'Export Poisha' }),
+      );
     } catch (e: unknown) {
       showAlert({ title: 'Export failed', message: e instanceof Error ? e.message : 'Unknown error' });
     } finally {

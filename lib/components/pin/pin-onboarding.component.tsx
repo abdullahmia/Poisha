@@ -24,7 +24,6 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { OnboardingProgress } from './onboarding-progress.component';
-import { OnboardingRestoreLink } from './onboarding-restore-link.component';
 import { PinInput } from './pin-input.component';
 
 type OuterStep = 'welcome' | 'wizard' | 'biometric';
@@ -89,7 +88,6 @@ export const PinOnboarding: React.FC = () => {
           <StepText title="Secure your Poisha" subtitle="Set a 4-digit PIN to keep your data private." />
         </View>
         <OnboardingButton label="Set PIN" onPress={() => setOuterStep('wizard')} />
-        <OnboardingRestoreLink />
       </Animated.View>
     );
   }

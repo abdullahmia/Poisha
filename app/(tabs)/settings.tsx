@@ -50,7 +50,6 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <SettingsGroup label="Data">
-          <SettingsNavRow icon="cloud" label="Backup" onPress={() => router.push('/settings/backup')} />
           <SettingsNavRow icon="database" label="Import & Export" onPress={() => router.push('/settings/data')} />
         </SettingsGroup>
 

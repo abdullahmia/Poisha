@@ -12,9 +12,9 @@ export function useSaveEntry() {
 
   return useMutation({
     mutationFn: async (draft: TDraft): Promise<TEntry> => {
-      // Random, not `Date.now()`: ids are written into Drive backups that
-      // outlive the install, and two devices creating an entry in the same
-      // millisecond would collide — which INSERT OR REPLACE resolves by
+      // Random, not `Date.now()`: ids travel in CSV exports that get merged
+      // into another device's data, and two devices creating an entry in the
+      // same millisecond would collide — which INSERT OR REPLACE resolves by
       // silently destroying a row rather than erroring.
       const entry: TEntry = draft.id
         ? ({ ...draft, id: draft.id } as TEntry)

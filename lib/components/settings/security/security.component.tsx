@@ -17,8 +17,13 @@ export const Security: React.FC = () => {
   const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const showAlert = useAlert();
-  const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric } = useLock();
-  const { authenticate } = useBiometric();
+  const { lockEnabled, biometricType, biometricEnabled, enableBiometric, disableBiometric, runWithoutAutoLock } = useLock();
+  const { authenticate: authenticateBiometric } = useBiometric();
+
+  // The system biometric sheet takes the app out of 'active' (Face ID turns it
+  // 'inactive'), and every caller here has App Lock on — unguarded, verifying
+  // would lock the app it is verifying for.
+  const authenticate = (promptMessage: string) => runWithoutAutoLock(() => authenticateBiometric(promptMessage));
 
   const [setupSheet, setSetupSheet] = useState<{ visible: boolean; mode: 'enable' | 'change' | 'disable' }>({
     visible: false,

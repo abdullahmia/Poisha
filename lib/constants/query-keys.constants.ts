@@ -22,10 +22,4 @@ export const QUERY_KEYS = {
   },
   pin: { status: ['pin', 'status'] },
   biometric: { enabled: ['biometric', 'enabled'] },
-  backup: {
-    account: ['backup', 'account'],
-    settings: ['backup', 'settings'],
-    list: ['backup', 'list'],
-    promoDismissed: ['backup', 'promoDismissed'],
-  },
 } as const;

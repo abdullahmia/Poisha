@@ -12,7 +12,6 @@ Poisha is a personal expense-tracking app built with [Expo](https://expo.dev) an
 - **Home dashboard** — monthly hero total, entry/item stats, a custom daily spending bar chart, and recent entries
 - **Browse screen** — full entry list grouped by date, with Day/Week/Month/Year/All period filters, a date-range navigator, stats grid, and sort controls
 - **App lock** — mandatory PIN onboarding, SHA-256 salted PIN storage in `expo-secure-store`, 5-attempt lockout with cooldown, and optional Face ID / Fingerprint unlock
-- **Google Drive backup** — opt in from Settings › Backup to keep a copy of every entry, category, todo and setting in a private per-app folder in your own Google Drive, uploaded automatically when you open the app. Restore onto a fresh install straight from the onboarding screen. Your PIN is never backed up
 - **CSV import & export** — export all entries to CSV via the native share sheet, or import from a CSV file with a merge-or-replace flow
 - **Budget tracking** — set a monthly budget with a progress indicator on the home screen
 - **Light, dark & system themes** — pick one in Settings › Appearance; System follows your device and repaints live

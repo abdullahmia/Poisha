@@ -15,9 +15,7 @@ export function useSaveTodo() {
 
       const todo: TTodo = {
         ...draft,
-        // Random, not `Date.now()`: ids travel in Drive backups that outlive the
-        // install, and two devices creating a todo in the same millisecond would
-        // collide — which INSERT OR REPLACE resolves by destroying a row.
+        // Random rather than `Date.now()` — see the note in use-save-entry.service.ts.
         id: draft.id ?? `todo_${Crypto.randomUUID()}`,
         // An edit must not reset the creation stamp; 'created' sort reads it.
         createdAt: existing?.createdAt ?? now,

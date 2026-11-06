@@ -59,7 +59,7 @@ function buildBody(entries: TEntry[], locale: TLocale): string {
  * Cancels and re-schedules every "planned entry is due" notification from the
  * current entry list. Safe to call at any time — it always derives the full
  * schedule from scratch rather than patching it, so it self-heals after an
- * edit, a delete, an import, a restore, or a timezone change.
+ * edit, a delete, an import, or a timezone change.
  *
  * Best-effort throughout: a notification failure must never interrupt an entry
  * mutation, which is why every call site fires this without awaiting.

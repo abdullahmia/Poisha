@@ -2,7 +2,6 @@ import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BackupPromoBanner } from '@/lib/components/home/backup-promo-banner.component';
 import { BudgetBar } from '@/lib/components/home/budget-bar.component';
 import { DailyFlowChart } from '@/lib/components/home/daily-flow-chart.component';
 import { HomeHeader } from '@/lib/components/home/home-header.component';
@@ -52,7 +51,6 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <HomeHeader />
-      <BackupPromoBanner />
       <MonthNav monthOffset={monthOffset} setMonthOffset={setMonthOffset} monthLabel={monthLabel} />
       <MonthHero total={total} count={count} txCount={txCount} avgDay={avgDay} plannedTotal={plannedTotal} />
       {budget !== null && <BudgetBar spent={total} planned={plannedTotal} budget={budget} />}

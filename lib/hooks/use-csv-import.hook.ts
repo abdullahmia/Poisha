@@ -3,17 +3,22 @@ import { File } from 'expo-file-system';
 import { useState } from 'react';
 import { useAlert } from '@/lib/context/alert.context';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
+import { useLock } from '@/lib/hooks/use-lock.hook';
 import { csvToEntries } from '@/lib/utils/csv.util';
 
 export function useCsvImport() {
   const showAlert = useAlert();
   const { importEntries } = useEntries();
+  const { runWithoutAutoLock } = useLock();
   const [importing, setImporting] = useState(false);
 
   async function handleImport() {
     setImporting(true);
     try {
-      const result = await DocumentPicker.getDocumentAsync({ type: 'text/csv', copyToCacheDirectory: true });
+      // The system file picker is its own Activity on Android; see runWithoutAutoLock.
+      const result = await runWithoutAutoLock(() =>
+        DocumentPicker.getDocumentAsync({ type: 'text/csv', copyToCacheDirectory: true }),
+      );
       if (result.canceled) return;
       const csv = await new File(result.assets[0].uri).text();
       const imported = csvToEntries(csv);

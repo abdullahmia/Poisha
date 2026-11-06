@@ -1,8 +1,6 @@
 import '@/global.css';
-import '@/lib/config/google.config';
 
 import { AppUpdatesGate } from '@/lib/components/common/app-updates-gate.component';
-import { AutoBackupGate } from '@/lib/components/common/auto-backup-gate.component';
 import { GlobalAlertModal } from '@/lib/components/common/global-alert-modal.component';
 import { ThemeVars } from '@/lib/components/common/theme-vars.component';
 import { AddEntrySheet } from '@/lib/components/entries/add-entry-sheet.component';
@@ -117,7 +115,6 @@ function AppGate() {
       <AddEntrySheet />
       <GlobalAlertModal />
       {!showOnboarding && !isLocked && <AppUpdatesGate />}
-      {!showOnboarding && !isLocked && <AutoBackupGate />}
     </>
   );
 }
