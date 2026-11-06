@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
   },
   categories: { all: ['categories'], enabled: ['categories', 'enabled'] },
   planMode: { enabled: ['planMode', 'enabled'] },
+  tabBar: ['tabBar'],
   todo: {
     enabled: ['todo', 'enabled'],
     all: ['todo', 'all'],
@@ -22,10 +23,4 @@ export const QUERY_KEYS = {
   },
   pin: { status: ['pin', 'status'] },
   biometric: { enabled: ['biometric', 'enabled'] },
-  backup: {
-    account: ['backup', 'account'],
-    settings: ['backup', 'settings'],
-    list: ['backup', 'list'],
-    promoDismissed: ['backup', 'promoDismissed'],
-  },
 } as const;

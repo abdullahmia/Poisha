@@ -10,9 +10,7 @@ import { loadTodoPrefs } from '@/lib/utils/todo-notification.util';
  *
  * Guarded by a once-per-day stamp because this edits the user's data, and
  * running it on every query refetch would rewrite `updatedAt` on a dozen rows
- * each time the list re-renders. The stamp is deliberately device-local and
- * excluded from backups: another device's "already done today" says nothing
- * about this one.
+ * each time the list re-renders.
  *
  * Returns true when at least one todo moved, so the caller knows whether the
  * read it is about to do reflects a change worth broadcasting.

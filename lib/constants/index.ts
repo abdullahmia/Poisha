@@ -4,3 +4,4 @@ export * from './query-keys.constants';
 export * from './locale.constants';
 export * from './category-defaults.constants';
 export * from './todo-defaults.constants';
+export * from './tab-bar.constants';

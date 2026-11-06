@@ -1,8 +1,7 @@
-import { useFocusEffect } from 'expo-router';
+import { type Href, Redirect, useFocusEffect } from 'expo-router';
 import { useCallback, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { BackupPromoBanner } from '@/lib/components/home/backup-promo-banner.component';
 import { BudgetBar } from '@/lib/components/home/budget-bar.component';
 import { DailyFlowChart } from '@/lib/components/home/daily-flow-chart.component';
 import { HomeHeader } from '@/lib/components/home/home-header.component';
@@ -15,8 +14,36 @@ import { useBudget } from '@/lib/hooks/use-budget.hook';
 import { useEntries } from '@/lib/hooks/use-entries.hook';
 import { useMonthRange } from '@/lib/hooks/use-month-range.hook';
 import { useMonthlySummary } from '@/lib/hooks/use-monthly-summary.hook';
+import { useTabBar } from '@/lib/hooks/use-tab-bar.hook';
+import type { TTabItem } from '@/lib/types';
 
-export default function HomeScreen() {
+const TAB_HREFS: Partial<Record<TTabItem, Href>> = {
+  entries: '/explore',
+  plan: '/plan',
+  todo: '/todo',
+  settings: '/settings',
+};
+
+/**
+ * Index is where the app lands: on launch, after unlock, and whenever Plan or
+ * Todo redirect away because their feature is off. When Home is out of the bar,
+ * it hands over to the first tab that is in it, so the user never lands on a
+ * screen the bar can't get them back to.
+ */
+export default function HomeRoute() {
+  const { items, loading } = useTabBar();
+
+  if (loading) return <LoadingSplash />;
+  if (!items.includes('home')) {
+    // Settings is pinned, so there is always at least one route to land on.
+    const first = items.find(item => TAB_HREFS[item] !== undefined);
+    if (first) return <Redirect href={TAB_HREFS[first]!} />;
+  }
+
+  return <HomeScreen />;
+}
+
+function HomeScreen() {
   const { entries, loading } = useEntries();
   const insets = useSafeAreaInsets();
   const [monthOffset, setMonthOffset] = useState(0);
@@ -52,7 +79,6 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <HomeHeader />
-      <BackupPromoBanner />
       <MonthNav monthOffset={monthOffset} setMonthOffset={setMonthOffset} monthLabel={monthLabel} />
       <MonthHero total={total} count={count} txCount={txCount} avgDay={avgDay} plannedTotal={plannedTotal} />
       {budget !== null && <BudgetBar spent={total} planned={plannedTotal} budget={budget} />}

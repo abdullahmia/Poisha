@@ -41,14 +41,6 @@ type TodoListRow = CategoryRow;
 type TodoPriorityRow = { id: string; name: string; color: string; level: number; sortOrder: number };
 type TodoTagRow = { id: string; name: string; color: string; sortOrder: number };
 
-/** One bundle of every todo-domain table — what backup reads and restore writes. */
-export type TTodoBundle = {
-  todos: TTodo[];
-  lists: TTodoList[];
-  priorities: TTodoPriority[];
-  tags: TTodoTag[];
-};
-
 /**
  * JSON columns (`repeat`, `tag_ids`, `subtasks`) are parsed defensively rather
  * than trusted: a row hand-edited outside the app, or written by a build whose
@@ -155,18 +147,6 @@ class SqliteStorage {
   loadCategories(): TCategory[] {
     const rows = this.db.getAllSync<CategoryRow>(
       'SELECT id, name, icon, color, sortOrder, archived FROM categories WHERE archived = 0 ORDER BY sortOrder ASC'
-    );
-    return rows.map(row => ({ ...row, archived: row.archived === 1 }));
-  }
-
-  /**
-   * Every category including archived ones. `loadCategories()` filters archived
-   * rows out for pickers and chips, but a backup that did the same would orphan
-   * every entry whose `category_id` points at an archived category.
-   */
-  loadAllCategories(): TCategory[] {
-    const rows = this.db.getAllSync<CategoryRow>(
-      'SELECT id, name, icon, color, sortOrder, archived FROM categories ORDER BY sortOrder ASC'
     );
     return rows.map(row => ({ ...row, archived: row.archived === 1 }));
   }
@@ -363,14 +343,6 @@ class SqliteStorage {
     return rows.map(row => ({ ...row, archived: row.archived === 1 }));
   }
 
-  /** Archived included — todos may still point at one, same as categories. */
-  loadAllTodoLists(): TTodoList[] {
-    const rows = this.db.getAllSync<TodoListRow>(
-      'SELECT id, name, icon, color, sortOrder, archived FROM todo_lists ORDER BY sortOrder ASC'
-    );
-    return rows.map(row => ({ ...row, archived: row.archived === 1 }));
-  }
-
   upsertTodoList(list: TTodoList): void {
     this.db.runSync(
       'INSERT OR REPLACE INTO todo_lists (id, name, icon, color, sortOrder, archived) VALUES (?, ?, ?, ?, ?, ?)',
@@ -473,60 +445,6 @@ class SqliteStorage {
           todo.id,
         );
       }
-    });
-  }
-
-  loadTodoBundle(): TTodoBundle {
-    return {
-      todos: this.loadTodos(),
-      lists: this.loadAllTodoLists(),
-      priorities: this.loadTodoPriorities(),
-      tags: this.loadTodoTags(),
-    };
-  }
-
-  /**
-   * Wipe and refill both tables as one atomic unit — the restore path.
-   *
-   * Deliberately not reused by CSV import, which keeps its existing row-by-row
-   * Replace. A half-applied restore is the one state a backup feature must
-   * never produce, so this either lands whole or rolls back.
-   *
-   * Note `withTransactionSync` blocks the JS thread for the duration; callers
-   * are expected to show a blocking modal rather than pretend otherwise.
-   *
-   * `todo` is optional because v1 backups predate the Todo module and carry no
-   * todo data at all. Omitting it leaves the local todo tables untouched —
-   * restoring an old backup must not silently wipe todos it never knew about.
-   */
-  replaceAll(entries: TEntry[], categories: TCategory[], todo?: TTodoBundle): void {
-    this.db.withTransactionSync(() => {
-      this.db.execSync('DELETE FROM entries');
-      this.db.execSync('DELETE FROM categories');
-
-      // Categories first: entries reference them, and a caller inspecting the
-      // db mid-transaction should never see entries without their categories.
-      // An empty incoming list falls back to the defaults, because seeding
-      // otherwise only happens in the constructor — i.e. not until next launch.
-      const restored = categories.length > 0 ? categories : DEFAULT_CATEGORIES;
-      for (const category of restored) this.upsertCategory(category);
-      for (const entry of entries) this.upsertEntry(entry);
-
-      if (!todo) return;
-
-      this.db.execSync('DELETE FROM todos');
-      this.db.execSync('DELETE FROM todo_lists');
-      this.db.execSync('DELETE FROM todo_priorities');
-      this.db.execSync('DELETE FROM todo_tags');
-
-      for (const list of todo.lists) this.upsertTodoList(list);
-      for (const priority of todo.priorities) this.upsertTodoPriority(priority);
-      for (const tag of todo.tags) this.upsertTodoTag(tag);
-      for (const item of todo.todos) this.upsertTodo(item);
-
-      // Restoring a deliberately-empty taxonomy must stay empty, so claim the
-      // seed marker here rather than letting the next cold launch refill it.
-      this.markTodoSeeded();
     });
   }
 }

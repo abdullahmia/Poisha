@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import type React from 'react';
 import { useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -7,14 +8,19 @@ import { useHaptics } from '@/lib/hooks/use-haptics.hook';
 import { useLocale } from '@/lib/hooks/use-locale.hook';
 import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { usePlanSummary } from '@/lib/hooks/use-plan-summary.hook';
+import { useTabBar } from '@/lib/hooks/use-tab-bar.hook';
 import { useTodo } from '@/lib/hooks/use-todo.hook';
 import { useTodos } from '@/lib/hooks/use-todos.hook';
+import { MAX_TAB_ITEMS } from '@/lib/constants';
 import { ConfirmModal } from '@/lib/ui/confirm-modal.ui';
 import { EMPTY_TODO_FILTER } from '@/lib/utils/todo-view.util';
 import { ScreenHeader } from '../shared/screen-header.component';
 import { SettingsToggleRow } from '../shared/settings-toggle-row.component';
 
 type TPendingOff = 'plan' | 'categories' | 'todo' | null;
+type TTabFeature = 'plan' | 'todo';
+
+const TAB_FEATURE_LABELS: Record<TTabFeature, string> = { plan: 'Plan Mode', todo: 'Todo' };
 
 export const Features: React.FC = () => {
   const insets = useSafeAreaInsets();
@@ -24,17 +30,28 @@ export const Features: React.FC = () => {
   const { hapticsEnabled, setHapticsEnabled } = useHaptics();
   const { count: plannedCount, plannedTotal } = usePlanSummary();
   const { enabled: todoEnabled, setEnabled: setTodoEnabled } = useTodo();
+  const { admit } = useTabBar();
   // Unfiltered — this is a count of everything the user would stop seeing, not
   // of whatever slice the Todo tab happened to be showing.
   const { todos } = useTodos(EMPTY_TODO_FILTER);
   const openTodoCount = todos.filter(t => !t.completed).length;
 
   const [pendingOff, setPendingOff] = useState<TPendingOff>(null);
+  const [barFullFor, setBarFullFor] = useState<TTabFeature | null>(null);
+
+  // Claims the tab's slot before the flag flips, so the bar never renders one
+  // frame with more items than it can hold. The feature turns on either way;
+  // a full bar only means its tab waits in Settings › Tab bar.
+  async function enableWithTab(feature: TTabFeature, setEnabled: (value: boolean) => Promise<void>) {
+    const fits = await admit(feature);
+    await setEnabled(true);
+    if (!fits) setBarFullFor(feature);
+  }
 
   // Only switching *off* asks. Turning a feature on adds surfaces and changes
   // no numbers, so a prompt there would be pure friction.
   function handlePlanChange(next: boolean) {
-    if (next) setPlanEnabled(true);
+    if (next) enableWithTab('plan', setPlanEnabled);
     else setPendingOff('plan');
   }
 
@@ -44,7 +61,7 @@ export const Features: React.FC = () => {
   }
 
   function handleTodoChange(next: boolean) {
-    if (next) setTodoEnabled(true);
+    if (next) enableWithTab('todo', setTodoEnabled);
     else setPendingOff('todo');
   }
 
@@ -136,6 +153,22 @@ export const Features: React.FC = () => {
         actions={[
           { label: 'Cancel', variant: 'outline' },
           { label: 'Turn off', variant: 'solid', onPress: () => setTodoEnabled(false) },
+        ]}
+      />
+
+      <ConfirmModal
+        visible={barFullFor !== null}
+        onClose={() => setBarFullFor(null)}
+        title="Tab bar is full"
+        message={
+          barFullFor
+            ? `${TAB_FEATURE_LABELS[barFullFor]} is on, but the tab bar already holds ${MAX_TAB_ITEMS} items, so its tab isn't in it yet. Swap something out in Settings › Tab bar to add it.`
+            : ''
+        }
+        icon="layout"
+        actions={[
+          { label: 'Not now', variant: 'outline' },
+          { label: 'Edit tab bar', variant: 'solid', onPress: () => router.push('/settings/tab-bar') },
         ]}
       />
     </ScrollView>

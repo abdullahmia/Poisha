@@ -37,6 +37,7 @@ export default function SettingsScreen() {
           <SettingsNavRow icon="sun" label="Appearance" onPress={() => router.push('/settings/appearance')} />
           <SettingsNavRow icon="bell" label="Notifications" onPress={() => router.push('/settings/notifications')} />
           <SettingsNavRow icon="grid" label="Features" onPress={() => router.push('/settings/features')} />
+          <SettingsNavRow icon="layout" label="Tab bar" onPress={() => router.push('/settings/tab-bar')} />
           {/* Only when the feature is on — there is nothing to manage otherwise. */}
           {categoriesEnabled && (
             <SettingsNavRow icon="tag" label="Categories" onPress={() => router.push('/settings/categories')} />
@@ -50,7 +51,6 @@ export default function SettingsScreen() {
         </SettingsGroup>
 
         <SettingsGroup label="Data">
-          <SettingsNavRow icon="cloud" label="Backup" onPress={() => router.push('/settings/backup')} />
           <SettingsNavRow icon="database" label="Import & Export" onPress={() => router.push('/settings/data')} />
         </SettingsGroup>
 

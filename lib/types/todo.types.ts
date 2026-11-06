@@ -97,8 +97,7 @@ export interface TTodoCardFields {
 /**
  * Everything the user can tune about the Todo module, stored as one JSON blob
  * under a single AsyncStorage key. One key rather than a dozen keeps reads to a
- * single round-trip and keeps the backup allowlist from growing a new entry
- * every time a preference is added.
+ * single round-trip.
  */
 export interface TTodoPrefs {
   sortBy: TTodoSortBy;

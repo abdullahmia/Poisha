@@ -64,8 +64,8 @@ function buildBody(todo: TTodo): string {
 /**
  * Cancels and re-schedules every todo reminder from current state. Like the
  * Plan Mode equivalent it always rebuilds the whole schedule rather than
- * patching it, so it self-heals after an edit, a delete, a restore, a
- * preference change, or a timezone shift.
+ * patching it, so it self-heals after an edit, a delete, a preference change,
+ * or a timezone shift.
  *
  * Best-effort throughout: a notification failure must never interrupt the
  * mutation that triggered it, which is why call sites fire it without awaiting.

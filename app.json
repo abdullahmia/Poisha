@@ -58,13 +58,7 @@
       "expo-status-bar",
       "expo-system-ui",
       "expo-web-browser",
-      "./plugins/with-ndk-version",
-      [
-        "@react-native-google-signin/google-signin",
-        {
-          "iosUrlScheme": "com.googleusercontent.apps.642347879269-mcdp314bg8o2tev5cbqtvrl1kthgpf5s"
-        }
-      ]
+      "./plugins/with-ndk-version"
     ],
     "experiments": {
       "typedRoutes": true,
