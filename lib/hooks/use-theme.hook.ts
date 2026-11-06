@@ -17,7 +17,7 @@ export function useTheme() {
   const { data } = useThemePreference();
   const preference: TThemePreference = data ?? 'dark';
   const setThemePreference = useSetThemePreference();
-  const { flash } = useThemeTransition();
+  const { transition } = useThemeTransition();
 
   // One shared OS subscription behind this — see system-scheme.util.ts.
   const systemScheme = useSyncExternalStore(subscribeToSystemScheme, getSystemScheme, getSystemScheme);
@@ -40,9 +40,21 @@ export function useTheme() {
   }, [preference]);
 
   const setPreference = useCallback((next: TThemePreference) => {
-    flash(colors.bg);
-    setThemePreference.mutate(next);
-  }, [colors.bg, setThemePreference, flash]);
+    if (next === preference) return;
+
+    const commit = () => setThemePreference.mutate(next);
+    const nextScheme: TColorScheme = next === 'system' ? systemScheme : next;
+
+    // e.g. Light → System on a light device: the preference changes but nothing
+    // on screen does, so covering and revealing it would be motion for nothing.
+    if (nextScheme === scheme) {
+      commit();
+      return;
+    }
+
+    const nextColors = nextScheme === 'dark' ? DARK_THEME : LIGHT_THEME;
+    transition(colors.bg, nextColors.bg, commit);
+  }, [preference, systemScheme, scheme, colors.bg, setThemePreference, transition]);
 
   return {
     scheme,
