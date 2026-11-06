@@ -1,38 +1,22 @@
+import { TAB_ITEM_META } from '@/lib/constants';
 import { useEntriesSheet } from '@/lib/context/entries-sheet.context';
 import { useHaptics } from '@/lib/hooks/use-haptics.hook';
-import { usePlanMode } from '@/lib/hooks/use-plan-mode.hook';
 import { usePressScale } from '@/lib/hooks/use-press-scale.hook';
-import { useTodo } from '@/lib/hooks/use-todo.hook';
+import { useTabBar } from '@/lib/hooks/use-tab-bar.hook';
 import { useTheme } from '@/lib/hooks/use-theme.hook';
-import type { TPalette } from '@/lib/types';
-import {
-  Add01Icon,
-  Calendar01Icon,
-  CheckmarkSquare02Icon,
-  Home01Icon,
-  ListViewIcon,
-  Settings01Icon,
-} from '@hugeicons/core-free-icons';
+import type { TPalette, TTabItem } from '@/lib/types';
 import { HugeiconsIcon } from '@hugeicons/react-native';
 import * as Haptics from 'expo-haptics';
 import { Tabs } from 'expo-router';
 import type React from 'react';
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, useAnimatedStyle, useSharedValue, withSequence, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-const ALL_TABS = [
-  { name: 'index', label: 'Home', icon: Home01Icon },
-  { name: 'explore', label: 'Entries', icon: ListViewIcon },
-  { name: 'plan', label: 'Plan', icon: Calendar01Icon },
-  { name: 'todo', label: 'Todo', icon: CheckmarkSquare02Icon },
-  { name: 'settings', label: 'Settings', icon: Settings01Icon },
-];
-
 type TabButtonProps = {
   label: string;
-  icon: typeof Home01Icon;
+  icon: (typeof TAB_ITEM_META)[TTabItem]['icon'];
   active: boolean;
   onPress: () => void;
   colors: TPalette;
@@ -97,18 +81,8 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, emitter, navigateToT
   const { openAdd } = useEntriesSheet();
   const { colors } = useTheme();
   const { impact, selection } = useHaptics();
-  const { enabled: planEnabled } = usePlanMode();
-  const { enabled: todoEnabled } = useTodo();
-
-  const tabs = useMemo(
-    () =>
-      ALL_TABS.filter(t => {
-        if (t.name === 'plan') return planEnabled;
-        if (t.name === 'todo') return todoEnabled;
-        return true;
-      }),
-    [planEnabled, todoEnabled],
-  );
+  // Already capped and ordered — Settings › Tab bar decides what is here.
+  const { items } = useTabBar();
 
   function handleTabPress(i: number, route: (typeof state.routes)[number]) {
     selection();
@@ -119,14 +93,29 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, emitter, navigateToT
     }
   }
 
-  function renderTab(tab: (typeof ALL_TABS)[number]) {
-    const i = state.routes.findIndex(r => r.name === tab.name);
+  function renderItem(item: TTabItem) {
+    const { label, icon, route } = TAB_ITEM_META[item];
+
+    if (route === null) {
+      return (
+        <TabButton
+          key={item}
+          label={label}
+          icon={icon}
+          active={false}
+          colors={colors}
+          onPress={() => { impact(Haptics.ImpactFeedbackStyle.Medium); openAdd(); }}
+        />
+      );
+    }
+
+    const i = state.routes.findIndex(r => r.name === route);
     if (i === -1) return null;
     return (
       <TabButton
-        key={tab.name}
-        label={tab.label}
-        icon={tab.icon}
+        key={item}
+        label={label}
+        icon={icon}
         active={state.index === i}
         colors={colors}
         onPress={() => handleTabPress(i, state.routes[i])}
@@ -149,17 +138,7 @@ const PoishaTabBar: React.FC<PoishaTabBarProps> = ({ state, emitter, navigateToT
         <View className="overflow-hidden rounded-[32px]">
           <View className="absolute inset-0 rounded-[32px] border border-line bg-surface" />
           <View className="flex-row items-center px-2 pb-2 pt-2.5">
-            {/* Add always sits after the first two tabs — reproduces today's
-                layout when Plan Mode is off, and centres it when on. */}
-            {tabs.slice(0, 2).map(renderTab)}
-            <TabButton
-              label="Add"
-              icon={Add01Icon}
-              active={false}
-              colors={colors}
-              onPress={() => { impact(Haptics.ImpactFeedbackStyle.Medium); openAdd(); }}
-            />
-            {tabs.slice(2).map(renderTab)}
+            {items.map(renderItem)}
           </View>
         </View>
       </View>

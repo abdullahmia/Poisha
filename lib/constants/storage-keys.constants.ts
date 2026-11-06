@@ -13,6 +13,7 @@ export const ASYNC_STORAGE_KEYS = {
   todoCarryOverDate: "poisha_todo_carry_over_date",
   budgetAlertsEnabled: "poisha_budget_alerts_enabled",
   planRemindersEnabled: "poisha_plan_reminders_enabled",
+  tabBar: "poisha_tab_bar",
   sqliteMigrated: "poisha_sqlite_migrated",
   legacyEntries: "tracker_entries",
 } as const;

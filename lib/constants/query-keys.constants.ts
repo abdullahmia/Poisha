@@ -12,6 +12,7 @@ export const QUERY_KEYS = {
   },
   categories: { all: ['categories'], enabled: ['categories', 'enabled'] },
   planMode: { enabled: ['planMode', 'enabled'] },
+  tabBar: ['tabBar'],
   todo: {
     enabled: ['todo', 'enabled'],
     all: ['todo', 'all'],
